@@ -16,14 +16,14 @@
     "@supabase/supabase-js": "^2.107.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.4"
-  },
-  "devDependencies": {
+    "react-router-dom": "^6.30.4",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
-    "supabase": "^2.105.0",
     "tailwindcss": "^3.4.19",
     "vite": "^5.4.21"
+  },
+  "devDependencies": {
+    "supabase": "^2.105.0"
   }
 }

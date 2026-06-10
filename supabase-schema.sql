@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS orders (
   client_id UUID REFERENCES clients(id),
   category_id UUID REFERENCES service_categories(id),
   user_id UUID, -- Сделано nullable для работы без Supabase Auth
-  status TEXT DEFAULT 'draft', -- draft, confirmed, completed, cancelled
+  status TEXT DEFAULT 'draft', -- draft, in_progress, approved, completed
+  payment_status TEXT DEFAULT 'not_paid', -- not_paid, prepaid, paid
   total_amount NUMERIC(10,2),
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

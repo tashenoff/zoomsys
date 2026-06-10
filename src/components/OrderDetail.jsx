@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 export default function OrderDetail({ orderId, onBack }) {
   const [order, setOrder] = useState(null)
   const [currentStatus, setCurrentStatus] = useState('draft')
+  const [paymentStatus, setPaymentStatus] = useState('not_paid')
 
   useEffect(() => {
     loadOrder()
@@ -15,6 +16,7 @@ export default function OrderDetail({ orderId, onBack }) {
       const found = orders.find(o => o.id === orderId)
       setOrder(found)
       setCurrentStatus(found?.status || 'draft')
+      setPaymentStatus(found?.paymentStatus || 'not_paid')
     }
   }
 
@@ -31,13 +33,41 @@ export default function OrderDetail({ orderId, onBack }) {
     }
   }
 
+  const updatePaymentStatus = (newPaymentStatus) => {
+    const stored = localStorage.getItem('orders')
+    if (stored) {
+      const orders = JSON.parse(stored)
+      const updatedOrders = orders.map(o => 
+        o.id === orderId ? { ...o, paymentStatus: newPaymentStatus } : o
+      )
+      localStorage.setItem('orders', JSON.stringify(updatedOrders))
+      setPaymentStatus(newPaymentStatus)
+      setOrder({ ...order, paymentStatus: newPaymentStatus })
+    }
+  }
+
   const getStatusBadge = (status) => {
     const statusMap = {
       draft: { label: '📝 Черновик', className: 'bg-gray-500 text-white' },
       in_progress: { label: '⚙️ В процессе', className: 'bg-blue-500 text-white' },
-      approved: { label: '✅ Утверждено', className: 'bg-green-500 text-white' }
+      approved: { label: '✅ Утверждено', className: 'bg-green-500 text-white' },
+      completed: { label: '🎉 Исполнено', className: 'bg-purple-600 text-white' }
     }
     const statusInfo = statusMap[status || 'draft']
+    return (
+      <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.className}`}>
+        {statusInfo.label}
+      </span>
+    )
+  }
+
+  const getPaymentStatusBadge = (status) => {
+    const statusMap = {
+      not_paid: { label: '❌ Не оплачено', className: 'bg-red-500 text-white' },
+      prepaid: { label: '💵 Предоплата получена', className: 'bg-yellow-500 text-white' },
+      paid: { label: '✅ Оплачено 100%', className: 'bg-green-600 text-white' }
+    }
+    const statusInfo = statusMap[status || 'not_paid']
     return (
       <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.className}`}>
         {statusInfo.label}
@@ -116,7 +146,7 @@ export default function OrderDetail({ orderId, onBack }) {
         </div>
         <div className="border-t pt-4">
           <p className="text-sm font-medium text-gray-700 mb-3">Изменить статус:</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <button
               onClick={() => updateStatus('draft')}
               disabled={currentStatus === 'draft'}
@@ -149,6 +179,64 @@ export default function OrderDetail({ orderId, onBack }) {
               }`}
             >
               ✅ Утверждено
+            </button>
+            <button
+              onClick={() => updateStatus('completed')}
+              disabled={currentStatus === 'completed'}
+              className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
+                currentStatus === 'completed'
+                  ? 'bg-purple-300 text-purple-500 border-purple-300 cursor-not-allowed'
+                  : 'bg-white border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+              }`}
+            >
+              🎉 Исполнено
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Управление статусом платежа */}
+      <div className="bg-white rounded-lg shadow-md p-6 border-2 border-green-200">
+        <h2 className="text-xl font-bold mb-4">Статус платежа:</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <span className="text-sm font-medium text-gray-700">Текущий статус:</span>
+          {getPaymentStatusBadge(paymentStatus)}
+        </div>
+        <div className="border-t pt-4">
+          <p className="text-sm font-medium text-gray-700 mb-3">Изменить статус платежа:</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button
+              onClick={() => updatePaymentStatus('not_paid')}
+              disabled={paymentStatus === 'not_paid'}
+              className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
+                paymentStatus === 'not_paid'
+                  ? 'bg-red-300 text-red-500 border-red-300 cursor-not-allowed'
+                  : 'bg-white border-red-300 hover:border-red-500 hover:bg-red-50'
+              }`}
+            >
+              ❌ Не оплачено
+            </button>
+            <button
+              onClick={() => updatePaymentStatus('prepaid')}
+              disabled={paymentStatus === 'prepaid'}
+              className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
+                paymentStatus === 'prepaid'
+                  ? 'bg-yellow-300 text-yellow-600 border-yellow-300 cursor-not-allowed'
+                  : 'bg-white border-yellow-300 hover:border-yellow-500 hover:bg-yellow-50'
+              }`}
+            >
+              💵 Предоплата получена
+            </button>
+            <button
+              onClick={() => updatePaymentStatus('paid')}
+              disabled={paymentStatus === 'paid'}
+              className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
+                paymentStatus === 'paid'
+                  ? 'bg-green-300 text-green-600 border-green-300 cursor-not-allowed'
+                  : 'bg-white border-green-300 hover:border-green-600 hover:bg-green-50'
+              }`}
+            >
+              ✅ Оплачено 100%
             </button>
           </div>
         </div>

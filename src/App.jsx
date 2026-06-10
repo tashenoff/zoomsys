@@ -3,6 +3,7 @@ import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
 import ClientSelector from './components/ClientSelector'
 import BusinessCardsCalculator from './components/BusinessCardsCalculator'
+import PrintingCalculator from './components/PrintingCalculator'
 import WideFormatCalculator from './components/WideFormatCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
@@ -116,8 +117,12 @@ function App() {
               />
 
               {/* Калькулятор в зависимости от категории */}
-              {selectedCategory.slug === 'polygraphy' && (
+              {selectedCategory.slug === 'business-cards' && (
                 <BusinessCardsCalculator client={selectedClient} />
+              )}
+
+              {selectedCategory.slug === 'printing' && (
+                <PrintingCalculator client={selectedClient} />
               )}
 
               {selectedCategory.slug === 'wide-format' && (

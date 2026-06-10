@@ -1,8 +1,20 @@
+import { useState } from 'react'
 import pricingData from '../data/pricing.json'
 import logo from '../logo.svg'
 
 export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView }) {
   const categories = pricingData.categories
+  const [expandedCategory, setExpandedCategory] = useState(null)
+
+  const handleCategoryClick = (category) => {
+    if (category.subcategories) {
+      // Если есть подкатегории, раскрываем/скрываем их
+      setExpandedCategory(expandedCategory === category.id ? null : category.id)
+    } else {
+      // Если нет подкатегорий, выбираем категорию
+      onSelectCategory(category)
+    }
+  }
 
   return (
     <div className="w-64 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
@@ -13,7 +25,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
       </div>
 
       {/* Навигация */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {/* Главная */}
         <button
           onClick={() => onSelectView('home')}
@@ -42,17 +54,43 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
         <p className="text-xs uppercase text-gray-500 font-semibold mb-3">Категории услуг</p>
         {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => onSelectCategory(category)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-              selectedCategory?.id === category.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category.name}
-          </button>
+          <div key={category.id}>
+            <button
+              onClick={() => handleCategoryClick(category)}
+              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
+                selectedCategory?.id === category.id || 
+                (category.subcategories && expandedCategory === category.id)
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <span>{category.name}</span>
+              {category.subcategories && (
+                <span className="text-sm">
+                  {expandedCategory === category.id ? '▼' : '▶'}
+                </span>
+              )}
+            </button>
+            
+            {/* Подкатегории */}
+            {category.subcategories && expandedCategory === category.id && (
+              <div className="ml-4 mt-1 space-y-1">
+                {category.subcategories.map((subcategory) => (
+                  <button
+                    key={subcategory.id}
+                    onClick={() => onSelectCategory(subcategory)}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition text-sm ${
+                      selectedCategory?.id === subcategory.id
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {subcategory.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </nav>
 

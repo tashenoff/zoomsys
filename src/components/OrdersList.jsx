@@ -7,6 +7,7 @@ export default function OrdersList({ onViewOrder }) {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [statusFilter, setStatusFilter] = useState('all') // all, draft, in_progress, approved
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all') // all, not_paid, prepaid, paid
   const [groupByClient, setGroupByClient] = useState(false)
   const [viewMode, setViewMode] = useState('list') // list, kanban
 
@@ -16,7 +17,7 @@ export default function OrdersList({ onViewOrder }) {
 
   useEffect(() => {
     filterOrders()
-  }, [orders, searchTerm, dateFrom, dateTo, statusFilter])
+  }, [orders, searchTerm, dateFrom, dateTo, statusFilter, paymentStatusFilter])
 
   const loadOrders = () => {
     const stored = localStorage.getItem('orders')
@@ -57,6 +58,11 @@ export default function OrdersList({ onViewOrder }) {
       filtered = filtered.filter(order => (order.status || 'draft') === statusFilter)
     }
 
+    // Фильтр по статусу платежа
+    if (paymentStatusFilter !== 'all') {
+      filtered = filtered.filter(order => (order.paymentStatus || 'not_paid') === paymentStatusFilter)
+    }
+
     setFilteredOrders(filtered)
   }
 
@@ -76,7 +82,8 @@ export default function OrdersList({ onViewOrder }) {
     const statusMap = {
       draft: { label: '📝 Черновик', className: 'bg-gray-500 text-white' },
       in_progress: { label: '⚙️ В процессе', className: 'bg-blue-500 text-white' },
-      approved: { label: '✅ Утверждено', className: 'bg-green-500 text-white' }
+      approved: { label: '✅ Утверждено', className: 'bg-green-500 text-white' },
+      completed: { label: '🎉 Исполнено', className: 'bg-purple-600 text-white' }
     }
     const statusInfo = statusMap[status || 'draft']
     return (
@@ -102,7 +109,8 @@ export default function OrdersList({ onViewOrder }) {
     const grouped = {
       draft: [],
       in_progress: [],
-      approved: []
+      approved: [],
+      completed: []
     }
     
     filteredOrders.forEach(order => {
@@ -331,6 +339,65 @@ export default function OrdersList({ onViewOrder }) {
             >
               ✅ Утверждено
             </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                statusFilter === 'completed'
+                  ? 'bg-purple-600 text-white shadow-md'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              🎉 Исполнено
+            </button>
+          </div>
+        </div>
+
+        {/* Фильтр по статусу платежа */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            💳 Статус платежа
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setPaymentStatusFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                paymentStatusFilter === 'all'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              Все
+            </button>
+            <button
+              onClick={() => setPaymentStatusFilter('not_paid')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                paymentStatusFilter === 'not_paid'
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              ❌ Не оплачено
+            </button>
+            <button
+              onClick={() => setPaymentStatusFilter('prepaid')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                paymentStatusFilter === 'prepaid'
+                  ? 'bg-yellow-500 text-white shadow-md'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              💵 Предоплата
+            </button>
+            <button
+              onClick={() => setPaymentStatusFilter('paid')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                paymentStatusFilter === 'paid'
+                  ? 'bg-green-600 text-white shadow-md'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              ✅ Оплачено 100%
+            </button>
           </div>
         </div>
 
@@ -381,13 +448,14 @@ export default function OrdersList({ onViewOrder }) {
         )}
 
         {/* Кнопка сброса */}
-        {(searchTerm || dateFrom || dateTo || statusFilter !== 'all') && (
+        {(searchTerm || dateFrom || dateTo || statusFilter !== 'all' || paymentStatusFilter !== 'all') && (
           <button
             onClick={() => {
               setSearchTerm('')
               setDateFrom('')
               setDateTo('')
               setStatusFilter('all')
+              setPaymentStatusFilter('all')
             }}
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
@@ -411,7 +479,7 @@ export default function OrdersList({ onViewOrder }) {
       {/* Список заказов / Канбан */}
       {viewMode === 'kanban' ? (
         /* Канбан-представление */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(groupOrdersByStatus()).map(([status, statusOrders]) => {
             const statusConfig = {
               draft: { 
@@ -431,6 +499,12 @@ export default function OrdersList({ onViewOrder }) {
                 bgColor: 'bg-green-50',
                 borderColor: 'border-green-300',
                 headerBg: 'bg-green-500'
+              },
+              completed: {
+                title: '🎉 Исполнено',
+                bgColor: 'bg-purple-50',
+                borderColor: 'border-purple-300',
+                headerBg: 'bg-purple-600'
               }
             }
 

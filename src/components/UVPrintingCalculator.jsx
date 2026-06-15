@@ -11,6 +11,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   const [searchProduct, setSearchProduct] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedSide, setSelectedSide] = useState(null)
+  const [selectedMaterial, setSelectedMaterial] = useState(null)
   
   const [quantity, setQuantity] = useState(100)
   const [area, setArea] = useState(1) // для расчета по площади (кв.см)
@@ -66,9 +67,15 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     return selectedProduct.sides
   }, [selectedProduct])
 
+  const availableMaterials = useMemo(() => {
+    if (!selectedProduct || !selectedProduct.materials) return []
+    return selectedProduct.materials
+  }, [selectedProduct])
+
   useEffect(() => {
     setSelectedProduct(null)
     setSelectedSide(null)
+    setSelectedMaterial(null)
     setSearchProduct('')
     
     if (selectedCategory && productsRef.current) {
@@ -104,9 +111,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   useEffect(() => {
     if (selectedProduct && quantity) {
       if (selectedProduct.sides && !selectedSide) return
+      if (selectedProduct.materials && !selectedMaterial) return
       calculatePrice()
     }
-  }, [selectedProduct, selectedSide, quantity, area, isUrgent, discount])
+  }, [selectedProduct, selectedSide, selectedMaterial, quantity, area, isUrgent, discount])
 
   const getPriceForQuantity = (pricesObj, qty) => {
     if (!pricesObj) return 0
@@ -139,23 +147,53 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     let unitPrice = 0
     let baseTotal = 0
     let calculationType = ''
+    let materialName = null
+    let sideData = null
 
     // Если продукт со сторонами
     if (selectedProduct.sides && selectedSide) {
-      const sideData = selectedProduct.sides.find(s => s.type === selectedSide)
+      sideData = selectedProduct.sides.find(s => s.type === selectedSide)
       if (sideData) {
-        unitPrice = getPriceForQuantity(sideData.prices, quantity)
-        if (unitPrice === "договорная") {
-          setCalculation({
-            productName: selectedProduct.name,
-            side: selectedSide,
-            quantity,
-            note: "Цена договорная, свяжитесь с менеджером"
-          })
-          return
+        // Проверяем, есть ли у стороны свой тип цены (для блокнотов с изображением)
+        if (sideData.priceType === 'sqcm' && sideData.prices) {
+          unitPrice = getPriceForQuantity(sideData.prices, area)
+          if (unitPrice === "договорная") {
+            setCalculation({
+              productName: selectedProduct.name,
+              side: selectedSide,
+              quantity,
+              area,
+              note: "Цена договорная, свяжитесь с менеджером"
+            })
+            return
+          }
+          baseTotal = unitPrice * area * quantity
+          calculationType = 'sqcm-tiered'
+        } else {
+          // Обычный расчет по количеству
+          unitPrice = getPriceForQuantity(sideData.prices, quantity)
+          if (unitPrice === "договорная") {
+            setCalculation({
+              productName: selectedProduct.name,
+              side: selectedSide,
+              quantity,
+              note: "Цена договорная, свяжитесь с менеджером"
+            })
+            return
+          }
+          baseTotal = unitPrice * quantity
+          calculationType = 'sides'
         }
-        baseTotal = unitPrice * quantity
-        calculationType = 'sides'
+      }
+    }
+    // Если продукт с материалами
+    else if (selectedProduct.materials && selectedMaterial) {
+      const material = selectedProduct.materials.find(m => m.name === selectedMaterial)
+      if (material) {
+        materialName = material.name
+        unitPrice = material.pricePerSqCm
+        baseTotal = unitPrice * area * quantity
+        calculationType = 'material-sqcm'
       }
     }
     // Если продукт с ценой за единицу
@@ -197,8 +235,9 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       productName: selectedProduct.name,
       description: selectedProduct.description,
       side: selectedSide,
+      material: materialName,
       quantity,
-      area: selectedProduct.priceType === 'sqcm' ? area : null,
+      area: (selectedProduct.priceType === 'sqcm' || selectedProduct.materials || (sideData && sideData.priceType === 'sqcm')) ? area : null,
       unitPrice,
       baseTotal,
       subtotal,
@@ -248,7 +287,23 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   }
 
   const canCalculate = selectedProduct && 
-    (!selectedProduct.sides || selectedSide)
+    (!selectedProduct.sides || selectedSide) &&
+    (!selectedProduct.materials || selectedMaterial)
+  
+  const needsArea = useMemo(() => {
+    if (!selectedProduct) return false
+    
+    // Для материалов всегда нужна площадь
+    if (selectedProduct.materials && selectedMaterial) return true
+    
+    // Для блокнотов с изображением
+    if (selectedSide && selectedProduct.sides) {
+      const sideData = selectedProduct.sides.find(s => s.type === selectedSide)
+      if (sideData && sideData.priceType === 'sqcm') return true
+    }
+    
+    return false
+  }, [selectedProduct, selectedSide, selectedMaterial])
 
   return (
     <div className="space-y-6">
@@ -360,7 +415,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
         {selectedProduct && availableSides.length > 0 && (
           <div ref={sidesRef} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-              🔄 Количество сторон
+              🔄 {selectedProduct.id === 'uv4' ? 'Тип нанесения' : 'Количество сторон'}
             </label>
             <div className="grid grid-cols-2 gap-3">
               {availableSides.map((side) => (
@@ -374,6 +429,11 @@ export default function UVPrintingCalculator({ client: externalClient }) {
                   }`}
                 >
                   <div className="text-lg">{side.type}</div>
+                  {side.description && (
+                    <div className={`text-xs mt-1 ${selectedSide === side.type ? 'text-purple-100' : 'text-gray-500'}`}>
+                      {side.description}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -382,6 +442,48 @@ export default function UVPrintingCalculator({ client: externalClient }) {
               <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
                 <span className="text-sm font-semibold text-green-800">
                   ✓ Выбрано: {selectedSide}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* СЕКЦИЯ 3.5: Выбор материала (если есть) */}
+        {selectedProduct && availableMaterials.length > 0 && (
+          <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
+              🎨 Выбор материала
+            </label>
+            <div className="grid grid-cols-1 gap-3">
+              {availableMaterials.map((material) => (
+                <button
+                  key={material.name}
+                  onClick={() => setSelectedMaterial(material.name)}
+                  className={`p-4 rounded-lg border-2 transition font-semibold text-left ${
+                    selectedMaterial === material.name
+                      ? 'bg-pink-500 text-white border-pink-600 shadow-lg'
+                      : 'bg-white border-pink-300 hover:border-pink-500 hover:bg-pink-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold">{material.name}</div>
+                      <div className={`text-sm mt-1 ${selectedMaterial === material.name ? 'text-pink-100' : 'text-gray-600'}`}>
+                        {material.pricePerSqCm} тг/кв.см
+                      </div>
+                    </div>
+                    {selectedMaterial === material.name && (
+                      <span className="text-xl">✓</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {selectedMaterial && (
+              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+                <span className="text-sm font-semibold text-green-800">
+                  ✓ Выбран материал: {selectedMaterial}
                 </span>
               </div>
             )}
@@ -439,8 +541,8 @@ export default function UVPrintingCalculator({ client: externalClient }) {
               </div>
             </div>
 
-            {/* Площадь (для продуктов с ценой за кв.см) */}
-            {selectedProduct.priceType === 'sqcm' && (
+            {/* Площадь (для продуктов с ценой за кв.см, материалов или изображений) */}
+            {(selectedProduct.priceType === 'sqcm' || selectedProduct.materials || needsArea) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Площадь изображения (кв.см)

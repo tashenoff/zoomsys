@@ -93,6 +93,20 @@ export default function OrdersList({ onViewOrder }) {
     )
   }
 
+  const getPaymentStatusBadge = (paymentStatus) => {
+    const paymentStatusMap = {
+      not_paid: { label: '❌ Не оплачено', className: 'bg-red-500 text-white' },
+      prepaid: { label: '💵 Предоплата', className: 'bg-yellow-500 text-white' },
+      paid: { label: '✅ Оплачено', className: 'bg-green-600 text-white' }
+    }
+    const statusInfo = paymentStatusMap[paymentStatus || 'not_paid']
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusInfo.className}`}>
+        {statusInfo.label}
+      </span>
+    )
+  }
+
   const groupOrdersByClient = (orders) => {
     const grouped = {}
     orders.forEach(order => {
@@ -161,9 +175,10 @@ export default function OrdersList({ onViewOrder }) {
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <h3 className="font-bold text-lg">{order.orderNumber}</h3>
             {getStatusBadge(order.status)}
+            {getPaymentStatusBadge(order.paymentStatus)}
             {order.isUrgent && (
               <span className="text-red-600" title="Срочный заказ">🔥</span>
             )}

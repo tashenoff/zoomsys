@@ -5,6 +5,7 @@ import ClientSelector from './components/ClientSelector'
 import BusinessCardsCalculator from './components/BusinessCardsCalculator'
 import PrintingCalculator from './components/PrintingCalculator'
 import WideFormatCalculator from './components/WideFormatCalculator'
+import UVPrintingCalculator from './components/UVPrintingCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 
@@ -110,11 +111,13 @@ function App() {
                 <p className="text-gray-600 mt-2">{selectedCategory.description}</p>
               </div>
 
-              {/* Выбор клиента */}
-              <ClientSelector
-                selectedClient={selectedClient}
-                onSelectClient={setSelectedClient}
-              />
+              {/* Выбор клиента (не показываем для УФ печати, т.к. он встроен в калькулятор) */}
+              {selectedCategory.slug !== 'uv-printing' && (
+                <ClientSelector
+                  selectedClient={selectedClient}
+                  onSelectClient={setSelectedClient}
+                />
+              )}
 
               {/* Калькулятор в зависимости от категории */}
               {selectedCategory.slug === 'business-cards' && (
@@ -123,6 +126,10 @@ function App() {
 
               {selectedCategory.slug === 'printing' && (
                 <PrintingCalculator client={selectedClient} />
+              )}
+
+              {selectedCategory.slug === 'uv-printing' && (
+                <UVPrintingCalculator client={selectedClient} />
               )}
 
               {selectedCategory.slug === 'wide-format' && (

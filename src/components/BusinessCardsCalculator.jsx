@@ -3,6 +3,9 @@ import pricingData from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 
 export default function BusinessCardsCalculator({ client: externalClient }) {
+  // Состояние для выбора типа карточки
+  const [selectedCardType, setSelectedCardType] = useState(null)
+  
   const [pricing, setPricing] = useState(pricingData.businessCards)
   const [additionalServices, setAdditionalServices] = useState(pricingData.additionalServices)
   
@@ -195,10 +198,93 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     setOrderStatus('draft')
   }
 
+  // Типы карточек для выбора
+  const cardTypes = [
+    { id: 'business-cards', name: 'Визитки', icon: '💼', active: true },
+    { id: 'badges', name: 'Бейджи', icon: '🎫', active: false },
+    { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: false },
+    { id: 'invitations', name: 'Пригласительные карточки', icon: '💌', active: false },
+    { id: 'certificates', name: 'Сертификаты малого формата', icon: '🎓', active: false },
+    { id: 'custom-cards', name: 'Карточки произвольного типа', icon: '📇', active: false },
+  ]
+
+  // Если тип карточки не выбран, показываем экран выбора
+  if (!selectedCardType) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Визитки и карточки</h2>
+          <p className="text-gray-600 mb-6">Выберите тип продукции для расчета:</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cardTypes.map((cardType) => (
+              <button
+                key={cardType.id}
+                onClick={() => {
+                  if (cardType.active) {
+                    setSelectedCardType(cardType.id)
+                  }
+                }}
+                disabled={!cardType.active}
+                className={`p-6 rounded-lg border-2 transition-all duration-200 ${
+                  cardType.active
+                    ? 'bg-white border-blue-300 hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer'
+                    : 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-60'
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-5xl mb-3">{cardType.icon}</div>
+                  <div className="text-lg font-semibold text-gray-800 mb-2">
+                    {cardType.name}
+                  </div>
+                  {!cardType.active && (
+                    <div className="text-xs text-gray-500 italic mt-2">
+                      Скоро появится
+                    </div>
+                  )}
+                  {cardType.active && (
+                    <div className="text-xs text-green-600 font-medium mt-2">
+                      ✓ Доступно
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Если выбран тип карточки, показываем соответствующий калькулятор
   return (
     <div className="space-y-6">
+      {/* Кнопка "Назад" */}
+      <button
+        onClick={() => {
+          setSelectedCardType(null)
+          // Сбрасываем все состояния
+          setSearchMaterial('')
+          setSelectedMaterial(null)
+          setSelectedColorType(null)
+          setSelectedProduct(null)
+          setQuantity(100)
+          setSelectedServices([])
+          setIsUrgent(false)
+          setDiscount(0)
+          setNotes('')
+          setCalculation(null)
+          setOrderStatus('draft')
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+      >
+        ← Назад к выбору типа
+      </button>
+
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Расчет визиток</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          {cardTypes.find(ct => ct.id === selectedCardType)?.icon} Расчет: {cardTypes.find(ct => ct.id === selectedCardType)?.name}
+        </h2>
 
         {/* СЕКЦИЯ 1: Выбор материала с поиском */}
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

@@ -52,46 +52,85 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
         <div className="my-4 border-t border-gray-300"></div>
 
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-3">Категории услуг</p>
-        {categories.map((category) => (
-          <div key={category.id}>
+        {/* Визитки и карточки */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Визитки и карточки</p>
+        {categories.map((category) => 
+          category.subcategories && category.subcategories.filter(sub => sub.slug === 'business-cards').map((subcategory) => (
             <button
-              onClick={() => handleCategoryClick(category)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
-                selectedCategory?.id === category.id || 
-                (category.subcategories && expandedCategory === category.id)
+              key={subcategory.id}
+              onClick={() => onSelectCategory(subcategory)}
+              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                selectedCategory?.id === subcategory.id
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <span>{category.name}</span>
-              {category.subcategories && (
-                <span className="text-sm">
-                  {expandedCategory === category.id ? '▼' : '▶'}
-                </span>
-              )}
+              {subcategory.name}
             </button>
-            
-            {/* Подкатегории */}
-            {category.subcategories && expandedCategory === category.id && (
-              <div className="ml-4 mt-1 space-y-1">
-                {category.subcategories.map((subcategory) => (
-                  <button
-                    key={subcategory.id}
-                    onClick={() => onSelectCategory(subcategory)}
-                    className={`w-full text-left px-3 py-2 rounded-lg transition text-sm ${
-                      selectedCategory?.id === subcategory.id
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {subcategory.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          ))
+        )}
+
+        {/* Оперативная листовая полиграфия */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Оперативная листовая полиграфия</p>
+        {categories.map((category) => 
+          category.subcategories && category.subcategories.filter(sub => sub.slug === 'printing').map((subcategory) => (
+            <button
+              key={subcategory.id}
+              onClick={() => onSelectCategory(subcategory)}
+              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                selectedCategory?.id === subcategory.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {subcategory.name}
+            </button>
+          ))
+        )}
+
+        {/* Многостраничная продукция */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Многостраничная продукция</p>
+        <div className="text-sm text-gray-500 px-4 py-2 italic">
+          Скоро появится
+        </div>
+
+        {/* Индивидуальный расчет */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Индивидуальный расчет</p>
+        {categories.map((category) => {
+          // Широкоформатная печать
+          if (!category.subcategories && category.slug === 'wide-format') {
+            return (
+              <button
+                key={category.id}
+                onClick={() => onSelectCategory(category)}
+                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                  selectedCategory?.id === category.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name}
+              </button>
+            )
+          }
+          // УФ печать
+          if (category.subcategories) {
+            return category.subcategories.filter(sub => sub.slug === 'uv-printing').map((subcategory) => (
+              <button
+                key={subcategory.id}
+                onClick={() => onSelectCategory(subcategory)}
+                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                  selectedCategory?.id === subcategory.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {subcategory.name}
+              </button>
+            ))
+          }
+          return null
+        })}
       </nav>
 
       {/* Информация о пользователе */}

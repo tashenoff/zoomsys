@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import pricingData from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
+import CategorySelector from './CategorySelector'
 
 export default function BusinessCardsCalculator({ client: externalClient }) {
   // Состояние для выбора типа карточки
   const [selectedCardType, setSelectedCardType] = useState(null)
   
   const [pricing, setPricing] = useState(pricingData.businessCards)
+  const [additionalOperations] = useState(pricingData.additionalOperations || {})
+  const [reorderOptions] = useState(pricingData.reorderOptions || [])
   const [additionalServices, setAdditionalServices] = useState(pricingData.additionalServices)
   
   // Состояния для выбора клиента
@@ -25,6 +28,10 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   const [notes, setNotes] = useState('')
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft') // draft, in_progress, approved
+  
+  // Новые состояния для перезаказа и примечания с ценой
+  const [selectedReorder, setSelectedReorder] = useState('no')
+  const [customNotes, setCustomNotes] = useState([]) // Массив кастомных услуг
 
   const urgentSurcharge = pricingData.settings.urgentSurcharge
 
@@ -40,6 +47,14 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       setClient(externalClient)
     }
   }, [externalClient])
+
+  // Получаем доступные допоперации для выбранного типа карточки
+  const availableOperations = useMemo(() => {
+    if (!selectedCardType) return []
+    return Object.values(additionalOperations).filter(op => 
+      op.applicableTo.includes('all') || op.applicableTo.includes(selectedCardType)
+    )
+  }, [selectedCardType, additionalOperations])
 
   // Получаем уникальные материалы
   const uniqueMaterials = useMemo(() => {
@@ -96,11 +111,26 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     }
   }, [selectedMaterial, selectedColorType, pricing])
 
+  // Функции для работы с кастомными услугами
+  const addCustomNote = () => {
+    setCustomNotes([...customNotes, { id: Date.now(), title: '', price: '', type: 'fixed' }])
+  }
+
+  const updateCustomNote = (id, field, value) => {
+    setCustomNotes(customNotes.map(note => 
+      note.id === id ? { ...note, [field]: value } : note
+    ))
+  }
+
+  const removeCustomNote = (id) => {
+    setCustomNotes(customNotes.filter(note => note.id !== id))
+  }
+
   useEffect(() => {
     if (selectedProduct && quantity) {
       calculatePrice()
     }
-  }, [selectedProduct, quantity, selectedServices, isUrgent, discount])
+  }, [selectedProduct, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes])
 
   const getPriceForQuantity = (product, qty) => {
     if (qty < 50) return product.prices.upTo49
@@ -119,18 +149,68 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     let servicesTotal = 0
     let servicesDetails = []
 
+    // Обрабатываем новые допоперации
     selectedServices.forEach(serviceId => {
-      const service = additionalServices.find(s => s.id === serviceId)
-      if (service) {
-        // Если услуга за штуку (тг/шт), умножаем на количество
-        // Если фиксированная цена (тг), не умножаем
-        const servicePrice = service.unit === 'тг/шт' 
-          ? service.price * quantity 
-          : service.price
+      // Ищем среди новых операций
+      const operation = availableOperations.find(op => op.id === serviceId)
+      if (operation) {
+        let servicePrice = operation.unit === 'тг/шт' 
+          ? operation.price * quantity 
+          : operation.price
+        
+        // Применяем скидку на препресс при перезаказе
+        if (operation.id === 'prepress' && selectedReorder !== 'no') {
+          const reorderOption = reorderOptions.find(opt => opt.id === selectedReorder)
+          if (reorderOption && reorderOption.prepressDiscount > 0) {
+            const discountAmount = servicePrice * (reorderOption.prepressDiscount / 100)
+            servicePrice -= discountAmount
+            servicesDetails.push({
+              name: `${operation.name} (перезаказ -${reorderOption.prepressDiscount}%)`,
+              price: servicePrice,
+              originalPrice: operation.unit === 'тг/шт' ? operation.price * quantity : operation.price,
+              discount: discountAmount
+            })
+          } else {
+            servicesDetails.push({
+              name: operation.name,
+              price: servicePrice
+            })
+          }
+        } else {
+          servicesDetails.push({
+            name: operation.name,
+            price: servicePrice
+          })
+        }
+        
         servicesTotal += servicePrice
+      } else {
+        // Fallback на старые additionalServices
+        const service = additionalServices.find(s => s.id === serviceId)
+        if (service) {
+          const servicePrice = service.unit === 'тг/шт' 
+            ? service.price * quantity 
+            : service.price
+          servicesTotal += servicePrice
+          servicesDetails.push({
+            name: service.name,
+            price: servicePrice
+          })
+        }
+      }
+    })
+
+    // Добавляем кастомные услуги с ценой
+    customNotes.forEach(note => {
+      if (note.title && note.price) {
+        const customPrice = note.type === 'per-unit' 
+          ? parseFloat(note.price) * quantity 
+          : parseFloat(note.price)
+        servicesTotal += customPrice
         servicesDetails.push({
-          name: service.name,
-          price: servicePrice
+          name: note.title,
+          price: customPrice,
+          isCustom: true
         })
       }
     })
@@ -160,6 +240,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       discount,
       discountAmount,
       notes,
+      reorder: selectedReorder !== 'no' ? reorderOptions.find(opt => opt.id === selectedReorder)?.name : null,
+      customNotes: customNotes.filter(n => n.title && n.price),
       total
     })
   }
@@ -196,11 +278,13 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     setNotes('')
     setCalculation(null)
     setOrderStatus('draft')
+    setSelectedReorder('no')
+    setCustomNotes([])
   }
 
   // Типы карточек для выбора
   const cardTypes = [
-    { id: 'business-cards', name: 'Визитки', icon: '💼', active: true },
+    { id: 'business-cards', name: 'Визитки', icon: '💼', active: true, sectionTitle: 'Визитки и карточки' },
     { id: 'badges', name: 'Бейджи', icon: '🎫', active: false },
     { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: false },
     { id: 'invitations', name: 'Пригласительные карточки', icon: '💌', active: false },
@@ -211,48 +295,12 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   // Если тип карточки не выбран, показываем экран выбора
   if (!selectedCardType) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Визитки и карточки</h2>
-          <p className="text-gray-600 mb-6">Выберите тип продукции для расчета:</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cardTypes.map((cardType) => (
-              <button
-                key={cardType.id}
-                onClick={() => {
-                  if (cardType.active) {
-                    setSelectedCardType(cardType.id)
-                  }
-                }}
-                disabled={!cardType.active}
-                className={`p-6 rounded-lg border-2 transition-all duration-200 ${
-                  cardType.active
-                    ? 'bg-white border-blue-300 hover:border-blue-500 hover:shadow-lg hover:scale-105 cursor-pointer'
-                    : 'bg-gray-100 border-gray-300 cursor-not-allowed opacity-60'
-                }`}
-              >
-                <div className="text-center">
-                  <div className="text-5xl mb-3">{cardType.icon}</div>
-                  <div className="text-lg font-semibold text-gray-800 mb-2">
-                    {cardType.name}
-                  </div>
-                  {!cardType.active && (
-                    <div className="text-xs text-gray-500 italic mt-2">
-                      Скоро появится
-                    </div>
-                  )}
-                  {cardType.active && (
-                    <div className="text-xs text-green-600 font-medium mt-2">
-                      ✓ Доступно
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <CategorySelector
+        categories={cardTypes}
+        selectedCategory={selectedCardType}
+        onSelectCategory={setSelectedCardType}
+        title="Выберите тип продукции для расчета:"
+      />
     )
   }
 
@@ -409,40 +457,177 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
           </div>
         )}
 
-        {/* СЕКЦИЯ 4: Дополнительные услуги */}
-        {selectedProduct && additionalServices.length > 0 && (
+        {/* СЕКЦИЯ 4: Дополнительные операции (новая система) */}
+        {selectedProduct && availableOperations.length > 0 && (
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-              ⭐ Дополнительные услуги
+              ⭐ Дополнительные операции
             </label>
-            <div className="space-y-2">
-              {additionalServices.map((service) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {availableOperations.map((operation) => (
                 <label 
-                  key={service.id} 
+                  key={operation.id} 
                   className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
-                    selectedServices.includes(service.id)
-                      ? 'bg-green-100 border-green-500'
+                    selectedServices.includes(operation.id)
+                      ? 'bg-green-100 border-green-500 shadow-md'
                       : 'bg-white border-green-300 hover:bg-green-50 hover:border-green-400'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={selectedServices.includes(service.id)}
+                    checked={selectedServices.includes(operation.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedServices([...selectedServices, service.id])
+                        setSelectedServices([...selectedServices, operation.id])
                       } else {
-                        setSelectedServices(selectedServices.filter(id => id !== service.id))
+                        setSelectedServices(selectedServices.filter(id => id !== operation.id))
                       }
                     }}
                     className="mr-3 w-5 h-5"
                   />
-                  <span className="flex-1 font-medium">{service.name}</span>
-                  <span className="font-bold text-green-700">
-                    {service.price} {service.unit}
-                  </span>
+                  <div className="flex-1">
+                    <span className="font-medium block">{operation.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {operation.price} {operation.unit}
+                    </span>
+                  </div>
+                  {selectedServices.includes(operation.id) && (
+                    <span className="text-green-600 text-xl">✓</span>
+                  )}
                 </label>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* СЕКЦИЯ 4.5: Перезаказ */}
+        {selectedProduct && reorderOptions.length > 0 && (
+          <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="mb-3">
+              <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
+                🔄 Перезаказ
+              </label>
+              <p className="text-xs text-gray-600 mt-1">
+                Если это повторный заказ, выберите вариант для получения скидки на допечатную подготовку
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {reorderOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setSelectedReorder(option.id)}
+                  className={`p-4 rounded-lg border-2 transition text-left ${
+                    selectedReorder === option.id
+                      ? 'bg-indigo-500 text-white border-indigo-600 shadow-lg'
+                      : 'bg-white border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50'
+                  }`}
+                >
+                  <div className="font-semibold mb-1">{option.name}</div>
+                  {option.description && (
+                    <div className={`text-xs ${selectedReorder === option.id ? 'text-indigo-100' : 'text-gray-500'}`}>
+                      {option.description}
+                    </div>
+                  )}
+                  {option.prepressDiscount > 0 && (
+                    <div className={`text-sm mt-1 font-medium ${selectedReorder === option.id ? 'text-indigo-200' : 'text-indigo-600'}`}>
+                      💰 -{option.prepressDiscount}% на препресс
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            {selectedReorder && selectedReorder !== 'no' && (
+              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+                <span className="text-sm font-semibold text-green-800">
+                  ✓ Перезаказ: {reorderOptions.find(o => o.id === selectedReorder)?.name}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* СЕКЦИЯ 4.6: Дополнительные услуги с ценой (множественные) */}
+        {selectedProduct && (
+          <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+            <div className="mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
+                    💬 Дополнительные услуги (с ценой)
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Добавьте нестандартные услуги, которых нет в списке выше (упаковка, доставка и т.д.)
+                  </p>
+                </div>
+                <button
+                  onClick={addCustomNote}
+                  className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition font-medium text-sm"
+                >
+                  <span className="text-lg">+</span> Добавить услугу
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {customNotes.map((note) => (
+                <div key={note.id} className="bg-white border-2 border-pink-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Название услуги (например: Индивидуальная упаковка)"
+                        value={note.title}
+                        onChange={(e) => updateCustomNote(note.id, 'title', e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="number"
+                          placeholder="Цена"
+                          value={note.price}
+                          onChange={(e) => updateCustomNote(note.id, 'price', e.target.value)}
+                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                        />
+                        
+                        <select
+                          value={note.type}
+                          onChange={(e) => updateCustomNote(note.id, 'type', e.target.value)}
+                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                        >
+                          <option value="fixed">Фикс. сумма</option>
+                          <option value="per-unit">За шт</option>
+                        </select>
+                      </div>
+
+                      {note.title && note.price && (
+                        <div className="p-2 bg-pink-100 border border-pink-300 rounded-lg">
+                          <span className="text-xs font-semibold text-pink-800">
+                            ✓ {note.title}: {note.price} {note.type === 'fixed' ? 'тг' : 'тг/шт'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => removeCustomNote(note.id)}
+                      className="mt-1 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                      title="Удалить"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {customNotes.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  <p className="mb-2">Нет дополнительных услуг</p>
+                  <p className="text-sm">Нажмите "Добавить услугу" чтобы добавить</p>
+                </div>
+              )}
             </div>
           </div>
         )}

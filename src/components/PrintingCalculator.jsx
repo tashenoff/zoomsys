@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import pricingData from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
+import CategorySelector from './CategorySelector'
 
 export default function PrintingCalculator({ client: externalClient }) {
   const [pricing, setPricing] = useState(pricingData.printing || [])
+  const [additionalOperations] = useState(pricingData.additionalOperations || {})
+  const [reorderOptions] = useState(pricingData.reorderOptions || [])
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -15,11 +18,16 @@ export default function PrintingCalculator({ client: externalClient }) {
   const [selectedColorType, setSelectedColorType] = useState(null)
   
   const [quantity, setQuantity] = useState(100)
+  const [selectedServices, setSelectedServices] = useState([])
   const [isUrgent, setIsUrgent] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState('')
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
+  
+  // Новые состояния для перезаказа и кастомных услуг
+  const [selectedReorder, setSelectedReorder] = useState('no')
+  const [customNotes, setCustomNotes] = useState([])
 
   const urgentSurcharge = pricingData.settings.urgentSurcharge
 
@@ -35,6 +43,29 @@ export default function PrintingCalculator({ client: externalClient }) {
     }
   }, [externalClient])
 
+  // Получаем доступные допоперации для выбранной категории
+  const availableOperations = useMemo(() => {
+    if (!selectedCategory) return []
+    return Object.values(additionalOperations).filter(op => 
+      op.applicableTo.includes('all') || op.applicableTo.includes(selectedCategory)
+    )
+  }, [selectedCategory, additionalOperations])
+
+  // Функции для работы с кастомными услугами
+  const addCustomNote = () => {
+    setCustomNotes([...customNotes, { id: Date.now(), title: '', price: '', type: 'fixed' }])
+  }
+
+  const updateCustomNote = (id, field, value) => {
+    setCustomNotes(customNotes.map(note => 
+      note.id === id ? { ...note, [field]: value } : note
+    ))
+  }
+
+  const removeCustomNote = (id) => {
+    setCustomNotes(customNotes.filter(note => note.id !== id))
+  }
+
   // Получаем уникальные категории
   const categories = useMemo(() => {
     const categoryMap = {
@@ -45,9 +76,10 @@ export default function PrintingCalculator({ client: externalClient }) {
     }
     
     const uniqueCategories = [...new Set(pricing.map(p => p.category))]
-    return uniqueCategories.map(cat => ({
+    return uniqueCategories.map((cat, index) => ({
       id: cat,
-      ...categoryMap[cat]
+      ...categoryMap[cat],
+      sectionTitle: index === 0 ? 'Оперативная листовая полиграфия' : undefined
     }))
   }, [pricing])
 
@@ -117,7 +149,7 @@ export default function PrintingCalculator({ client: externalClient }) {
       if (selectedProduct.colorTypes && !selectedColorType) return
       calculatePrice()
     }
-  }, [selectedProduct, selectedColorType, quantity, isUrgent, discount])
+  }, [selectedProduct, selectedColorType, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes])
 
   const getPriceForQuantity = (pricesObj, qty) => {
     if (!pricesObj) return 0
@@ -167,7 +199,61 @@ export default function PrintingCalculator({ client: externalClient }) {
 
     const baseTotal = unitPrice * quantity
 
-    let subtotal = baseTotal
+    let servicesTotal = 0
+    let servicesDetails = []
+
+    // Обрабатываем допоперации
+    selectedServices.forEach(serviceId => {
+      const operation = availableOperations.find(op => op.id === serviceId)
+      if (operation) {
+        let servicePrice = operation.unit === 'тг/шт' 
+          ? operation.price * quantity 
+          : operation.price
+        
+        // Применяем скидку на препресс при перезаказе
+        if (operation.id === 'prepress' && selectedReorder !== 'no') {
+          const reorderOption = reorderOptions.find(opt => opt.id === selectedReorder)
+          if (reorderOption && reorderOption.prepressDiscount > 0) {
+            const discountAmount = servicePrice * (reorderOption.prepressDiscount / 100)
+            servicePrice -= discountAmount
+            servicesDetails.push({
+              name: `${operation.name} (перезаказ -${reorderOption.prepressDiscount}%)`,
+              price: servicePrice,
+              discount: discountAmount
+            })
+          } else {
+            servicesDetails.push({
+              name: operation.name,
+              price: servicePrice
+            })
+          }
+        } else {
+          servicesDetails.push({
+            name: operation.name,
+            price: servicePrice
+          })
+        }
+        
+        servicesTotal += servicePrice
+      }
+    })
+
+    // Добавляем кастомные услуги
+    customNotes.forEach(note => {
+      if (note.title && note.price) {
+        const customPrice = note.type === 'per-unit' 
+          ? parseFloat(note.price) * quantity 
+          : parseFloat(note.price)
+        servicesTotal += customPrice
+        servicesDetails.push({
+          name: note.title,
+          price: customPrice,
+          isCustom: true
+        })
+      }
+    })
+
+    let subtotal = baseTotal + servicesTotal
 
     // Применяем надбавку за срочность
     const urgentAmount = isUrgent ? (subtotal * urgentSurcharge / 100) : 0
@@ -184,6 +270,8 @@ export default function PrintingCalculator({ client: externalClient }) {
       quantity,
       unitPrice,
       baseTotal,
+      servicesDetails,
+      servicesTotal,
       subtotal,
       isUrgent,
       urgentSurcharge: urgentSurcharge,
@@ -191,6 +279,8 @@ export default function PrintingCalculator({ client: externalClient }) {
       discount,
       discountAmount,
       notes,
+      reorder: selectedReorder !== 'no' ? reorderOptions.find(opt => opt.id === selectedReorder)?.name : null,
+      customNotes: customNotes.filter(n => n.title && n.price),
       total
     })
   }
@@ -222,55 +312,57 @@ export default function PrintingCalculator({ client: externalClient }) {
     setSelectedProduct(null)
     setSelectedColorType(null)
     setQuantity(100)
+    setSelectedServices([])
     setIsUrgent(false)
     setDiscount(0)
     setNotes('')
     setCalculation(null)
     setOrderStatus('draft')
+    setSelectedReorder('no')
+    setCustomNotes([])
   }
 
   const canCalculate = selectedProduct && 
     (!selectedProduct.colorTypes || selectedColorType)
 
+  // Если категория не выбрана, показываем экран выбора
+  if (!selectedCategory) {
+    return (
+      <CategorySelector
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        title="Выберите категорию продукции для расчета:"
+        gridCols="md:grid-cols-2"
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Кнопка "Назад" */}
+      <button
+        onClick={() => {
+          setSelectedCategory(null)
+          setSearchProduct('')
+          setSelectedProduct(null)
+          setSelectedColorType(null)
+          setQuantity(100)
+          setIsUrgent(false)
+          setDiscount(0)
+          setNotes('')
+          setCalculation(null)
+          setOrderStatus('draft')
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+      >
+        ← Назад к выбору категории
+      </button>
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Расчет полиграфии (Флаера, Листовки, Буклеты)
+          {categories.find(c => c.id === selectedCategory)?.icon} {categories.find(c => c.id === selectedCategory)?.name}
         </h2>
-
-        {/* СЕКЦИЯ 1: Выбор категории */}
-        <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-            📂 Категория продукции
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`p-4 rounded-lg border-2 transition font-semibold text-left ${
-                  selectedCategory === category.id
-                    ? 'bg-indigo-500 text-white border-indigo-600 shadow-lg'
-                    : 'bg-white border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50'
-                }`}
-              >
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">{category.icon}</span>
-                  <span>{category.name}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {selectedCategory && (
-            <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
-              <span className="text-sm font-semibold text-green-800">
-                ✓ Выбрана категория: {categories.find(c => c.id === selectedCategory)?.name}
-              </span>
-            </div>
-          )}
-        </div>
 
         {/* СЕКЦИЯ 2: Выбор продукта */}
         {selectedCategory && (
@@ -403,6 +495,172 @@ export default function PrintingCalculator({ client: externalClient }) {
           </div>
         )}
 
+        {/* СЕКЦИЯ 4.5: Дополнительные операции */}
+        {canCalculate && availableOperations.length > 0 && (
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
+              ⭐ Дополнительные операции
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {availableOperations.map((operation) => (
+                <label 
+                  key={operation.id} 
+                  className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
+                    selectedServices.includes(operation.id)
+                      ? 'bg-green-100 border-green-500 shadow-md'
+                      : 'bg-white border-green-300 hover:bg-green-50 hover:border-green-400'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedServices.includes(operation.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedServices([...selectedServices, operation.id])
+                      } else {
+                        setSelectedServices(selectedServices.filter(id => id !== operation.id))
+                      }
+                    }}
+                    className="mr-3 w-5 h-5"
+                  />
+                  <div className="flex-1">
+                    <span className="font-medium block">{operation.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {operation.price} {operation.unit}
+                    </span>
+                  </div>
+                  {selectedServices.includes(operation.id) && (
+                    <span className="text-green-600 text-xl">✓</span>
+                  )}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* СЕКЦИЯ 4.6: Перезаказ */}
+        {canCalculate && reorderOptions.length > 0 && (
+          <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <div className="mb-3">
+              <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
+                🔄 Перезаказ
+              </label>
+              <p className="text-xs text-gray-600 mt-1">
+                Если это повторный заказ, выберите вариант для получения скидки на допечатную подготовку
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {reorderOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setSelectedReorder(option.id)}
+                  className={`p-4 rounded-lg border-2 transition text-left ${
+                    selectedReorder === option.id
+                      ? 'bg-indigo-500 text-white border-indigo-600 shadow-lg'
+                      : 'bg-white border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50'
+                  }`}
+                >
+                  <div className="font-semibold mb-1">{option.name}</div>
+                  {option.description && (
+                    <div className={`text-xs ${selectedReorder === option.id ? 'text-indigo-100' : 'text-gray-500'}`}>
+                      {option.description}
+                    </div>
+                  )}
+                  {option.prepressDiscount > 0 && (
+                    <div className={`text-sm mt-1 font-medium ${selectedReorder === option.id ? 'text-indigo-200' : 'text-indigo-600'}`}>
+                      💰 -{option.prepressDiscount}% на препресс
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* СЕКЦИЯ 4.7: Кастомные услуги */}
+        {canCalculate && (
+          <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex-1">
+                <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
+                  💬 Дополнительные услуги (с ценой)
+                </label>
+                <p className="text-xs text-gray-600 mt-1">
+                  Добавьте нестандартные услуги, которых нет в списке выше (упаковка, доставка и т.д.)
+                </p>
+              </div>
+              <button
+                onClick={addCustomNote}
+                className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition font-medium text-sm ml-4"
+              >
+                <span className="text-lg">+</span> Добавить услугу
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {customNotes.map((note) => (
+                <div key={note.id} className="bg-white border-2 border-pink-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Название услуги"
+                        value={note.title}
+                        onChange={(e) => updateCustomNote(note.id, 'title', e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="number"
+                          placeholder="Цена"
+                          value={note.price}
+                          onChange={(e) => updateCustomNote(note.id, 'price', e.target.value)}
+                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                        />
+                        
+                        <select
+                          value={note.type}
+                          onChange={(e) => updateCustomNote(note.id, 'type', e.target.value)}
+                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                        >
+                          <option value="fixed">Фикс. сумма</option>
+                          <option value="per-unit">За шт</option>
+                        </select>
+                      </div>
+
+                      {note.title && note.price && (
+                        <div className="p-2 bg-pink-100 border border-pink-300 rounded-lg">
+                          <span className="text-xs font-semibold text-pink-800">
+                            ✓ {note.title}: {note.price} {note.type === 'fixed' ? 'тг' : 'тг/шт'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => removeCustomNote(note.id)}
+                      className="mt-1 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                      title="Удалить"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {customNotes.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  <p className="mb-2">Нет дополнительных услуг</p>
+                  <p className="text-sm">Нажмите "Добавить услугу"</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
         {canCalculate && (
           <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -507,6 +765,23 @@ export default function PrintingCalculator({ client: externalClient }) {
                 {calculation.baseTotal.toFixed(2)} тг
               </span>
             </div>
+
+            {/* Дополнительные услуги */}
+            {calculation.servicesDetails && calculation.servicesDetails.length > 0 && (
+              <>
+                <div className="text-sm font-bold text-gray-700 mt-4 mb-2 uppercase">
+                  Дополнительные услуги:
+                </div>
+                {calculation.servicesDetails.map((service, idx) => (
+                  <div key={idx} className="flex justify-between items-center pl-4 py-2">
+                    <span className="text-gray-600">{service.name}:</span>
+                    <span className="font-semibold text-green-600">
+                      {service.price.toFixed(2)} тг
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
 
             {/* Срочность */}
             {calculation.isUrgent && (

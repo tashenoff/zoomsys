@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import pricingData from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
+import CategorySelector from './CategorySelector'
 
 export default function UVPrintingCalculator({ client: externalClient }) {
   const [pricing, setPricing] = useState(pricingData.uvPrinting || [])
@@ -44,9 +45,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     }
     
     const uniqueCategories = [...new Set(pricing.map(p => p.category))]
-    return uniqueCategories.map(cat => ({
+    return uniqueCategories.map((cat, index) => ({
       id: cat,
-      ...categoryMap[cat]
+      ...categoryMap[cat],
+      sectionTitle: index === 0 ? 'Расчет УФ печати' : undefined
     }))
   }, [pricing])
 
@@ -305,45 +307,46 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     return false
   }, [selectedProduct, selectedSide, selectedMaterial])
 
+  // Если категория не выбрана, показываем экран выбора
+  if (!selectedCategory) {
+    return (
+      <CategorySelector
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        title="Выберите категорию продукции для расчета:"
+        gridCols="md:grid-cols-2"
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Кнопка "Назад" */}
+      <button
+        onClick={() => {
+          setSelectedCategory(null)
+          setSearchProduct('')
+          setSelectedProduct(null)
+          setSelectedSide(null)
+          setSelectedMaterial(null)
+          setQuantity(100)
+          setArea(1)
+          setIsUrgent(false)
+          setDiscount(0)
+          setNotes('')
+          setCalculation(null)
+          setOrderStatus('draft')
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+      >
+        ← Назад к выбору категории
+      </button>
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Расчет УФ печати
+          {categories.find(c => c.id === selectedCategory)?.icon} {categories.find(c => c.id === selectedCategory)?.name}
         </h2>
-
-        {/* СЕКЦИЯ 1: Выбор категории */}
-        <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-            📂 Категория продукции
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`p-4 rounded-lg border-2 transition font-semibold text-left ${
-                  selectedCategory === category.id
-                    ? 'bg-indigo-500 text-white border-indigo-600 shadow-lg'
-                    : 'bg-white border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50'
-                }`}
-              >
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">{category.icon}</span>
-                  <span>{category.name}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {selectedCategory && (
-            <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
-              <span className="text-sm font-semibold text-green-800">
-                ✓ Выбрана категория: {categories.find(c => c.id === selectedCategory)?.name}
-              </span>
-            </div>
-          )}
-        </div>
 
         {/* СЕКЦИЯ 2: Выбор продукта */}
         {selectedCategory && (

@@ -8,6 +8,7 @@ import WideFormatCalculator from './components/WideFormatCalculator'
 import UVPrintingCalculator from './components/UVPrintingCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
+import Dashboard from './components/Dashboard'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -71,19 +72,7 @@ function App() {
           ) : selectedView === 'orders' ? (
             <OrdersList onViewOrder={setSelectedOrderId} />
           ) : !selectedCategory ? (
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Добро пожаловать!
-                </h2>
-                <p className="text-gray-600">
-                  Быстрый расчет или выберите категорию из меню слева
-                </p>
-              </div>
-
-              {/* Быстрый калькулятор визиток */}
-              <BusinessCardsCalculator client={null} />
-            </div>
+            <Dashboard />
           ) : (
             <div className="space-y-6">
               {/* Хлебные крошки */}

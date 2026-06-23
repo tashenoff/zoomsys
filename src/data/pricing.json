@@ -254,6 +254,117 @@
       }
     }
   ],
+  "additionalOperations": {
+    "lamination": {
+      "id": "lamination",
+      "name": "Ламинация",
+      "price": 20,
+      "unit": "тг/шт",
+      "applicableTo": ["business-cards", "badges", "discount-cards", "invitations", "certificates", "custom-cards", "flyers", "booklets"]
+    },
+    "prepress": {
+      "id": "prepress",
+      "name": "Препресс",
+      "price": 1500,
+      "unit": "тг",
+      "applicableTo": ["all"]
+    },
+    "foiling": {
+      "id": "foiling",
+      "name": "Фольгирование",
+      "price": 15,
+      "unit": "тг/шт",
+      "applicableTo": ["business-cards", "invitations", "certificates", "flyers"]
+    },
+    "cutting": {
+      "id": "cutting",
+      "name": "Обрезка",
+      "price": 5,
+      "unit": "тг/шт",
+      "applicableTo": ["all"]
+    },
+    "cornerRounding": {
+      "id": "cornerRounding",
+      "name": "Скругление углов",
+      "price": 8,
+      "unit": "тг/шт",
+      "applicableTo": ["business-cards", "badges", "discount-cards"]
+    },
+    "assembly": {
+      "id": "assembly",
+      "name": "Сборка",
+      "price": 500,
+      "unit": "тг",
+      "applicableTo": ["all"]
+    },
+    "design": {
+      "id": "design",
+      "name": "Дизайн",
+      "price": 3000,
+      "unit": "тг",
+      "applicableTo": ["business-cards", "badges", "invitations", "certificates", "flyers", "booklets"]
+    },
+    "bigovka": {
+      "id": "bigovka",
+      "name": "Биговка",
+      "price": 10,
+      "unit": "тг/шт",
+      "applicableTo": ["flyers", "booklets", "certificates"]
+    },
+    "folding": {
+      "id": "folding",
+      "name": "Фальцовка (сгиб)",
+      "price": 8,
+      "unit": "тг/шт",
+      "applicableTo": ["flyers", "booklets"]
+    },
+    "grommets": {
+      "id": "grommets",
+      "name": "Полиграфические люверсы",
+      "price": 50,
+      "unit": "тг/шт",
+      "applicableTo": ["flyers", "booklets"]
+    },
+    "bolts": {
+      "id": "bolts",
+      "name": "Полиграфические болты",
+      "price": 60,
+      "unit": "тг/шт",
+      "applicableTo": ["flyers", "booklets"]
+    },
+    "pocket": {
+      "id": "pocket",
+      "name": "Карман для папки",
+      "price": 500,
+      "unit": "тг",
+      "applicableTo": ["flyers"]
+    }
+  },
+  "reorderOptions": [
+    {
+      "id": "no",
+      "name": "Нет",
+      "prepressDiscount": 0
+    },
+    {
+      "id": "no-changes",
+      "name": "Да, без изменений",
+      "prepressDiscount": 100,
+      "description": "Полная скидка на препресс"
+    },
+    {
+      "id": "with-changes",
+      "name": "Да, с изменением макета",
+      "prepressDiscount": 50,
+      "description": "Скидка 50% на препресс"
+    },
+    {
+      "id": "custom",
+      "name": "Индивидуальная цена",
+      "prepressDiscount": 0,
+      "description": "Ручной ввод стоимости"
+    }
+  ],
   "additionalServices": [
     {
       "id": "s1",

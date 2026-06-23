@@ -17,10 +17,10 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
   }
 
   return (
-    <div className="w-64 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
+    <div className="w-72 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
       {/* Заголовок */}
       <div className="p-6 border-b border-gray-300">
-        <img src={logo} alt="ZoomSys" className="w-32 h-auto mb-2" />
+        <img src={logo} alt="Ra Zoom" className="w-32 h-auto mb-2" />
         <p className="text-sm text-gray-600">Система расчета</p>
       </div>
 
@@ -52,8 +52,10 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
         <div className="my-4 border-t border-gray-300"></div>
 
-        {/* Визитки и карточки */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Визитки и карточки</p>
+        {/* БЛОК 1: Визитки и карточки */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          📇 Визитки и карточки
+        </p>
         {categories.map((category) => 
           category.subcategories && category.subcategories.filter(sub => sub.slug === 'business-cards').map((subcategory) => (
             <button
@@ -65,13 +67,15 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   : 'text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {subcategory.name}
+              💼 {subcategory.name}
             </button>
           ))
         )}
 
-        {/* Оперативная листовая полиграфия */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Оперативная листовая полиграфия</p>
+        {/* БЛОК 2: Оперативная листовая полиграфия */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          📄 Листовая полиграфия
+        </p>
         {categories.map((category) => 
           category.subcategories && category.subcategories.filter(sub => sub.slug === 'printing').map((subcategory) => (
             <button
@@ -83,36 +87,32 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   : 'text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {subcategory.name}
+              📋 {subcategory.name}
             </button>
           ))
         )}
 
-        {/* Многостраничная продукция */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Многостраничная продукция</p>
-        <div className="text-sm text-gray-500 px-4 py-2 italic">
-          Скоро появится
+        {/* БЛОК 3: Многостраничная продукция */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          📚 Многостраничная продукция
+        </p>
+        <div className="text-sm text-gray-500 px-4 py-2 italic bg-gray-50 rounded-lg mx-1">
+          🚧 В разработке
         </div>
 
-        {/* Индивидуальный расчет */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4">Индивидуальный расчет</p>
+        {/* БЛОК 4: Индивидуальный расчет */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          🛠️ Индивидуальный расчет
+        </p>
+        <div className="text-sm text-gray-500 px-4 py-2 italic bg-gray-50 rounded-lg mx-1">
+          🚧 В разработке
+        </div>
+
+        {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          ✨ Специализированная печать
+        </p>
         {categories.map((category) => {
-          // Широкоформатная печать
-          if (!category.subcategories && category.slug === 'wide-format') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.name}
-              </button>
-            )
-          }
           // УФ печать
           if (category.subcategories) {
             return category.subcategories.filter(sub => sub.slug === 'uv-printing').map((subcategory) => (
@@ -125,9 +125,25 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                     : 'text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {subcategory.name}
+                🖨️ {subcategory.name}
               </button>
             ))
+          }
+          // Широкоформатная печать
+          if (!category.subcategories && category.slug === 'wide-format') {
+            return (
+              <button
+                key={category.id}
+                onClick={() => onSelectCategory(category)}
+                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                  selectedCategory?.id === category.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🖼️ {category.name}
+              </button>
+            )
           }
           return null
         })}

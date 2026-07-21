@@ -23,6 +23,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   
   const [quantity, setQuantity] = useState(100)
   const [selectedServices, setSelectedServices] = useState([])
+  const [selectedServiceOptions, setSelectedServiceOptions] = useState({}) // Для выбора опций в select-операциях
+  const [serviceQuantities, setServiceQuantities] = useState({}) // Для операций с количеством
   const [isUrgent, setIsUrgent] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState('')
@@ -130,7 +132,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     if (selectedProduct && quantity) {
       calculatePrice()
     }
-  }, [selectedProduct, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes])
+  }, [selectedProduct, quantity, selectedServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, customNotes])
 
   const getPriceForQuantity = (product, qty) => {
     if (qty < 50) return product.prices.upTo49
@@ -154,31 +156,69 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       // Ищем среди новых операций
       const operation = availableOperations.find(op => op.id === serviceId)
       if (operation) {
-        let servicePrice = operation.unit === 'тг/шт' 
-          ? operation.price * quantity 
-          : operation.price
+        let servicePrice = 0
+        let serviceName = operation.name
+        
+        // Обработка операций с выбором (select)
+        if (operation.type === 'select') {
+          const selectedOptionId = selectedServiceOptions[serviceId]
+          if (selectedOptionId) {
+            const selectedOption = operation.options.find(opt => opt.id === selectedOptionId)
+            if (selectedOption) {
+              servicePrice = selectedOption.price
+              serviceName = `${operation.name}: ${selectedOption.name}`
+            }
+          }
+        }
+        // Обработка операций с количеством
+        else if (operation.type === 'quantity') {
+          const qty = serviceQuantities[serviceId] || 0
+          if (qty > 0) {
+            servicePrice = operation.price * qty
+            serviceName = `${operation.name} (${qty} шт)`
+          }
+        }
+        // Обработка операций с unit='тг/угол'
+        else if (operation.unit === 'тг/угол') {
+          const corners = serviceQuantities[serviceId] || operation.defaultQuantity || 4
+          servicePrice = operation.price * corners * quantity
+          serviceName = `${operation.name} (${corners} углов × ${quantity} шт)`
+        }
+        // Обработка обычных операций
+        else {
+          const qty = serviceQuantities[serviceId] || 1
+          if (operation.unit === 'тг/шт') {
+            servicePrice = operation.price * quantity * qty
+            if (qty > 1) {
+              serviceName = `${operation.name} (${qty} шт на визитку)`
+            }
+          } else {
+            servicePrice = operation.price
+          }
+        }
         
         // Применяем скидку на препресс при перезаказе
-        if (operation.id === 'prepress' && selectedReorder !== 'no') {
+        if (operation.id === 'prepress' && selectedReorder !== 'no' && servicePrice > 0) {
           const reorderOption = reorderOptions.find(opt => opt.id === selectedReorder)
           if (reorderOption && reorderOption.prepressDiscount > 0) {
+            const originalPrice = servicePrice
             const discountAmount = servicePrice * (reorderOption.prepressDiscount / 100)
             servicePrice -= discountAmount
             servicesDetails.push({
-              name: `${operation.name} (перезаказ -${reorderOption.prepressDiscount}%)`,
+              name: `${serviceName} (перезаказ -${reorderOption.prepressDiscount}%)`,
               price: servicePrice,
-              originalPrice: operation.unit === 'тг/шт' ? operation.price * quantity : operation.price,
+              originalPrice: originalPrice,
               discount: discountAmount
             })
           } else {
             servicesDetails.push({
-              name: operation.name,
+              name: serviceName,
               price: servicePrice
             })
           }
-        } else {
+        } else if (servicePrice > 0) {
           servicesDetails.push({
-            name: operation.name,
+            name: serviceName,
             price: servicePrice
           })
         }
@@ -392,43 +432,51 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </div>
 
         {/* СЕКЦИЯ 2: Выбор цветности */}
-        {selectedMaterial && availableColorTypes.length > 0 && (
-          <div ref={colorTypeRef} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-              🎨 Цветность
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {availableColorTypes.map(({ colorType, product }) => (
-                <button
-                  key={colorType}
-                  onClick={() => setSelectedColorType(colorType)}
-                  className={`p-4 rounded-lg border-2 transition font-bold text-center ${
-                    selectedColorType === colorType
-                      ? 'bg-purple-500 text-white border-purple-600 shadow-lg transform scale-105'
-                      : 'bg-white border-purple-300 hover:border-purple-500 hover:bg-purple-50'
-                  }`}
-                >
-                  <div className="text-xl mb-1">{colorType}</div>
-                  <div className="text-xs opacity-80">
-                    от {product.prices.upTo49} тг
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {selectedColorType && (
-              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
-                <span className="text-sm font-semibold text-green-800">
-                  ✓ Выбрана цветность: {selectedColorType}
-                </span>
+        <div ref={colorTypeRef} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
+            🎨 Цветность
+          </label>
+          
+          {availableColorTypes.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {availableColorTypes.map(({ colorType, product }) => (
+                  <button
+                    key={colorType}
+                    onClick={() => setSelectedColorType(colorType)}
+                    className={`p-4 rounded-lg border-2 transition font-bold text-center ${
+                      selectedColorType === colorType
+                        ? 'bg-purple-500 text-white border-purple-600 shadow-lg transform scale-105'
+                        : 'bg-white border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                    }`}
+                  >
+                    <div className="text-xl mb-1">{colorType}</div>
+                    <div className="text-xs opacity-80">
+                      от {product.prices.upTo49} тг
+                    </div>
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-        )}
+
+              {selectedColorType && (
+                <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+                  <span className="text-sm font-semibold text-green-800">
+                    ✓ Выбрана цветность: {selectedColorType}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white border-2 border-purple-200 rounded-lg p-6 text-center">
+              <p className="text-gray-500 text-sm">
+                👆 Сначала выберите материал выше, чтобы увидеть доступные варианты цветности
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* СЕКЦИЯ 3: Количество */}
-        {selectedProduct && (
-          <div ref={quantityRef} className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div ref={quantityRef} className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               🔢 Количество (шт)
             </label>
@@ -452,56 +500,142 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
                 >
                   {qty}
                 </button>
-              ))}
-            </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* СЕКЦИЯ 4: Дополнительные операции (новая система) */}
-        {selectedProduct && availableOperations.length > 0 && (
+        {availableOperations.length > 0 && (
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⭐ Дополнительные операции
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {availableOperations.map((operation) => (
-                <label 
+                <div 
                   key={operation.id} 
-                  className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
+                  className={`p-4 border-2 rounded-lg transition ${
                     selectedServices.includes(operation.id)
                       ? 'bg-green-100 border-green-500 shadow-md'
-                      : 'bg-white border-green-300 hover:bg-green-50 hover:border-green-400'
+                      : 'bg-white border-green-300'
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedServices.includes(operation.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedServices([...selectedServices, operation.id])
-                      } else {
-                        setSelectedServices(selectedServices.filter(id => id !== operation.id))
-                      }
-                    }}
-                    className="mr-3 w-5 h-5"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium block">{operation.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {operation.price} {operation.unit}
-                    </span>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedServices.includes(operation.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedServices([...selectedServices, operation.id])
+                        } else {
+                          setSelectedServices(selectedServices.filter(id => id !== operation.id))
+                          // Сбрасываем выбор опций при снятии галочки
+                          if (operation.type === 'select') {
+                            const newOptions = {...selectedServiceOptions}
+                            delete newOptions[operation.id]
+                            setSelectedServiceOptions(newOptions)
+                          }
+                          if (operation.type === 'quantity' || operation.unit === 'тг/угол' || operation.unit === 'тг/шт') {
+                            const newQty = {...serviceQuantities}
+                            delete newQty[operation.id]
+                            setServiceQuantities(newQty)
+                          }
+                        }
+                      }}
+                      className="mt-1 w-5 h-5 cursor-pointer"
+                    />
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium block">{operation.name}</span>
+                        {selectedServices.includes(operation.id) && (
+                          <span className="text-green-600 text-xl">✓</span>
+                        )}
+                      </div>
+                      
+                      {operation.description && (
+                        <p className="text-xs text-gray-600 mb-2">{operation.description}</p>
+                      )}
+                      
+                      {/* Выпадающий список для операций с type='select' */}
+                      {operation.type === 'select' && selectedServices.includes(operation.id) && (
+                        <div className="mt-3">
+                          <select
+                            value={selectedServiceOptions[operation.id] || ''}
+                            onChange={(e) => setSelectedServiceOptions({
+                              ...selectedServiceOptions,
+                              [operation.id]: e.target.value
+                            })}
+                            className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                          >
+                            <option value="">Выберите вариант...</option>
+                            {operation.options.map((opt) => (
+                              <option key={opt.id} value={opt.id}>
+                                {opt.name} — {opt.price} {opt.unit}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      
+                      {/* Поле количества для операций с type='quantity' или unit='тг/угол' */}
+                      {(operation.type === 'quantity' || operation.unit === 'тг/угол') && selectedServices.includes(operation.id) && (
+                        <div className="mt-3">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            {operation.unit === 'тг/угол' ? 'Количество углов:' : 'Количество:'}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={serviceQuantities[operation.id] || operation.defaultQuantity || ''}
+                            onChange={(e) => setServiceQuantities({
+                              ...serviceQuantities,
+                              [operation.id]: parseInt(e.target.value) || 0
+                            })}
+                            placeholder={operation.defaultQuantity ? `По умолчанию: ${operation.defaultQuantity}` : ''}
+                            className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Поле количества для операций с unit='тг/шт' (кроме quantity type) */}
+                      {operation.unit === 'тг/шт' && operation.type !== 'quantity' && selectedServices.includes(operation.id) && (
+                        <div className="mt-3">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Количество на 1 визитку:
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={serviceQuantities[operation.id] || 1}
+                            onChange={(e) => setServiceQuantities({
+                              ...serviceQuantities,
+                              [operation.id]: parseInt(e.target.value) || 1
+                            })}
+                            className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {operation.price} тг/шт × {serviceQuantities[operation.id] || 1} × {quantity} визиток = {((operation.price * (serviceQuantities[operation.id] || 1) * quantity).toFixed(2))} тг
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Показываем стоимость для обычных операций без полей ввода */}
+                      {!operation.type && operation.unit !== 'тг/шт' && operation.unit !== 'тг/угол' && (
+                        <span className="text-xs text-gray-500 block mt-1">
+                          {operation.price} {operation.unit}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {selectedServices.includes(operation.id) && (
-                    <span className="text-green-600 text-xl">✓</span>
-                  )}
-                </label>
+                </div>
               ))}
             </div>
           </div>
         )}
 
         {/* СЕКЦИЯ 4.5: Перезаказ */}
-        {selectedProduct && reorderOptions.length > 0 && (
+        {reorderOptions.length > 0 && (
           <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
             <div className="mb-3">
               <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
@@ -547,8 +681,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         )}
 
         {/* СЕКЦИЯ 4.6: Дополнительные услуги с ценой (множественные) */}
-        {selectedProduct && (
-          <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+        <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
             <div className="mb-3">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -627,14 +760,12 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
                   <p className="mb-2">Нет дополнительных услуг</p>
                   <p className="text-sm">Нажмите "Добавить услугу" чтобы добавить</p>
                 </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
-        {selectedProduct && (
-          <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⚙️ Дополнительные опции
             </label>
@@ -680,10 +811,9 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
                 rows="3"
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 placeholder="Дополнительная информация о заказе..."
-              />
-            </div>
+            />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Результат расчета */}

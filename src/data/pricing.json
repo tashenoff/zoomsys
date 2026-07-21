@@ -23,6 +23,12 @@
         },
         {
           "id": "1-3",
+          "name": "Многостраничная продукция",
+          "slug": "multipage",
+          "description": "Каталоги, брошюры, журналы"
+        },
+        {
+          "id": "1-4",
           "name": "УФ печать",
           "slug": "uv-printing",
           "description": "УФ-печать на различных поверхностях и материалах"
@@ -62,6 +68,54 @@
       }
     },
     {
+      "id": "33",
+      "name": "Черно-белые (Xerox)",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 140,
+        "50to99": 140,
+        "100to299": 140,
+        "300to499": 140,
+        "from500": 140
+      }
+    },
+    {
+      "id": "34",
+      "name": "Черно-белые (Xerox)",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 185,
+        "50to99": 185,
+        "100to299": 185,
+        "300to499": 185,
+        "from500": 185
+      }
+    },
+    {
+      "id": "35",
+      "name": "Черно-белые (Принтер)",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 70,
+        "50to99": 70,
+        "100to299": 70,
+        "300to499": 70,
+        "from500": 70
+      }
+    },
+    {
+      "id": "36",
+      "name": "Черно-белые (Принтер)",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 90,
+        "50to99": 90,
+        "100to299": 90,
+        "300to499": 90,
+        "from500": 90
+      }
+    },
+    {
       "id": "3",
       "name": "Цветные (250-300гр.)",
       "colorType": "4+0",
@@ -88,6 +142,30 @@
     {
       "id": "5",
       "name": "Цветные (лен 280 гр)",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 30,
+        "50to99": 30,
+        "100to299": 28,
+        "300to499": 26,
+        "from500": 26
+      }
+    },
+    {
+      "id": "6",
+      "name": "Цветные (лен 280 гр)",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 34,
+        "50to99": 34,
+        "100to299": 32,
+        "300to499": 30,
+        "from500": 30
+      }
+    },
+    {
+      "id": "7",
+      "name": "Цветные (лен 280 гр)",
       "colorType": "4+0",
       "prices": {
         "upTo49": 38,
@@ -98,7 +176,7 @@
       }
     },
     {
-      "id": "6",
+      "id": "8",
       "name": "Цветные (лен 280 гр)",
       "colorType": "4+4",
       "prices": {
@@ -110,7 +188,31 @@
       }
     },
     {
-      "id": "7",
+      "id": "9",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 40,
+        "50to99": 40,
+        "100to299": 38,
+        "300to499": 36,
+        "from500": 36
+      }
+    },
+    {
+      "id": "10",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 45,
+        "50to99": 45,
+        "100to299": 43,
+        "300to499": 41,
+        "from500": 41
+      }
+    },
+    {
+      "id": "11",
       "name": "Сирио /слендергель (280гр/м)",
       "colorType": "4+0",
       "prices": {
@@ -122,7 +224,7 @@
       }
     },
     {
-      "id": "8",
+      "id": "12",
       "name": "Сирио /слендергель (280гр/м)",
       "colorType": "4+4",
       "prices": {
@@ -134,7 +236,31 @@
       }
     },
     {
-      "id": "9",
+      "id": "13",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 65,
+        "50to99": 65,
+        "100to299": 63,
+        "300to499": 61,
+        "from500": 61
+      }
+    },
+    {
+      "id": "14",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 72,
+        "50to99": 72,
+        "100to299": 69,
+        "300to499": 66,
+        "from500": 66
+      }
+    },
+    {
+      "id": "15",
       "name": "Дизайнерская бумага (300-350гр)",
       "colorType": "4+0",
       "prices": {
@@ -146,7 +272,7 @@
       }
     },
     {
-      "id": "10",
+      "id": "16",
       "name": "Дизайнерская бумага (300-350гр)",
       "colorType": "4+4",
       "prices": {
@@ -158,7 +284,31 @@
       }
     },
     {
-      "id": "11",
+      "id": "17",
+      "name": "Таккавер",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 130,
+        "50to99": 120,
+        "100to299": 100,
+        "300to499": 90,
+        "from500": 90
+      }
+    },
+    {
+      "id": "18",
+      "name": "Таккавер",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 140,
+        "50to99": 130,
+        "100to299": 110,
+        "300to499": 100,
+        "from500": 100
+      }
+    },
+    {
+      "id": "19",
       "name": "Таккавер",
       "colorType": "4+0",
       "prices": {
@@ -170,7 +320,7 @@
       }
     },
     {
-      "id": "12",
+      "id": "20",
       "name": "Таккавер",
       "colorType": "4+4",
       "prices": {
@@ -182,7 +332,31 @@
       }
     },
     {
-      "id": "13",
+      "id": "21",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 160,
+        "50to99": 150,
+        "100to299": 140,
+        "300to499": 130,
+        "from500": 130
+      }
+    },
+    {
+      "id": "22",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 175,
+        "50to99": 165,
+        "100to299": 155,
+        "300to499": 145,
+        "from500": 145
+      }
+    },
+    {
+      "id": "23",
       "name": "Таккавер с УФ печатью без лака",
       "colorType": "4+0",
       "prices": {
@@ -194,7 +368,7 @@
       }
     },
     {
-      "id": "14",
+      "id": "24",
       "name": "Таккавер с УФ печатью без лака",
       "colorType": "4+4",
       "prices": {
@@ -206,7 +380,31 @@
       }
     },
     {
-      "id": "15",
+      "id": "25",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 210,
+        "50to99": 200,
+        "100to299": 190,
+        "300to499": 180,
+        "from500": 180
+      }
+    },
+    {
+      "id": "26",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 225,
+        "50to99": 215,
+        "100to299": 205,
+        "300to499": 195,
+        "from500": 195
+      }
+    },
+    {
+      "id": "27",
       "name": "Таккавер с УФ печатью и с лаком",
       "colorType": "4+0",
       "prices": {
@@ -218,7 +416,7 @@
       }
     },
     {
-      "id": "16",
+      "id": "28",
       "name": "Таккавер с УФ печатью и с лаком",
       "colorType": "4+4",
       "prices": {
@@ -230,7 +428,31 @@
       }
     },
     {
-      "id": "17",
+      "id": "29",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "1+0",
+      "prices": {
+        "upTo49": 110,
+        "50to99": 100,
+        "100to299": 95,
+        "300to499": 90,
+        "from500": 90
+      }
+    },
+    {
+      "id": "30",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "1+1",
+      "prices": {
+        "upTo49": 150,
+        "50to99": 140,
+        "100to299": 130,
+        "300to499": 120,
+        "from500": 120
+      }
+    },
+    {
+      "id": "31",
       "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
       "colorType": "4+0",
       "prices": {
@@ -242,7 +464,7 @@
       }
     },
     {
-      "id": "18",
+      "id": "32",
       "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
       "colorType": "4+4",
       "prices": {
@@ -255,25 +477,38 @@
     }
   ],
   "additionalOperations": {
-    "lamination": {
-      "id": "lamination",
-      "name": "Ламинация",
-      "price": 20,
-      "unit": "тг/шт",
-      "applicableTo": ["business-cards", "badges", "discount-cards", "invitations", "certificates", "custom-cards", "flyers", "booklets"]
+    "laminationPacket": {
+      "id": "laminationPacket",
+      "name": "Ламинация пакетная",
+      "type": "select",
+      "options": [
+        { "id": "gloss-a4", "name": "Глянец А4", "price": 450, "unit": "тг" },
+        { "id": "matte-a4", "name": "Матовая А4", "price": 300, "unit": "тг" },
+        { "id": "gloss-a3", "name": "Глянец А3", "price": 250, "unit": "тг" },
+        { "id": "matte-a3", "name": "Матовая А3", "price": 600, "unit": "тг" }
+      ],
+      "applicableTo": ["business-cards", "badges", "discount-cards", "invitations", "certificates", "custom-cards"]
     },
     "prepress": {
       "id": "prepress",
-      "name": "Препресс",
-      "price": 1500,
-      "unit": "тг",
+      "name": "Препрес",
+      "type": "select",
+      "options": [
+        { "id": "leaflet-gloss-a3-1", "name": "Листовая Глянец А3, 1 сторона", "price": 180, "unit": "тг" },
+        { "id": "leaflet-gloss-a4-1", "name": "Листовая Глянец А4, 1 сторона", "price": 90, "unit": "тг" },
+        { "id": "leaflet-shine-a3-1", "name": "Листовая Шайн А3, 1 сторона", "price": 180, "unit": "тг" },
+        { "id": "leaflet-shine-a4-1", "name": "Листовая Шайн А4, 1 сторона", "price": 90, "unit": "тг" }
+      ],
       "applicableTo": ["all"]
     },
     "foiling": {
       "id": "foiling",
       "name": "Фольгирование",
-      "price": 15,
-      "unit": "тг/шт",
+      "type": "select",
+      "options": [
+        { "id": "foil-a3-1", "name": "А3 лист, 1 сторона", "price": 250, "unit": "тг" },
+        { "id": "foil-a4-1", "name": "А4 лист, 1 сторона", "price": 150, "unit": "тг" }
+      ],
       "applicableTo": ["business-cards", "invitations", "certificates", "flyers"]
     },
     "cutting": {
@@ -286,9 +521,34 @@
     "cornerRounding": {
       "id": "cornerRounding",
       "name": "Скругление углов",
-      "price": 8,
-      "unit": "тг/шт",
+      "price": 7,
+      "unit": "тг/угол",
+      "defaultQuantity": 4,
+      "description": "Визитка 1×4 угла",
       "applicableTo": ["business-cards", "badges", "discount-cards"]
+    },
+    "roundHole": {
+      "id": "roundHole",
+      "name": "Отверстие круглое",
+      "price": 5,
+      "unit": "тг/шт",
+      "applicableTo": ["business-cards", "badges", "discount-cards", "certificates"]
+    },
+    "polyGrommet": {
+      "id": "polyGrommet",
+      "name": "Люверс полиграфический",
+      "price": 70,
+      "unit": "тг/шт",
+      "applicableTo": ["business-cards", "badges", "discount-cards", "certificates"]
+    },
+    "tags": {
+      "id": "tags",
+      "name": "Бирки на визитки",
+      "type": "quantity",
+      "price": 0,
+      "unit": "тг/шт",
+      "description": "Считается отдельно, как доп опция",
+      "applicableTo": ["business-cards"]
     },
     "assembly": {
       "id": "assembly",
@@ -296,13 +556,6 @@
       "price": 500,
       "unit": "тг",
       "applicableTo": ["all"]
-    },
-    "design": {
-      "id": "design",
-      "name": "Дизайн",
-      "price": 3000,
-      "unit": "тг",
-      "applicableTo": ["business-cards", "badges", "invitations", "certificates", "flyers", "booklets"]
     },
     "bigovka": {
       "id": "bigovka",

@@ -52,55 +52,60 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
         <div className="my-4 border-t border-gray-300"></div>
 
-        {/* БЛОК 1: Визитки и карточки */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          📇 Визитки и карточки
-        </p>
-        {categories.map((category) => 
-          category.subcategories && category.subcategories.filter(sub => sub.slug === 'business-cards').map((subcategory) => (
-            <button
-              key={subcategory.id}
-              onClick={() => onSelectCategory(subcategory)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-                selectedCategory?.id === subcategory.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              💼 {subcategory.name}
-            </button>
-          ))
-        )}
+        {/* БЛОК: Полиграфия (объединенный с выпадающим списком) */}
+        {categories.map((category) => {
+          if (category.slug === 'polygraphy' && category.subcategories) {
+            const isExpanded = expandedCategory === category.id
+            const hasSelectedSubcategory = category.subcategories.some(sub => selectedCategory?.id === sub.id)
+            
+            return (
+              <div key={category.id} className="mb-2">
+                <button
+                  onClick={() => handleCategoryClick(category)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
+                    hasSelectedSubcategory
+                      ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>📄 {category.name}</span>
+                  <span className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                    ▶
+                  </span>
+                </button>
+                
+                {isExpanded && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {category.subcategories
+                      .filter(sub => sub.slug !== 'uv-printing') // УФ печать в специализированной печати
+                      .map((subcategory) => {
+                        let icon = '📋'
+                        if (subcategory.slug === 'business-cards') icon = '💼'
+                        if (subcategory.slug === 'multipage') icon = '📚'
+                        
+                        return (
+                          <button
+                            key={subcategory.id}
+                            onClick={() => onSelectCategory(subcategory)}
+                            className={`w-full text-left px-4 py-2 rounded-lg transition text-sm ${
+                              selectedCategory?.id === subcategory.id
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            {icon} {subcategory.name}
+                          </button>
+                        )
+                      })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          return null
+        })}
 
-        {/* БЛОК 2: Оперативная листовая полиграфия */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          📄 Листовая полиграфия
-        </p>
-        {categories.map((category) => 
-          category.subcategories && category.subcategories.filter(sub => sub.slug === 'printing').map((subcategory) => (
-            <button
-              key={subcategory.id}
-              onClick={() => onSelectCategory(subcategory)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-                selectedCategory?.id === subcategory.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              📋 {subcategory.name}
-            </button>
-          ))
-        )}
-
-        {/* БЛОК 3: Многостраничная продукция */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          📚 Многостраничная продукция
-        </p>
-        <div className="text-sm text-gray-500 px-4 py-2 italic bg-gray-50 rounded-lg mx-1">
-          🚧 В разработке
-        </div>
-
-        {/* БЛОК 4: Индивидуальный расчет */}
+        {/* БЛОК: Индивидуальный расчет */}
         <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
           🛠️ Индивидуальный расчет
         </p>

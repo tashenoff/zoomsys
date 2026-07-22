@@ -539,6 +539,7 @@ export default function PrintingCalculator({ client: externalClient }) {
         )}
 
         {/* СЕКЦИЯ 4.6: Перезаказ */}
+        {/* Временно скрыто
         {canCalculate && reorderOptions.length > 0 && (
           <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
             <div className="mb-3">
@@ -576,6 +577,7 @@ export default function PrintingCalculator({ client: externalClient }) {
             </div>
           </div>
         )}
+        */}
 
         {/* СЕКЦИЯ 4.7: Кастомные услуги */}
         {canCalculate && (

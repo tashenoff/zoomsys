@@ -1,21 +1,24 @@
 import { useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 
-export default function Auth({ onLogin }) {
-  const [login, setLogin] = useState('')
+export default function Auth() {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
-    const adminLogin = import.meta.env.VITE_ADMIN_LOGIN || 'admin'
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'admin'
-
-    if (login === adminLogin && password === adminPassword) {
-      onLogin(true)
-    } else {
-      setError('Неверный логин или пароль')
+    try {
+      await login(username, password)
+    } catch (err) {
+      setError(err.message || 'Неверный логин или пароль')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -34,10 +37,11 @@ export default function Auth({ onLogin }) {
             </label>
             <input
               type="text"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
               placeholder="admin"
               autoFocus
             />
@@ -52,16 +56,18 @@ export default function Auth({ onLogin }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
               placeholder="••••••••"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Войти
+            {loading ? 'Вход...' : 'Войти'}
           </button>
         </form>
 

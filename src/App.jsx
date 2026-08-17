@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
 import ClientSelector from './components/ClientSelector'
@@ -9,34 +9,48 @@ import UVPrintingCalculator from './components/UVPrintingCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
+import UserManagement from './components/UserManagement'
+import PricingManagement from './components/PricingManagement'
+import { PricingProvider } from './hooks/usePricing'
+import { OrdersProvider } from './hooks/useOrders'
+import { ClientsProvider } from './hooks/useClients'
+import { AuthProvider, useAuth } from './hooks/useAuth'
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('isAuthenticated') === 'true'
-  })
+// Компонент "Нет доступа"
+function AccessDenied({ message }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-12 text-center">
+      <div className="text-6xl mb-4">🚫</div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">Доступ запрещён</h2>
+      <p className="text-gray-600">{message || 'У вас недостаточно прав для просмотра этой страницы'}</p>
+    </div>
+  )
+}
+
+function AppContent() {
+  const { isAuthenticated, loading, logout, user, hasPermission } = useAuth()
   const [selectedView, setSelectedView] = useState('home')
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedClient, setSelectedClient] = useState(null)
   const [selectedOrderId, setSelectedOrderId] = useState(null)
 
-  useEffect(() => {
-    localStorage.setItem('isAuthenticated', isAuthenticated)
-  }, [isAuthenticated])
-
-  const handleLogin = (auth) => {
-    setIsAuthenticated(auth)
-    localStorage.setItem('isAuthenticated', 'true')
-  }
-
   const handleLogout = () => {
-    setIsAuthenticated(false)
+    logout()
     setSelectedCategory(null)
     setSelectedClient(null)
-    localStorage.removeItem('isAuthenticated')
+  }
+
+  // Показываем загрузку пока проверяем токен
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+        <div className="text-white text-xl">Загрузка...</div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {
-    return <Auth onLogin={handleLogin} />
+    return <Auth />
   }
 
   const handleSelectView = (view) => {
@@ -70,9 +84,29 @@ function App() {
               onBack={() => setSelectedOrderId(null)} 
             />
           ) : selectedView === 'orders' ? (
-            <OrdersList onViewOrder={setSelectedOrderId} />
+            hasPermission('viewOrders') ? (
+              <OrdersList onViewOrder={setSelectedOrderId} />
+            ) : (
+              <AccessDenied message="У вас нет прав для просмотра заказов" />
+            )
+          ) : selectedView === 'users' ? (
+            hasPermission('manageUsers') ? (
+              <UserManagement />
+            ) : (
+              <AccessDenied message="У вас нет прав для управления пользователями" />
+            )
+          ) : selectedView === 'pricing' ? (
+            hasPermission('editPricing') ? (
+              <PricingManagement />
+            ) : (
+              <AccessDenied message="У вас нет прав для редактирования прайсов" />
+            )
           ) : !selectedCategory ? (
-            <Dashboard />
+            hasPermission('viewDashboard') ? (
+              <Dashboard />
+            ) : (
+              <AccessDenied message="У вас нет прав для просмотра дашборда" />
+            )
           ) : (
             <div className="space-y-6">
               {/* Хлебные крошки */}
@@ -109,26 +143,46 @@ function App() {
               )}
 
               {/* Калькулятор в зависимости от категории */}
-              {selectedCategory.slug === 'business-cards' && (
-                <BusinessCardsCalculator client={selectedClient} />
-              )}
+              {!hasPermission('createOrders') ? (
+                <AccessDenied message="У вас нет прав для создания заказов" />
+              ) : (
+                <>
+                  {selectedCategory.slug === 'business-cards' && (
+                    <BusinessCardsCalculator client={selectedClient} />
+                  )}
 
-              {selectedCategory.slug === 'printing' && (
-                <PrintingCalculator client={selectedClient} />
-              )}
+                  {selectedCategory.slug === 'printing' && (
+                    <PrintingCalculator client={selectedClient} />
+                  )}
 
-              {selectedCategory.slug === 'uv-printing' && (
-                <UVPrintingCalculator client={selectedClient} />
-              )}
+                  {selectedCategory.slug === 'uv-printing' && (
+                    <UVPrintingCalculator client={selectedClient} />
+                  )}
 
-              {selectedCategory.slug === 'wide-format' && (
-                <WideFormatCalculator client={selectedClient} />
+                  {selectedCategory.slug === 'wide-format' && (
+                    <WideFormatCalculator client={selectedClient} />
+                  )}
+                </>
               )}
             </div>
           )}
         </div>
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <PricingProvider>
+        <ClientsProvider>
+          <OrdersProvider>
+            <AppContent />
+          </OrdersProvider>
+        </ClientsProvider>
+      </PricingProvider>
+    </AuthProvider>
   )
 }
 

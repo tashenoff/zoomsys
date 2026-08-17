@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react'
+import { useOrders } from '../hooks/useOrders'
+import { useAuth } from '../hooks/useAuth'
 
 export default function OrdersList({ onViewOrder }) {
-  const [orders, setOrders] = useState([])
+  const { hasPermission } = useAuth()
+  const { orders: rawOrders, loading, isOnline, deleteOrder: apiDeleteOrder } = useOrders()
   const [filteredOrders, setFilteredOrders] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all') // all, draft, in_progress, approved
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all') // all, not_paid, prepaid, paid
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
   const [groupByClient, setGroupByClient] = useState(false)
-  const [viewMode, setViewMode] = useState('list') // list, kanban
+  const [viewMode, setViewMode] = useState('list')
 
-  useEffect(() => {
-    loadOrders()
-  }, [])
+  // Сортировка: новые сверху
+  const orders = [...rawOrders].sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at))
 
   useEffect(() => {
     filterOrders()
   }, [orders, searchTerm, dateFrom, dateTo, statusFilter, paymentStatusFilter])
-
-  const loadOrders = () => {
-    const stored = localStorage.getItem('orders')
-    if (stored) {
-      const ordersData = JSON.parse(stored)
-      setOrders(ordersData.reverse()) // Новые сверху
-    }
-  }
 
   const filterOrders = () => {
     let filtered = [...orders]
@@ -66,11 +60,13 @@ export default function OrdersList({ onViewOrder }) {
     setFilteredOrders(filtered)
   }
 
-  const deleteOrder = (orderId) => {
+  const deleteOrder = async (orderId) => {
     if (confirm('Удалить этот заказ?')) {
-      const updated = orders.filter(o => o.id !== orderId)
-      localStorage.setItem('orders', JSON.stringify(updated))
-      setOrders(updated)
+      try {
+        await apiDeleteOrder(orderId)
+      } catch (err) {
+        alert('Ошибка удаления: ' + err.message)
+      }
     }
   }
 
@@ -244,18 +240,39 @@ export default function OrdersList({ onViewOrder }) {
         >
           Подробнее
         </button>
-        <button
-          onClick={() => deleteOrder(order.id)}
-          className="text-red-600 hover:text-red-800 text-sm font-medium"
-        >
-          🗑️ Удалить
-        </button>
+        {hasPermission('deleteOrders') && (
+          <button
+            onClick={() => deleteOrder(order.id)}
+            className="text-red-600 hover:text-red-800 text-sm font-medium"
+          >
+            🗑️ Удалить
+          </button>
+        )}
       </div>
     </div>
   )
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка заказов...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Индикатор offline */}
+      {!isOnline && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+          <span>📴</span>
+          <span className="text-yellow-700 text-sm">Работа в offline режиме</span>
+        </div>
+      )}
+
       {/* Заголовок */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold text-gray-800">Заказы</h1>

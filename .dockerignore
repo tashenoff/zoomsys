@@ -1,0 +1,11 @@
+# Игнорируем при сборке Docker образа
+node_modules
+server/node_modules
+dist
+.git
+.gitignore
+*.md
+.env
+.env.*
+!.env.example
+!.env.production.example

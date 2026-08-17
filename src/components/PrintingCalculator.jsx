@@ -1,12 +1,19 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
 export default function PrintingCalculator({ client: externalClient }) {
-  const [pricing, setPricing] = useState(pricingData.printing || [])
-  const [additionalOperations] = useState(pricingData.additionalOperations || {})
-  const [reorderOptions] = useState(pricingData.reorderOptions || [])
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  const pricingData = pricingContext || pricingDataFallback
+  
+  const pricing = pricingData.printing || []
+  const additionalOperations = pricingData.additionalOperations || {}
+  const reorderOptions = pricingData.reorderOptions || []
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -29,7 +36,7 @@ export default function PrintingCalculator({ client: externalClient }) {
   const [selectedReorder, setSelectedReorder] = useState('no')
   const [customNotes, setCustomNotes] = useState([])
 
-  const urgentSurcharge = pricingData.settings.urgentSurcharge
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   // Refs для автоскролла
   const productsRef = useRef(null)
@@ -46,9 +53,12 @@ export default function PrintingCalculator({ client: externalClient }) {
   // Получаем доступные допоперации для выбранной категории
   const availableOperations = useMemo(() => {
     if (!selectedCategory) return []
-    return Object.values(additionalOperations).filter(op => 
-      op.applicableTo.includes('all') || op.applicableTo.includes(selectedCategory)
-    )
+    if (!additionalOperations || typeof additionalOperations !== 'object') return []
+    return Object.values(additionalOperations).filter(op => {
+      if (!op || !op.applicableTo) return false
+      const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
+      return applicableTo.includes('all') || applicableTo.includes(selectedCategory)
+    })
   }, [selectedCategory, additionalOperations])
 
   // Функции для работы с кастомными услугами
@@ -285,41 +295,47 @@ export default function PrintingCalculator({ client: externalClient }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      type: 'printing',
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'printing',
+        type: 'printing',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      
+      // Сброс формы
+      setSelectedCategory(null)
+      setSearchProduct('')
+      setSelectedProduct(null)
+      setSelectedColorType(null)
+      setQuantity(100)
+      setSelectedServices([])
+      setIsUrgent(false)
+      setDiscount(0)
+      setNotes('')
+      setCalculation(null)
+      setOrderStatus('draft')
+      setSelectedReorder('no')
+      setCustomNotes([])
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    
-    // Сброс формы
-    setSelectedCategory(null)
-    setSearchProduct('')
-    setSelectedProduct(null)
-    setSelectedColorType(null)
-    setQuantity(100)
-    setSelectedServices([])
-    setIsUrgent(false)
-    setDiscount(0)
-    setNotes('')
-    setCalculation(null)
-    setOrderStatus('draft')
-    setSelectedReorder('no')
-    setCustomNotes([])
   }
 
   const canCalculate = selectedProduct && 
@@ -874,10 +890,10 @@ export default function PrintingCalculator({ client: externalClient }) {
 
           <button
             onClick={handleSaveOrder}
-            disabled={!client}
+            disabled={!client || savingOrder}
             className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg uppercase tracking-wide"
           >
-            💾 Сохранить заказ
+            {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
           </button>
 
           {!client && (

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useOrders } from '../hooks/useOrders'
 
 export default function Dashboard() {
-  const [orders, setOrders] = useState([])
+  const { orders, loading, isOnline } = useOrders()
   const [stats, setStats] = useState({
     total: 0,
     totalAmount: 0,
@@ -12,19 +13,8 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    loadOrders()
-  }, [])
-
-  useEffect(() => {
     calculateStats()
   }, [orders])
-
-  const loadOrders = () => {
-    const stored = localStorage.getItem('orders')
-    if (stored) {
-      setOrders(JSON.parse(stored))
-    }
-  }
 
   const calculateStats = () => {
     if (orders.length === 0) {
@@ -179,8 +169,27 @@ export default function Dashboard() {
     )
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка данных...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Индикатор offline */}
+      {!isOnline && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+          <span>📴</span>
+          <span className="text-yellow-700 text-sm">Работа в offline режиме. Данные будут синхронизированы при восстановлении связи.</span>
+        </div>
+      )}
+
       {/* Приветствие */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">👋 Добро пожаловать в Ra Zoom!</h1>

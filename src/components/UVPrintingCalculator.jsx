@@ -1,10 +1,17 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
 export default function UVPrintingCalculator({ client: externalClient }) {
-  const [pricing, setPricing] = useState(pricingData.uvPrinting || [])
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  const pricingData = pricingContext || pricingDataFallback
+  
+  const pricing = pricingData.uvPrinting || []
   
   const [client, setClient] = useState(externalClient)
   
@@ -22,7 +29,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
 
-  const urgentSurcharge = pricingData.settings.urgentSurcharge
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const productsRef = useRef(null)
   const sidesRef = useRef(null)
@@ -254,38 +261,44 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      type: 'uv-printing',
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'uv-printing',
+        type: 'uv-printing',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      
+      setSelectedCategory(null)
+      setSearchProduct('')
+      setSelectedProduct(null)
+      setSelectedSide(null)
+      setQuantity(100)
+      setArea(1)
+      setIsUrgent(false)
+      setDiscount(0)
+      setNotes('')
+      setCalculation(null)
+      setOrderStatus('draft')
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    
-    setSelectedCategory(null)
-    setSearchProduct('')
-    setSelectedProduct(null)
-    setSelectedSide(null)
-    setQuantity(100)
-    setArea(1)
-    setIsUrgent(false)
-    setDiscount(0)
-    setNotes('')
-    setCalculation(null)
-    setOrderStatus('draft')
   }
 
   const canCalculate = selectedProduct && 
@@ -762,10 +775,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
 
               <button
                 onClick={handleSaveOrder}
-                disabled={!client}
+                disabled={!client || savingOrder}
                 className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg uppercase tracking-wide"
               >
-                💾 Сохранить заказ
+                {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
               </button>
 
               {!client && (

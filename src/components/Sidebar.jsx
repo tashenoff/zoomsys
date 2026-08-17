@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import pricingData from '../data/pricing.json'
 import logo from '../logo.svg'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView }) {
+  const { user, hasPermission } = useAuth()
   const categories = pricingData.categories
   const [expandedCategory, setExpandedCategory] = useState(null)
 
@@ -38,17 +40,47 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           🏠 Главная
         </button>
 
-        {/* Заказы */}
-        <button
-          onClick={() => onSelectView('orders')}
-          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-            selectedView === 'orders'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          📋 Заказы
-        </button>
+        {/* Заказы - только с правом viewOrders */}
+        {hasPermission('viewOrders') && (
+          <button
+            onClick={() => onSelectView('orders')}
+            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+              selectedView === 'orders'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📋 Заказы
+          </button>
+        )}
+
+        {/* Управление пользователями - только с правом manageUsers */}
+        {hasPermission('manageUsers') && (
+          <button
+            onClick={() => onSelectView('users')}
+            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+              selectedView === 'users'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            👥 Пользователи
+          </button>
+        )}
+
+        {/* Управление прайсами - только с правом editPricing */}
+        {hasPermission('editPricing') && (
+          <button
+            onClick={() => onSelectView('pricing')}
+            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+              selectedView === 'pricing'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            💰 Прайсы
+          </button>
+        )}
 
         <div className="my-4 border-t border-gray-300"></div>
 
@@ -158,7 +190,11 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
       <div className="p-4 border-t border-gray-300">
         <div className="mb-3">
           <p className="text-xs text-gray-500">Пользователь</p>
-          <p className="text-sm font-semibold text-gray-800">Admin</p>
+          <p className="text-sm font-semibold text-gray-800">{user?.fullName || 'Пользователь'}</p>
+          <p className="text-xs text-gray-500">
+            {user?.role === 'admin' ? '👑 Администратор' : 
+             user?.role === 'manager' ? '📊 Менеджер' : '👤 Пользователь'}
+          </p>
         </div>
         <button
           onClick={onLogout}

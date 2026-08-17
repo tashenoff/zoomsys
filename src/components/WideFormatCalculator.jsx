@@ -1,13 +1,22 @@
 import { useState } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 
 export default function WideFormatCalculator({ client }) {
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  const pricingData = pricingContext || pricingDataFallback
+  const wideFormatPricing = pricingData.wideFormat || []
+  
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [selectedMaterial, setSelectedMaterial] = useState(pricingData.wideFormat[0])
+  const [selectedMaterial, setSelectedMaterial] = useState(wideFormatPricing[0] || null)
   const [calculation, setCalculation] = useState(null)
-  const [orderStatus, setOrderStatus] = useState('draft') // draft, in_progress, approved
+  const [orderStatus, setOrderStatus] = useState('draft')
+  const [savingOrder, setSavingOrder] = useState(false)
 
   const handleCalculate = (e) => {
     e.preventDefault()
@@ -38,31 +47,34 @@ export default function WideFormatCalculator({ client }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    // Сохраняем в localStorage
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'wide-format',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      setWidth('')
+      setHeight('')
+      setQuantity(1)
+      setCalculation(null)
+      setOrderStatus('draft')
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    setWidth('')
-    setHeight('')
-    setQuantity(1)
-    setCalculation(null)
-    setOrderStatus('draft')
   }
 
   return (
@@ -77,13 +89,13 @@ export default function WideFormatCalculator({ client }) {
               Материал
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {pricingData.wideFormat.map((material) => (
+              {wideFormatPricing.map((material) => (
                 <button
                   key={material.id}
                   type="button"
                   onClick={() => setSelectedMaterial(material)}
                   className={`p-4 rounded-lg border-2 transition ${
-                    selectedMaterial.id === material.id
+                    selectedMaterial?.id === material.id
                       ? 'bg-blue-50 border-blue-500'
                       : 'border-gray-300 hover:border-blue-300'
                   }`}
@@ -266,10 +278,10 @@ export default function WideFormatCalculator({ client }) {
 
           <button
             onClick={handleSaveOrder}
-            disabled={!client}
+            disabled={!client || savingOrder}
             className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
           >
-            Сохранить заказ
+            {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
           </button>
         </div>
       )}

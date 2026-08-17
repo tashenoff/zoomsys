@@ -15,8 +15,8 @@ async function seed() {
   console.log('🌱 Загружаем начальные данные...')
   
   try {
-    // Загружаем данные из pricing.json
-    const pricingPath = path.join(__dirname, '..', 'src', 'data', 'pricing.json')
+    // Загружаем данные из pricing.json (лежит в папке server)
+    const pricingPath = path.join(__dirname, 'pricing.json')
     const pricingData = JSON.parse(fs.readFileSync(pricingPath, 'utf8'))
 
     // Settings

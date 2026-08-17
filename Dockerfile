@@ -19,8 +19,8 @@ COPY . .
 # Устанавливаем зависимости сервера
 RUN cd server && npm ci
 
-# Собираем фронтенд
-RUN npm run build
+# Собираем фронтенд БЕЗ VITE_API_URL (чтобы использовался /api)
+RUN unset VITE_API_URL && npm run build
 
 # ============ Production образ ============
 FROM node:18-alpine

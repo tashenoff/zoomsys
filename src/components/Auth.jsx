@@ -76,11 +76,6 @@ export default function Auth() {
             {error}
           </div>
         )}
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Логин по умолчанию: <span className="font-semibold">admin</span></p>
-          <p>Пароль по умолчанию: <span className="font-semibold">admin</span></p>
-        </div>
       </div>
     </div>
   )

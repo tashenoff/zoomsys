@@ -7,16 +7,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Копируем package файлы
+# Копируем package файлы фронтенда
 COPY package*.json ./
-COPY server/package*.json ./server/
 
-# Устанавливаем ВСЕ зависимости (нужны для сборки)
+# Устанавливаем зависимости фронтенда
 RUN npm ci
-RUN cd server && npm ci
 
-# Копируем исходники
+# Копируем ВСЕ исходники
 COPY . .
+
+# Устанавливаем зависимости сервера
+RUN cd server && npm ci
 
 # Собираем фронтенд
 RUN npm run build
@@ -29,12 +30,10 @@ WORKDIR /app
 # Копируем собранный фронт
 COPY --from=builder /app/dist ./dist
 
-# Копируем сервер
+# Копируем сервер (исходники + node_modules)
 COPY --from=builder /app/server ./server
 
-# Переходим в server и ставим только prod зависимости
 WORKDIR /app/server
-RUN npm ci --only=production
 
 EXPOSE 3001
 

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+// В production используем относительный путь (фронт и API на одном сервере)
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const AuthContext = createContext(null)
 

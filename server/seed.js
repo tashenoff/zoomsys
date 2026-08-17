@@ -3,9 +3,12 @@ const { Pool } = require('pg')
 const fs = require('fs')
 const path = require('path')
 
+// SSL только если явно указано (для managed DB типа Heroku, Supabase)
+const useSSL = process.env.DATABASE_SSL === 'true'
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: useSSL ? { rejectUnauthorized: false } : false
 })
 
 async function seed() {

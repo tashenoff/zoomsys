@@ -77,11 +77,15 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
   const additionalOperations = pricingData.additionalOperations || {}
   const availableOperations = useMemo(() => {
     if (!additionalOperations || typeof additionalOperations !== 'object') return []
+    const seen = new Set()
     return Object.values(additionalOperations).filter(op => {
       const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
-      return applicableTo.includes('all')
-        || applicableTo.includes('state-symbols')
-        || applicableTo.includes(categorySlug)
+      const matches = applicableTo.includes('state-symbols') || applicableTo.includes(categorySlug)
+      if (!matches) return false
+      const key = String(op.id || op.name)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
     })
   }, [additionalOperations, categorySlug])
   const parsedItems = useMemo(

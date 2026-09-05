@@ -12,9 +12,14 @@ export default function WideFormatCalculator({ client }) {
 
   const availableOperations = useMemo(() => {
     if (!additionalOperations || typeof additionalOperations !== 'object') return []
+    const seen = new Set()
     return Object.values(additionalOperations).filter(op => {
       const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
-      return applicableTo.includes('all') || applicableTo.includes('wide-format')
+      if (!applicableTo.includes('wide-format')) return false
+      const key = String(op.id || op.name)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
     })
   }, [additionalOperations])
 
@@ -23,6 +28,8 @@ export default function WideFormatCalculator({ client }) {
   const [quantity, setQuantity] = useState(1)
   const [selectedMaterial, setSelectedMaterial] = useState(wideFormatPricing[0] || null)
   const [selectedServices, setSelectedServices] = useState([])
+  const [serviceQuantities, setServiceQuantities] = useState({})
+  const [selectedServiceOptions, setSelectedServiceOptions] = useState({})
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
@@ -47,10 +54,34 @@ export default function WideFormatCalculator({ client }) {
     selectedServices.forEach(id => {
       const op = availableOperations.find(o => o.id === id)
       if (!op) return
+      let add = 0
+      let detailName = op.name
       const price = Number(op.price) || 0
-      const add = op.unit === 'тг/шт' ? price * qty : price
+
+      // Операции с выбором опции (select)
+      if (op.type === 'select') {
+        const selectedOptionId = selectedServiceOptions[id]
+        if (selectedOptionId) {
+          const selectedOption = op.options.find(opt => opt.id === selectedOptionId)
+          if (selectedOption) {
+            add = Number(selectedOption.price) || 0
+            detailName = `${op.name}: ${selectedOption.name}`
+          }
+        }
+      }
+      // Операции с количеством (quantity)
+      else if (op.type === 'quantity') {
+        const opQty = serviceQuantities[id] || 1
+        add = price * opQty
+        detailName = `${op.name} (${opQty} шт)`
+      }
+      // Обычные операции
+      else {
+        add = op.unit === 'тг/шт' ? price * qty : price
+      }
+
       extrasTotal += add
-      extras.push({ name: op.name, price: add })
+      extras.push({ name: detailName, price: add })
     })
     const total = totalPerItem * qty + extrasTotal
 
@@ -89,6 +120,9 @@ export default function WideFormatCalculator({ client }) {
       setWidth('')
       setHeight('')
       setQuantity(1)
+      setSelectedServices([])
+      setServiceQuantities({})
+      setSelectedServiceOptions({})
       setCalculation(null)
       setOrderStatus('draft')
     } catch (err) {
@@ -203,21 +237,104 @@ export default function WideFormatCalculator({ client }) {
           {availableOperations.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">Доп. операции</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {availableOperations.map((op) => (
-                  <label key={op.id} className="flex items-center gap-2 p-3 border rounded-lg">
-                    <input
-                      type="checkbox"
-                      checked={selectedServices.includes(op.id)}
-                      onChange={(e) => {
-                        setSelectedServices(e.target.checked
-                          ? [...selectedServices, op.id]
-                          : selectedServices.filter(id => id !== op.id))
-                      }}
-                    />
-                    <span>{op.name}{op.price ? ` (${op.price} ${op.unit || 'тг'})` : ''}</span>
-                  </label>
-                ))}
+              <div className="space-y-3">
+                {availableOperations.map((op) => {
+                  const isSelected = selectedServices.includes(op.id)
+                  return (
+                    <div
+                      key={op.id}
+                      className={`p-4 border-2 rounded-lg transition ${
+                        isSelected
+                          ? 'bg-green-50 border-green-500 shadow-md'
+                          : 'bg-white border-green-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedServices([...selectedServices, op.id])
+                            } else {
+                              setSelectedServices(selectedServices.filter(id => id !== op.id))
+                              // Сбрасываем значения при снятии галочки
+                              if (op.type === 'select') {
+                                const newOptions = { ...selectedServiceOptions }
+                                delete newOptions[op.id]
+                                setSelectedServiceOptions(newOptions)
+                              }
+                              if (op.type === 'quantity') {
+                                const newQty = { ...serviceQuantities }
+                                delete newQty[op.id]
+                                setServiceQuantities(newQty)
+                              }
+                            }
+                          }}
+                          className="mt-1 w-5 h-5 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium block">{op.name}</span>
+                            {isSelected && (
+                              <span className="text-green-600 text-xl">✓</span>
+                            )}
+                          </div>
+                          {op.description && (
+                            <p className="text-xs text-gray-600 mb-2">{op.description}</p>
+                          )}
+
+                          {/* Для обычных операций показываем цену */}  
+                          {!op.type && op.price && (
+                            <p className="text-sm text-gray-500">
+                              {op.price} {op.unit || 'тг'}
+                              {op.unit === 'тг/шт' ? ` × ${quantity} шт = ${op.price * quantity} тг` : ''}
+                            </p>
+                          )}
+
+                          {/* Выпадающий список для type='select' */}
+                          {op.type === 'select' && isSelected && (
+                            <div className="mt-3">
+                              <select
+                                value={selectedServiceOptions[op.id] || ''}
+                                onChange={(e) => setSelectedServiceOptions({
+                                  ...selectedServiceOptions,
+                                  [op.id]: e.target.value
+                                })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                              >
+                                <option value="">Выберите опцию</option>
+                                {(op.options || []).map(opt => (
+                                  <option key={opt.id} value={opt.id}>
+                                    {opt.name} — {opt.price} тг
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {/* Поле ввода количества для type='quantity' */}
+                          {op.type === 'quantity' && isSelected && (
+                            <div className="mt-3">
+                              <label className="text-xs text-gray-600 mb-1 block">Количество:</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={serviceQuantities[op.id] || ''}
+                                onChange={(e) => setServiceQuantities({
+                                  ...serviceQuantities,
+                                  [op.id]: parseInt(e.target.value) || 0
+                                })}
+                                className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                placeholder="1"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}

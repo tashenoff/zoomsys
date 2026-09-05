@@ -41,6 +41,12 @@ async function migrate() {
       created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
     console.log('✅ wide_format_pricing')
 
+    await pool.query(`CREATE TABLE IF NOT EXISTS state_symbols_pricing (
+      id SERIAL PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL, option TEXT,
+      price NUMERIC(12,2), is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ state_symbols_pricing')
+
     await pool.query(`CREATE TABLE IF NOT EXISTS additional_services (
       id SERIAL PRIMARY KEY, name TEXT NOT NULL, price NUMERIC(10,2), unit TEXT, description TEXT,
       is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,

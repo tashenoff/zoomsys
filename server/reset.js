@@ -15,6 +15,7 @@ async function reset() {
         printing_pricing, 
         uv_printing_pricing, 
         wide_format_pricing, 
+        state_symbols_pricing,
         additional_services, 
         additional_operations,
         reorder_options, 

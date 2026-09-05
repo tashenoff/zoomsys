@@ -1,19 +1,28 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 
 export default function WideFormatCalculator({ client }) {
-  // Получаем данные из контекста прайсов и заказов
   const { pricing: pricingContext } = usePricing()
   const { createOrder, isOnline } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   const wideFormatPricing = pricingData.wideFormat || []
-  
+  const additionalOperations = pricingData.additionalOperations || {}
+
+  const availableOperations = useMemo(() => {
+    if (!additionalOperations || typeof additionalOperations !== 'object') return []
+    return Object.values(additionalOperations).filter(op => {
+      const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
+      return applicableTo.includes('all') || applicableTo.includes('wide-format')
+    })
+  }, [additionalOperations])
+
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [selectedMaterial, setSelectedMaterial] = useState(wideFormatPricing[0] || null)
+  const [selectedServices, setSelectedServices] = useState([])
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
@@ -33,7 +42,17 @@ export default function WideFormatCalculator({ client }) {
     const area = w * h
     const pricePerSqM = selectedMaterial.pricePerSqm
     const totalPerItem = area * pricePerSqM
-    const total = totalPerItem * qty
+    let extrasTotal = 0
+    const extras = []
+    selectedServices.forEach(id => {
+      const op = availableOperations.find(o => o.id === id)
+      if (!op) return
+      const price = Number(op.price) || 0
+      const add = op.unit === 'тг/шт' ? price * qty : price
+      extrasTotal += add
+      extras.push({ name: op.name, price: add })
+    })
+    const total = totalPerItem * qty + extrasTotal
 
     setCalculation({
       width: w,
@@ -43,6 +62,8 @@ export default function WideFormatCalculator({ client }) {
       materialName: selectedMaterial.name,
       pricePerSqM,
       totalPerItem: totalPerItem.toFixed(2),
+      extras,
+      extrasTotal,
       total: total.toFixed(2)
     })
   }
@@ -179,6 +200,28 @@ export default function WideFormatCalculator({ client }) {
             />
           </div>
 
+          {availableOperations.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Доп. операции</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {availableOperations.map((op) => (
+                  <label key={op.id} className="flex items-center gap-2 p-3 border rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={selectedServices.includes(op.id)}
+                      onChange={(e) => {
+                        setSelectedServices(e.target.checked
+                          ? [...selectedServices, op.id]
+                          : selectedServices.filter(id => id !== op.id))
+                      }}
+                    />
+                    <span>{op.name}{op.price ? ` (${op.price} ${op.unit || 'тг'})` : ''}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
@@ -205,6 +248,12 @@ export default function WideFormatCalculator({ client }) {
                 {calculation.width} × {calculation.height} м
               </span>
             </div>
+            {(calculation.extras || []).map((ex) => (
+              <div key={ex.name} className="flex justify-between">
+                <span className="text-gray-600">{ex.name}:</span>
+                <span>{Number(ex.price).toLocaleString('ru-RU')} тг</span>
+              </div>
+            ))}
 
             <div className="flex justify-between">
               <span className="text-gray-600">Площадь:</span>

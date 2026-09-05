@@ -50,6 +50,13 @@ export function PricingProvider({ children }) {
           name: item.name,
           pricePerSqm: parseFloat(item.price_per_sqm)
         })),
+        stateSymbols: (data.stateSymbols || []).map(item => ({
+          id: String(item.id),
+          category: item.category,
+          name: item.name,
+          option: item.option,
+          price: item.price == null ? null : parseFloat(item.price)
+        })),
         additionalServices: (data.additionalServices || []).map(item => ({
           id: String(item.id),
           name: item.name,

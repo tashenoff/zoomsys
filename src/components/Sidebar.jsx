@@ -137,6 +137,58 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           return null
         })}
 
+        {/* БЛОК: Государственная символика */}
+        {categories.map((category) => {
+          if (category.slug === 'state-symbols' && category.subcategories) {
+            const isExpanded = expandedCategory === category.id
+            const hasSelectedSubcategory = category.subcategories.some(sub => selectedCategory?.id === sub.id)
+
+            return (
+              <div key={category.id}>
+                <button
+                  onClick={() => handleCategoryClick(category)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
+                    hasSelectedSubcategory
+                      ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>🏳️ {category.name}</span>
+                  <span>{isExpanded ? '▾' : '▸'}</span>
+                </button>
+                {isExpanded && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {category.subcategories.map((subcategory) => {
+                      let icon = '📋'
+                      if (subcategory.slug === 'coat-of-arms') icon = '🛡️'
+                      if (subcategory.slug === 'flags-rk') icon = '🚩'
+                      if (subcategory.slug === 'flagpoles') icon = '🎏'
+                      if (subcategory.slug === 'signs') icon = '🪧'
+                      if (subcategory.slug === 'stands') icon = '📰'
+                      if (subcategory.slug === 'president-portrait') icon = '🖼️'
+
+                      return (
+                        <button
+                          key={subcategory.id}
+                          onClick={() => onSelectCategory(subcategory)}
+                          className={`w-full text-left px-4 py-2 rounded-lg transition text-sm ${
+                            selectedCategory?.id === subcategory.id
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {icon} {subcategory.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          return null
+        })}
+
         {/* БЛОК: Индивидуальный расчет */}
         <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
           🛠️ Индивидуальный расчет

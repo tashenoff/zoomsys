@@ -10,7 +10,7 @@ export default function PricingManagement() {
   const [saving, setSaving] = useState(false)
 
   // Локальное состояние для отображения (используем данные из контекста)
-  const localPricing = pricing || { businessCards: [], printing: [], uvPrinting: [], wideFormat: [], additionalServices: [], additionalOperations: {} }
+  const localPricing = pricing || { businessCards: [], printing: [], uvPrinting: [], wideFormat: [], stateSymbols: [], additionalServices: [], additionalOperations: {} }
   
   // Преобразуем additionalOperations объект в массив для отображения
   const additionalOperationsList = localPricing.additionalOperations 
@@ -24,6 +24,7 @@ export default function PricingManagement() {
     try {
       const apiCategory = category === 'businessCards' ? 'business-cards' : 
                           category === 'wideFormat' ? 'wide-format' : 
+                          category === 'stateSymbols' ? 'state-symbols' :
                           category === 'additionalServices' ? 'services' :
                           category === 'additionalOperations' ? 'operations' :
                           category === 'uvPrinting' ? 'uv-printing' : category
@@ -42,6 +43,7 @@ export default function PricingManagement() {
     { id: 'printing', label: '📄 Полиграфия', count: localPricing.printing?.length || 0 },
     { id: 'uvPrinting', label: '🖨️ УФ печать', count: localPricing.uvPrinting?.length || 0 },
     { id: 'wideFormat', label: '🖼️ Широкоформат', count: localPricing.wideFormat?.length || 0 },
+    { id: 'stateSymbols', label: '🇰🇿 Гос. символика', count: localPricing.stateSymbols?.length || 0 },
     { id: 'additionalOperations', label: '⚙️ Доп. операции', count: additionalOperationsList.length },
     { id: 'additionalServices', label: '➕ Доп. услуги', count: localPricing.additionalServices?.length || 0 }
   ]
@@ -105,14 +107,14 @@ export default function PricingManagement() {
 
       {/* Табы */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="flex border-b border-gray-200 overflow-x-auto">
+        <div className="flex flex-wrap border-b border-gray-200">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 font-medium whitespace-nowrap transition ${
+              className={`px-5 py-3 font-medium transition ${
                 activeTab === tab.id
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
@@ -167,6 +169,17 @@ export default function PricingManagement() {
             />
           )}
 
+          {activeTab === 'stateSymbols' && (
+            <StateSymbolsTable
+              items={localPricing.stateSymbols}
+              onEdit={(item) => {
+                setEditingItem({ ...item, pricingTab: 'stateSymbols' })
+                setIsModalOpen(true)
+              }}
+              onDelete={(id) => handleDelete('stateSymbols', id)}
+            />
+          )}
+
           {activeTab === 'additionalOperations' && (
             <AdditionalOperationsTable
               items={additionalOperationsList}
@@ -201,13 +214,14 @@ export default function PricingManagement() {
             setEditingItem(null)
           }}
           onSave={async (updatedItem) => {
-            const category = editingItem?.category || activeTab
+            const category = editingItem?.pricingTab || activeTab
             setSaving(true)
             
             try {
               // Определяем API endpoint
               const apiCategory = category === 'businessCards' ? 'business-cards' : 
                                   category === 'wideFormat' ? 'wide-format' : 
+                                  category === 'stateSymbols' ? 'state-symbols' :
                                   category === 'additionalServices' ? 'services' :
                                   category === 'additionalOperations' ? 'operations' :
                                   category === 'uvPrinting' ? 'uv-printing' : category
@@ -220,6 +234,16 @@ export default function PricingManagement() {
                 apiData = { category: updatedItem.category, name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {} }
               } else if (category === 'wideFormat') {
                 apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm }
+              } else if (category === 'stateSymbols') {
+                const productCategory = ['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(updatedItem.category)
+                  ? updatedItem.category
+                  : (editingItem?.category && editingItem.category !== 'stateSymbols' ? editingItem.category : 'coat-of-arms')
+                apiData = {
+                  category: productCategory,
+                  name: updatedItem.name,
+                  option: updatedItem.option,
+                  price: updatedItem.price === '' || updatedItem.price == null ? null : updatedItem.price
+                }
               } else if (category === 'additionalServices') {
                 apiData = { name: updatedItem.name, price: updatedItem.price, unit: updatedItem.unit, description: updatedItem.description }
               } else if (category === 'additionalOperations') {
@@ -267,9 +291,53 @@ export default function PricingManagement() {
   )
 }
 
+const PRINTING_CATEGORY_LABELS = {
+  flyers: 'Флаера, листовки, афиши',
+  booklets: 'Буклеты',
+  certificates: 'Дипломы, грамоты, сертификаты',
+  notebooks: 'Блокноты'
+}
+
+const UV_CATEGORY_LABELS = {
+  pens: 'Ручки',
+  cards: 'Карты / визитки',
+  promotional: 'Промо-продукция',
+  notebooks: 'Блокноты / ежедневники',
+  other: 'Прочие материалы'
+}
+
+function groupByKey(items, keyFn) {
+  const map = new Map()
+  for (const item of items || []) {
+    const key = keyFn(item) || 'Прочее'
+    if (!map.has(key)) map.set(key, [])
+    map.get(key).push(item)
+  }
+  return [...map.entries()]
+}
+
+function PricingGroups({ items, getGroup, children }) {
+  const groups = groupByKey(items, getGroup)
+  if (groups.length <= 1) return children(items || [])
+  return (
+    <div className="space-y-8">
+      {groups.map(([label, groupItems]) => (
+        <div key={label}>
+          <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+            {label} <span className="text-sm font-normal text-gray-500">({groupItems.length})</span>
+          </h3>
+          {children(groupItems)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Таблица для визиток
 function BusinessCardsTable({ items, onEdit, onDelete }) {
   return (
+    <PricingGroups items={items} getGroup={(i) => i.name}>
+      {(groupItems) => (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -285,7 +353,7 @@ function BusinessCardsTable({ items, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {items?.map((item, index) => (
+          {groupItems.map((item, index) => (
             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-700">
@@ -317,12 +385,16 @@ function BusinessCardsTable({ items, onEdit, onDelete }) {
         </tbody>
       </table>
     </div>
+      )}
+    </PricingGroups>
   )
 }
 
 // Таблица для полиграфии
 function PrintingTable({ items, onEdit, onDelete }) {
   return (
+    <PricingGroups items={items} getGroup={(i) => PRINTING_CATEGORY_LABELS[i.category] || i.category || i.name}>
+      {(groupItems) => (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -338,7 +410,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {items?.map((item, index) => (
+          {groupItems.map((item, index) => (
             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm">
@@ -348,7 +420,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
               </td>
               <td className="px-4 py-3 text-sm">
                 <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                  {item.category}
+                  {PRINTING_CATEGORY_LABELS[item.category] || item.category}
                 </span>
               </td>
               <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices?.['50'] || item.prices?.upTo49 || '-'}</td>
@@ -364,12 +436,16 @@ function PrintingTable({ items, onEdit, onDelete }) {
         </tbody>
       </table>
     </div>
+      )}
+    </PricingGroups>
   )
 }
 
 // Таблица для УФ печати
 function UVPrintingTable({ items, onEdit, onDelete }) {
   return (
+    <PricingGroups items={items} getGroup={(i) => UV_CATEGORY_LABELS[i.category] || i.category || 'Прочее'}>
+      {(groupItems) => (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -381,14 +457,14 @@ function UVPrintingTable({ items, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {items?.map((item, index) => (
+          {groupItems.map((item, index) => (
             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
               </td>
               <td className="px-4 py-3 text-sm">
-                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">{item.category}</span>
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">{UV_CATEGORY_LABELS[item.category] || item.category}</span>
               </td>
               <td className="px-4 py-3 text-sm text-gray-600">
                 {item.sides?.map((side, i) => (
@@ -410,6 +486,8 @@ function UVPrintingTable({ items, onEdit, onDelete }) {
         </tbody>
       </table>
     </div>
+      )}
+    </PricingGroups>
   )
 }
 
@@ -454,9 +532,69 @@ function WideFormatTable({ items, onEdit, onDelete }) {
   )
 }
 
+const STATE_SYMBOL_CATEGORIES = [
+  { id: 'coat-of-arms', label: 'Герб' },
+  { id: 'flags-rk', label: 'Флаги РК' },
+  { id: 'flagpoles', label: 'Флагштоки' },
+  { id: 'signs', label: 'Вывески' },
+  { id: 'stands', label: 'Стенды' },
+  { id: 'president-portrait', label: 'Портрет президента' }
+]
+
+function StateSymbolsTable({ items, onEdit, onDelete }) {
+  const grouped = STATE_SYMBOL_CATEGORIES.map((cat) => ({
+    ...cat,
+    items: (items || []).filter(i => i.category === cat.id)
+  })).filter(g => g.items.length > 0)
+
+  const extras = (items || []).filter(i => !STATE_SYMBOL_CATEGORIES.some(c => c.id === i.category))
+  if (extras.length) grouped.push({ id: 'other', label: 'Прочее', items: extras })
+
+  return (
+    <div className="space-y-8">
+      {grouped.map((group) => (
+        <div key={group.id}>
+          <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+            {group.label} <span className="text-sm font-normal text-gray-500">({group.items.length})</span>
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Название</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Опция</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Цена</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.items.map((item, index) => (
+                  <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{item.option}</td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
+                      {item.price == null ? 'по запросу' : `${Number(item.price).toLocaleString('ru-RU')} ₸`}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button>
+                      <button onClick={() => onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Таблица для доп. операций (ламинация, скругление и т.д.)
 function AdditionalOperationsTable({ items, onEdit, onDelete }) {
   return (
+    <PricingGroups items={items} getGroup={(i) => i.type === 'select' ? 'Выбор опции' : i.type === 'quantity' ? 'С количеством' : 'Фикс. цена'}>
+      {(groupItems) => (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -470,7 +608,7 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {items?.map((item, index) => (
+          {groupItems.map((item, index) => (
             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900 font-medium">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
@@ -506,13 +644,15 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
           ))}
         </tbody>
       </table>
-      {(!items || items.length === 0) && (
+      {(!groupItems || groupItems.length === 0) && (
         <div className="text-center py-8 text-gray-500">
           <p>Нет дополнительных операций</p>
           <p className="text-sm mt-2">Операции загружаются из pricing.json при seed базы данных</p>
         </div>
       )}
     </div>
+      )}
+    </PricingGroups>
   )
 }
 
@@ -560,10 +700,24 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
 // Форма редактирования операций
 function OperationEditForm({ formData, setFormData }) {
   const types = [
-    { id: 'all', name: 'Все типы' }, { id: 'business-cards', name: 'Визитки' },
-    { id: 'badges', name: 'Бейджи' }, { id: 'discount-cards', name: 'Дисконтные карты' },
-    { id: 'invitations', name: 'Пригласительные' }, { id: 'certificates', name: 'Сертификаты' },
-    { id: 'flyers', name: 'Флаеры' }, { id: 'booklets', name: 'Буклеты' }
+    { id: 'all', name: 'Все типы' },
+    { id: 'business-cards', name: 'Визитки' },
+    { id: 'badges', name: 'Бейджи' },
+    { id: 'discount-cards', name: 'Дисконтные карты' },
+    { id: 'invitations', name: 'Пригласительные' },
+    { id: 'certificates', name: 'Сертификаты' },
+    { id: 'flyers', name: 'Флаеры' },
+    { id: 'booklets', name: 'Буклеты' },
+    { id: 'notebooks', name: 'Блокноты' },
+    { id: 'uv-printing', name: 'УФ печать' },
+    { id: 'wide-format', name: 'Широкоформат' },
+    { id: 'state-symbols', name: 'Гос. символика (все)' },
+    { id: 'coat-of-arms', name: 'Герб' },
+    { id: 'flags-rk', name: 'Флаги РК' },
+    { id: 'flagpoles', name: 'Флагштоки' },
+    { id: 'signs', name: 'Вывески' },
+    { id: 'stands', name: 'Стенды' },
+    { id: 'president-portrait', name: 'Портрет президента' }
   ]
   return (
     <>
@@ -654,6 +808,9 @@ function EditModal({ item, category, onClose, onSave }) {
     }
     if (category === 'wideFormat') {
       return { name: '', pricePerSqm: 0 }
+    }
+    if (category === 'stateSymbols') {
+      return { category: 'coat-of-arms', name: '', option: '', price: null }
     }
     if (category === 'additionalServices') {
       return { name: '', price: 0, unit: '', description: '' }
@@ -932,6 +1089,43 @@ function EditModal({ item, category, onClose, onSave }) {
                   placeholder="350"
                 />
               </div>
+            )}
+
+            {category === 'stateSymbols' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Подкатегория</label>
+                  <select
+                    value={formData.category || 'coat-of-arms'}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    {STATE_SYMBOL_CATEGORIES.map((c) => (
+                      <option key={c.id} value={c.id}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Опция (исполнение / размер / материал)</label>
+                  <input
+                    type="text"
+                    value={formData.option || ''}
+                    onChange={(e) => setFormData({ ...formData, option: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="уличное исполнение"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Цена (пусто = по запросу)</label>
+                  <input
+                    type="number"
+                    value={formData.price ?? ''}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? null : parseFloat(e.target.value) })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="350000"
+                  />
+                </div>
+              </>
             )}
 
             {/* Доп. услуги */}

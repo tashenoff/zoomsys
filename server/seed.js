@@ -82,6 +82,18 @@ async function seed() {
       console.log(`✅ Широкоформат: ${pricingData.wideFormat.length} позиций`)
     }
 
+    // State Symbols
+    if (pricingData.stateSymbols) {
+      for (let i = 0; i < pricingData.stateSymbols.length; i++) {
+        const item = pricingData.stateSymbols[i]
+        await pool.query(
+          'INSERT INTO state_symbols_pricing (category, name, option, price, sort_order) VALUES ($1, $2, $3, $4, $5)',
+          [item.category, item.name, item.option || null, item.price, i]
+        )
+      }
+      console.log(`✅ Гос. символика: ${pricingData.stateSymbols.length} позиций`)
+    }
+
     // Additional Services
     if (pricingData.additionalServices) {
       for (let i = 0; i < pricingData.additionalServices.length; i++) {

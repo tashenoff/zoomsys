@@ -6,11 +6,12 @@ module.exports = (pool) => {
   // Получить все прайсы
   router.get('/', async (req, res) => {
     try {
-      const [bc, printing, uv, wide, services, operations, settings, reorder] = await Promise.all([
+      const [bc, printing, uv, wide, state, services, operations, settings, reorder] = await Promise.all([
         pool.query('SELECT * FROM business_cards_pricing WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM printing_pricing WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM uv_printing_pricing WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM wide_format_pricing WHERE is_active=true ORDER BY sort_order,name'),
+        pool.query('SELECT * FROM state_symbols_pricing WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM additional_services WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM additional_operations WHERE is_active=true ORDER BY sort_order,name'),
         pool.query('SELECT * FROM pricing_settings LIMIT 1'),
@@ -19,7 +20,7 @@ module.exports = (pool) => {
       res.json({
         settings: settings.rows[0] || { urgent_surcharge: 30 },
         businessCards: bc.rows, printing: printing.rows, uvPrinting: uv.rows,
-        wideFormat: wide.rows, additionalServices: services.rows,
+        wideFormat: wide.rows, stateSymbols: state.rows, additionalServices: services.rows,
         additionalOperations: operations.rows, reorderOptions: reorder.rows
       })
     } catch (e) { console.error(e); res.status(500).json({ error: 'Ошибка загрузки' }) }
@@ -102,6 +103,26 @@ module.exports = (pool) => {
   })
   router.delete('/uv-printing/:id', async (req, res) => {
     try { await pool.query('UPDATE uv_printing_pricing SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }
+    catch(e) { res.status(500).json({error:'Ошибка'}) }
+  })
+
+  // STATE SYMBOLS CRUD
+  router.get('/state-symbols', async (req, res) => {
+    try { res.json((await pool.query('SELECT * FROM state_symbols_pricing WHERE is_active=true ORDER BY sort_order,name')).rows) }
+    catch(e) { res.status(500).json({error:'Ошибка'}) }
+  })
+  router.post('/state-symbols', async (req, res) => {
+    const { category, name, option, price, sort_order } = req.body
+    try { res.json((await pool.query('INSERT INTO state_symbols_pricing (category,name,option,price,sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [category, name, option, price, sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+  })
+  router.put('/state-symbols/:id', async (req, res) => {
+    const { category, name, option, price, is_active, sort_order } = req.body
+    try { res.json((await pool.query('UPDATE state_symbols_pricing SET category=$1,name=$2,option=$3,price=$4,is_active=$5,sort_order=$6,updated_at=NOW() WHERE id=$7 RETURNING *',
+      [category, name, option, price, is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+  })
+  router.delete('/state-symbols/:id', async (req, res) => {
+    try { await pool.query('UPDATE state_symbols_pricing SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
 

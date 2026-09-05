@@ -6,6 +6,7 @@ import BusinessCardsCalculator from './components/BusinessCardsCalculator'
 import PrintingCalculator from './components/PrintingCalculator'
 import WideFormatCalculator from './components/WideFormatCalculator'
 import UVPrintingCalculator from './components/UVPrintingCalculator'
+import StateSymbolsCalculator from './components/StateSymbolsCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
@@ -161,6 +162,10 @@ function AppContent() {
 
                   {selectedCategory.slug === 'wide-format' && (
                     <WideFormatCalculator client={selectedClient} />
+                  )}
+
+                  {['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(selectedCategory.slug) && (
+                    <StateSymbolsCalculator client={selectedClient} categorySlug={selectedCategory.slug} />
                   )}
                 </>
               )}

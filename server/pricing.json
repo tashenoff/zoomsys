@@ -40,6 +40,50 @@
       "name": "Широкоформатная печать",
       "slug": "wide-format",
       "description": "Баннеры, стенды, плакаты большого формата"
+    },
+    {
+      "id": "3",
+      "name": "Государственная символика",
+      "slug": "state-symbols",
+      "description": "Герб, флаги РК, флагштоки, вывески, стенды, портрет Президента",
+      "subcategories": [
+        {
+          "id": "3-1",
+          "name": "Государственный герб",
+          "slug": "coat-of-arms",
+          "description": "Государственный герб Республики Казахстан"
+        },
+        {
+          "id": "3-2",
+          "name": "Флаги РК",
+          "slug": "flags-rk",
+          "description": "Государственные флаги Республики Казахстан"
+        },
+        {
+          "id": "3-3",
+          "name": "Флагштоки",
+          "slug": "flagpoles",
+          "description": "Флагштоки для государственной символики"
+        },
+        {
+          "id": "3-4",
+          "name": "Вывески",
+          "slug": "signs",
+          "description": "Вывески государственной символики"
+        },
+        {
+          "id": "3-5",
+          "name": "Стенды",
+          "slug": "stands",
+          "description": "Информационные стенды государственной символики"
+        },
+        {
+          "id": "3-6",
+          "name": "Портрет Президента",
+          "slug": "president-portrait",
+          "description": "Портрет Президента Республики Казахстан"
+        }
+      ]
     }
   ],
   "businessCards": [
@@ -482,41 +526,107 @@
       "name": "Ламинация пакетная",
       "type": "select",
       "options": [
-        { "id": "gloss-a4", "name": "Глянец А4", "price": 450, "unit": "тг" },
-        { "id": "matte-a4", "name": "Матовая А4", "price": 300, "unit": "тг" },
-        { "id": "gloss-a3", "name": "Глянец А3", "price": 250, "unit": "тг" },
-        { "id": "matte-a3", "name": "Матовая А3", "price": 600, "unit": "тг" }
+        {
+          "id": "gloss-a4",
+          "name": "Глянец А4",
+          "price": 450,
+          "unit": "тг"
+        },
+        {
+          "id": "matte-a4",
+          "name": "Матовая А4",
+          "price": 300,
+          "unit": "тг"
+        },
+        {
+          "id": "gloss-a3",
+          "name": "Глянец А3",
+          "price": 250,
+          "unit": "тг"
+        },
+        {
+          "id": "matte-a3",
+          "name": "Матовая А3",
+          "price": 600,
+          "unit": "тг"
+        }
       ],
-      "applicableTo": ["business-cards", "badges", "discount-cards", "invitations", "certificates", "custom-cards"]
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards",
+        "invitations",
+        "certificates",
+        "custom-cards"
+      ]
     },
     "prepress": {
       "id": "prepress",
       "name": "Препрес",
       "type": "select",
       "options": [
-        { "id": "leaflet-gloss-a3-1", "name": "Листовая Глянец А3, 1 сторона", "price": 180, "unit": "тг" },
-        { "id": "leaflet-gloss-a4-1", "name": "Листовая Глянец А4, 1 сторона", "price": 90, "unit": "тг" },
-        { "id": "leaflet-shine-a3-1", "name": "Листовая Шайн А3, 1 сторона", "price": 180, "unit": "тг" },
-        { "id": "leaflet-shine-a4-1", "name": "Листовая Шайн А4, 1 сторона", "price": 90, "unit": "тг" }
+        {
+          "id": "leaflet-gloss-a3-1",
+          "name": "Листовая Глянец А3, 1 сторона",
+          "price": 180,
+          "unit": "тг"
+        },
+        {
+          "id": "leaflet-gloss-a4-1",
+          "name": "Листовая Глянец А4, 1 сторона",
+          "price": 90,
+          "unit": "тг"
+        },
+        {
+          "id": "leaflet-shine-a3-1",
+          "name": "Листовая Шайн А3, 1 сторона",
+          "price": 180,
+          "unit": "тг"
+        },
+        {
+          "id": "leaflet-shine-a4-1",
+          "name": "Листовая Шайн А4, 1 сторона",
+          "price": 90,
+          "unit": "тг"
+        }
       ],
-      "applicableTo": ["all"]
+      "applicableTo": [
+        "all"
+      ]
     },
     "foiling": {
       "id": "foiling",
       "name": "Фольгирование",
       "type": "select",
       "options": [
-        { "id": "foil-a3-1", "name": "А3 лист, 1 сторона", "price": 250, "unit": "тг" },
-        { "id": "foil-a4-1", "name": "А4 лист, 1 сторона", "price": 150, "unit": "тг" }
+        {
+          "id": "foil-a3-1",
+          "name": "А3 лист, 1 сторона",
+          "price": 250,
+          "unit": "тг"
+        },
+        {
+          "id": "foil-a4-1",
+          "name": "А4 лист, 1 сторона",
+          "price": 150,
+          "unit": "тг"
+        }
       ],
-      "applicableTo": ["business-cards", "invitations", "certificates", "flyers"]
+      "applicableTo": [
+        "business-cards",
+        "invitations",
+        "certificates",
+        "flyers"
+      ]
     },
     "cutting": {
       "id": "cutting",
       "name": "Обрезка",
       "price": 5,
       "unit": "тг/шт",
-      "applicableTo": ["all"]
+      "applicableTo": [
+        "all"
+      ]
     },
     "cornerRounding": {
       "id": "cornerRounding",
@@ -525,21 +635,35 @@
       "unit": "тг/угол",
       "defaultQuantity": 4,
       "description": "Визитка 1×4 угла",
-      "applicableTo": ["business-cards", "badges", "discount-cards"]
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards"
+      ]
     },
     "roundHole": {
       "id": "roundHole",
       "name": "Отверстие круглое",
       "price": 5,
       "unit": "тг/шт",
-      "applicableTo": ["business-cards", "badges", "discount-cards", "certificates"]
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards",
+        "certificates"
+      ]
     },
     "polyGrommet": {
       "id": "polyGrommet",
       "name": "Люверс полиграфический",
       "price": 70,
       "unit": "тг/шт",
-      "applicableTo": ["business-cards", "badges", "discount-cards", "certificates"]
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards",
+        "certificates"
+      ]
     },
     "tags": {
       "id": "tags",
@@ -548,49 +672,68 @@
       "price": 0,
       "unit": "тг/шт",
       "description": "Считается отдельно, как доп опция",
-      "applicableTo": ["business-cards"]
+      "applicableTo": [
+        "business-cards"
+      ]
     },
     "assembly": {
       "id": "assembly",
       "name": "Сборка",
       "price": 500,
       "unit": "тг",
-      "applicableTo": ["all"]
+      "applicableTo": [
+        "all"
+      ]
     },
     "bigovka": {
       "id": "bigovka",
       "name": "Биговка",
       "price": 10,
       "unit": "тг/шт",
-      "applicableTo": ["flyers", "booklets", "certificates"]
+      "applicableTo": [
+        "flyers",
+        "booklets",
+        "certificates"
+      ]
     },
     "folding": {
       "id": "folding",
       "name": "Фальцовка (сгиб)",
       "price": 8,
       "unit": "тг/шт",
-      "applicableTo": ["flyers", "booklets"]
+      "applicableTo": [
+        "flyers",
+        "booklets"
+      ]
     },
     "grommets": {
       "id": "grommets",
       "name": "Полиграфические люверсы",
       "price": 50,
       "unit": "тг/шт",
-      "applicableTo": ["flyers", "booklets"]
+      "applicableTo": [
+        "flyers",
+        "booklets"
+      ]
     },
     "bolts": {
       "id": "bolts",
       "name": "Полиграфические болты",
       "price": 60,
       "unit": "тг/шт",
-      "applicableTo": ["flyers", "booklets"]
+      "applicableTo": [
+        "flyers",
+        "booklets"
+      ]
     },
     "pocket": {
       "id": "pocket",
       "name": "Карман для папки",
       "price": 500,
       "unit": "тг",
-      "applicableTo": ["flyers"]
+      "applicableTo": [
+        "flyers"
+      ]
     }
   },
   "reorderOptions": [
@@ -971,6 +1114,456 @@
       "id": "w4",
       "name": "Бумага",
       "pricePerSqm": 250
+    }
+  ],
+  "stateSymbols": [
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 3 000 мм",
+      "option": "уличное исполнение",
+      "price": 7500000,
+      "id": "1"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 2 000 мм",
+      "option": "уличное исполнение",
+      "price": 3600000,
+      "id": "2"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 1 000 мм",
+      "option": "внутреннее исполнение",
+      "price": 350000,
+      "id": "3"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 1 000 мм",
+      "option": "уличное исполнение",
+      "price": 370000,
+      "id": "4"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 500 мм",
+      "option": "внутреннее исполнение",
+      "price": 70000,
+      "id": "5"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 500 мм",
+      "option": "уличное исполнение",
+      "price": 75000,
+      "id": "6"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 250 мм",
+      "option": "внутреннее исполнение",
+      "price": 25000,
+      "id": "7"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 250 мм",
+      "option": "уличное исполнение",
+      "price": 26000,
+      "id": "8"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 125 мм",
+      "option": "внутреннее исполнение",
+      "price": 17500,
+      "id": "9"
+    },
+    {
+      "category": "coat-of-arms",
+      "name": "Герб РК, диаметр 125 мм",
+      "option": "уличное исполнение",
+      "price": 17500,
+      "id": "10"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Штандарт Президента РК (габардин, вышивка, бахрома, кисти)",
+      "option": "12 м",
+      "price": 375000,
+      "id": "11"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК вышивной двухслойный (габардин, бахрома, кисти)",
+      "option": "12 м",
+      "price": 275000,
+      "id": "12"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (кабинетный): габардин двухсторонний",
+      "option": "12 м",
+      "price": 37000,
+      "id": "13"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (кабинетный): габардин двухсторонний",
+      "option": "1,53 м",
+      "price": 73000,
+      "id": "14"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (кабинетный): тафта двухсторонний",
+      "option": "12 м",
+      "price": 40250,
+      "id": "15"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (кабинетный): тафта двухсторонний",
+      "option": "1,53 м",
+      "price": 80000,
+      "id": "16"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Знамя (кабинетный): габардин двухсторонний (сшивной), бахрома",
+      "option": "12 м",
+      "price": 43000,
+      "id": "17"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Знамя (кабинетный): габардин двухсторонний (сшивной), бахрома",
+      "option": "1,53 м",
+      "price": 85000,
+      "id": "18"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Знамя (кабинетный): тафта двухсторонняя (сшивной), бахрома",
+      "option": "12 м",
+      "price": 46250,
+      "id": "19"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Знамя (кабинетный): тафта двухсторонняя (сшивной), бахрома",
+      "option": "1,53 м",
+      "price": 97000,
+      "id": "20"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (уличное исполнение): сетка двухсторонняя",
+      "option": "12 м",
+      "price": 21000,
+      "id": "21"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (уличное исполнение): сетка двухсторонняя",
+      "option": "1,53 м",
+      "price": 40000,
+      "id": "22"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Флаг РК (уличное исполнение): сетка двухсторонняя",
+      "option": "24 м",
+      "price": 80000,
+      "id": "23"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Настольный флаг: тафта, габардин двухсторонний 150250 мм",
+      "option": "шт.",
+      "price": 2500,
+      "id": "24"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Настольный флаг: сетка, односторонний 150250 мм",
+      "option": "шт.",
+      "price": 1200,
+      "id": "25"
+    },
+    {
+      "category": "flags-rk",
+      "name": "Автомобильный двухсторонний, сетка 200300 мм",
+      "option": "шт.",
+      "price": 6000,
+      "id": "26"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Настольный флагшток (хром) 1 рожковый",
+      "option": "шт.",
+      "price": null,
+      "id": "27"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Настольный флагшток (хром) 2-х рожковый",
+      "option": "шт.",
+      "price": null,
+      "id": "28"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Настольный флагшток (хром) 3-х рожковый",
+      "option": "шт.",
+      "price": null,
+      "id": "29"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Напольный флагшток (цв. золото) h-2,5 м телескопический",
+      "option": "шт.",
+      "price": 50000,
+      "id": "30"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Фартук для флагштока напольного (пластик белый)",
+      "option": "шт.",
+      "price": 5000,
+      "id": "31"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Фартук для флагштока напольного (пластик золото, серебро)",
+      "option": "шт.",
+      "price": 3500,
+      "id": "32"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Наконечник на флагшток трезубец (пластик)",
+      "option": "шт.",
+      "price": 14000,
+      "id": "33"
+    },
+    {
+      "category": "signs",
+      "name": "Вывеска 600800 мм, ПВХ, голубая пленка, плоттерная резка, герб 125 мм",
+      "option": "шт.",
+      "price": 60000,
+      "id": "34"
+    },
+    {
+      "category": "signs",
+      "name": "Вывеска 600800 мм, ПВХ, накладные буквы акрил золото, герб 125 мм",
+      "option": "шт.",
+      "price": 98000,
+      "id": "35"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
+      "option": "15001000 мм",
+      "price": 33000,
+      "id": "36"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
+      "option": "20001000 мм",
+      "price": 44000,
+      "id": "37"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
+      "option": "24001200 мм",
+      "price": 64000,
+      "id": "38"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
+      "option": "25001500 мм",
+      "price": 100000,
+      "id": "39"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
+      "option": "15001000 мм",
+      "price": 110000,
+      "id": "40"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
+      "option": "20001000 мм",
+      "price": 150000,
+      "id": "41"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
+      "option": "24001200 мм",
+      "price": 220000,
+      "id": "42"
+    },
+    {
+      "category": "stands",
+      "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
+      "option": "25001500 мм",
+      "price": 285000,
+      "id": "43"
+    },
+    {
+      "category": "stands",
+      "name": "Объемный герб к стенду (доплата)",
+      "option": "шт.",
+      "price": 27500,
+      "id": "44"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А4 (210297)",
+      "option": "Пластик",
+      "price": 2500,
+      "id": "45"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А4 (210297)",
+      "option": "Пластик в рамке",
+      "price": 7800,
+      "id": "46"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А4 (210297)",
+      "option": "Холст",
+      "price": 4500,
+      "id": "47"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А4 (210297)",
+      "option": "Холст в рамке",
+      "price": 10000,
+      "id": "48"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А3 (297420)",
+      "option": "Пластик",
+      "price": 3500,
+      "id": "49"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А3 (297420)",
+      "option": "Пластик в рамке",
+      "price": 12600,
+      "id": "50"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А3 (297420)",
+      "option": "Холст",
+      "price": 7500,
+      "id": "51"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А3 (297420)",
+      "option": "Холст в рамке",
+      "price": 17500,
+      "id": "52"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А2 (420594)",
+      "option": "Пластик",
+      "price": 8500,
+      "id": "53"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А2 (420594)",
+      "option": "Пластик в рамке",
+      "price": 21600,
+      "id": "54"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А2 (420594)",
+      "option": "Холст",
+      "price": 15000,
+      "id": "55"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А2 (420594)",
+      "option": "Холст в рамке",
+      "price": 30000,
+      "id": "56"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А1 (594841)",
+      "option": "Пластик",
+      "price": 17000,
+      "id": "57"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А1 (594841)",
+      "option": "Пластик в рамке",
+      "price": 42600,
+      "id": "58"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А1 (594841)",
+      "option": "Холст",
+      "price": 28000,
+      "id": "59"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А1 (594841)",
+      "option": "Холст в рамке",
+      "price": 55000,
+      "id": "60"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А0 (8411189)",
+      "option": "Пластик",
+      "price": 32000,
+      "id": "61"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А0 (8411189)",
+      "option": "Пластик в рамке",
+      "price": 67800,
+      "id": "62"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А0 (8411189)",
+      "option": "Холст",
+      "price": 50000,
+      "id": "63"
+    },
+    {
+      "category": "president-portrait",
+      "name": "Портрет Президента А0 (8411189)",
+      "option": "Холст в рамке",
+      "price": 90000,
+      "id": "64"
     }
   ]
 }

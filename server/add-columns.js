@@ -9,17 +9,26 @@ const pool = new Pool({
 async function addColumns() {
   console.log('🔧 Добавляем недостающие колонки...')
   try {
-    // Добавляем колонки если их нет
     await pool.query(`
-      ALTER TABLE additional_operations 
+      ALTER TABLE wide_format_pricing
+      ADD COLUMN IF NOT EXISTS category TEXT,
+      ADD COLUMN IF NOT EXISTS unit TEXT DEFAULT 'м²',
+      ADD COLUMN IF NOT EXISTS prices JSONB,
+      ADD COLUMN IF NOT EXISTS description TEXT,
+      ADD COLUMN IF NOT EXISTS notes TEXT
+    `)
+    console.log('✅ Колонки в wide_format_pricing добавлены!')
+
+    await pool.query(`
+      ALTER TABLE additional_operations
       ADD COLUMN IF NOT EXISTS price NUMERIC(10,2),
+      ADD COLUMN IF NOT EXISTS prices JSONB,
       ADD COLUMN IF NOT EXISTS unit TEXT,
       ADD COLUMN IF NOT EXISTS description TEXT,
       ADD COLUMN IF NOT EXISTS default_quantity INTEGER
     `)
     console.log('✅ Колонки в additional_operations добавлены!')
 
-    // Добавляем колонку applicable_to в additional_services
     await pool.query(`
       ALTER TABLE additional_services
       ADD COLUMN IF NOT EXISTS applicable_to JSONB DEFAULT '["all"]'

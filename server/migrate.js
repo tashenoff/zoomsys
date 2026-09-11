@@ -37,15 +37,92 @@ async function migrate() {
 
     await pool.query(`CREATE TABLE IF NOT EXISTS wide_format_pricing (
       id SERIAL PRIMARY KEY, name TEXT NOT NULL, price_per_sqm NUMERIC(10,2) NOT NULL,
+      category TEXT, unit TEXT DEFAULT 'м²', prices JSONB, description TEXT, notes TEXT,
       is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    await pool.query(`
+      ALTER TABLE wide_format_pricing
+      ADD COLUMN IF NOT EXISTS category TEXT,
+      ADD COLUMN IF NOT EXISTS unit TEXT DEFAULT 'м²',
+      ADD COLUMN IF NOT EXISTS prices JSONB,
+      ADD COLUMN IF NOT EXISTS description TEXT,
+      ADD COLUMN IF NOT EXISTS notes TEXT
+    `)
     console.log('✅ wide_format_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS textile_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, price_per_sqm NUMERIC(10,2),
+      category TEXT, unit TEXT DEFAULT 'м²', prices JSONB, description TEXT, notes TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ textile_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS flags_products_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, category TEXT, unit TEXT DEFAULT 'шт',
+      price NUMERIC(12,2), prices JSONB, description TEXT, notes TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ flags_products_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS advertising_stands_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, type TEXT, unit TEXT DEFAULT 'шт',
+      price NUMERIC(12,2), prices JSONB, description TEXT, notes TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ advertising_stands_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS cnc_laser_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, category TEXT, unit TEXT DEFAULT 'пог.м',
+      type TEXT, material TEXT, price NUMERIC(12,2), prices JSONB, description TEXT, notes TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ cnc_laser_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS plotter_cutting_pricing (
+      id SERIAL PRIMARY KEY, material TEXT, operation TEXT, unit TEXT DEFAULT 'м²',
+      price NUMERIC(12,2), price_text TEXT, description TEXT, notes TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ plotter_cutting_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS event_services_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, category TEXT, unit TEXT DEFAULT 'шт',
+      price NUMERIC(12,2), price_text TEXT, print_options JSONB, min_hours NUMERIC(6,2),
+      description TEXT, notes TEXT, is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ event_services_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS design_services_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, work TEXT, price NUMERIC(12,2), price_text TEXT,
+      description TEXT, notes TEXT, is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ design_services_pricing')
+
+
+
+
+
+
+
 
     await pool.query(`CREATE TABLE IF NOT EXISTS state_symbols_pricing (
       id SERIAL PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL, option TEXT,
       price NUMERIC(12,2), is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
     console.log('✅ state_symbols_pricing')
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS garment_printing_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, type TEXT, unit TEXT DEFAULT 'кв.см',
+      price_per_sqcm NUMERIC(10,2), min_qty INTEGER, min_amount NUMERIC(12,2), note TEXT,
+      is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    await pool.query(`CREATE TABLE IF NOT EXISTS embroidery_pricing (
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, unit TEXT DEFAULT 'за 1000 стежков',
+      price NUMERIC(12,2) NOT NULL, note TEXT, is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    console.log('✅ garment_printing_pricing')
+    console.log('✅ embroidery_pricing')
+
 
     await pool.query(`CREATE TABLE IF NOT EXISTS additional_services (
       id SERIAL PRIMARY KEY, name TEXT NOT NULL, price NUMERIC(10,2), unit TEXT, description TEXT,
@@ -56,10 +133,14 @@ async function migrate() {
 
     await pool.query(`CREATE TABLE IF NOT EXISTS additional_operations (
       id SERIAL PRIMARY KEY, name TEXT NOT NULL, operation_type TEXT,
-      applicable_to JSONB DEFAULT '["all"]', options JSONB, 
-      price NUMERIC(10,2), unit TEXT, description TEXT, default_quantity INTEGER,
+      applicable_to JSONB DEFAULT '["all"]', options JSONB,
+      price NUMERIC(10,2), prices JSONB, unit TEXT, description TEXT, default_quantity INTEGER,
       is_active BOOLEAN DEFAULT true,
       sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    await pool.query(`
+      ALTER TABLE additional_operations
+      ADD COLUMN IF NOT EXISTS prices JSONB
+    `)
     console.log('✅ additional_operations')
 
     await pool.query(`CREATE TABLE IF NOT EXISTS reorder_options (

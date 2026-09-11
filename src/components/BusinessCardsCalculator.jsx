@@ -263,19 +263,23 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         
         servicesTotal += servicePrice
       } else {
-        // Fallback на старые additionalServices
-        const service = additionalServices.find(s => s.id === serviceId)
-        if (service) {
-          const servicePrice = service.unit === 'тг/шт' 
-            ? service.price * quantity 
-            : service.price
-          servicesTotal += servicePrice
-          servicesDetails.push({
-            name: service.name,
-            price: servicePrice
-          })
-        }
-      }
+              // Fallback на старые additionalServices
+              const service = additionalServices.find(s => s.id === serviceId)
+              if (service) {
+                if (service.priceText) {
+                  servicesDetails.push({ name: `${service.name} (${service.priceText})`, price: 0, byRequest: true })
+                  return
+                }
+                const servicePrice = service.unit === 'тг/шт' 
+                  ? service.price * quantity 
+                  : service.price
+                servicesTotal += servicePrice
+                servicesDetails.push({
+                  name: service.name,
+                  price: servicePrice
+                })
+              }
+            }
     })
 
     // Добавляем кастомные услуги с ценой
@@ -369,8 +373,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   // Типы карточек для выбора
   const cardTypes = [
     { id: 'business-cards', name: 'Визитки', icon: '💼', active: true, sectionTitle: 'Визитки и карточки' },
-    { id: 'badges', name: 'Бейджи', icon: '🎫', active: false },
-    { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: false },
+        { id: 'badges', name: 'Бейджи', icon: '🎫', active: true },
+        { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: true },
     { id: 'invitations', name: 'Пригласительные карточки', icon: '💌', active: false },
     { id: 'certificates', name: 'Сертификаты малого формата', icon: '🎓', active: false },
     { id: 'custom-cards', name: 'Карточки произвольного типа', icon: '📇', active: false },

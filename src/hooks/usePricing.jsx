@@ -47,8 +47,103 @@ export function PricingProvider({ children }) {
         })),
         wideFormat: (data.wideFormat || []).map(item => ({
           id: String(item.id),
+          category: item.category,
           name: item.name,
-          pricePerSqm: parseFloat(item.price_per_sqm)
+          unit: item.unit || 'м²',
+          pricePerSqm: parseFloat(item.price_per_sqm),
+          prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices,
+          description: item.description,
+          notes: item.notes
+        })),
+        textile: (data.textile || []).map(item => ({
+          id: String(item.id),
+          category: item.category,
+          name: item.name,
+          unit: item.unit || 'м²',
+          pricePerSqm: parseFloat(item.price_per_sqm),
+          prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices,
+          description: item.description,
+          notes: item.notes
+        })),
+        flagsProducts: (data.flagsProducts || []).map(item => ({
+          id: String(item.id),
+          category: item.category,
+          name: item.name,
+          unit: item.unit || 'шт',
+          price: item.price == null ? null : (typeof item.price === 'string' ? item.price : parseFloat(item.price)),
+          prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices,
+          description: item.description,
+          notes: item.notes
+        })),
+        advertisingStands: (data.advertisingStands || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          type: item.type || 'fixed',
+          unit: item.unit || 'шт',
+          price: item.price == null ? null : parseFloat(item.price),
+          prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices,
+          description: item.description,
+          notes: item.notes
+        })),
+        cncLaser: (data.cncLaser || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          category: item.category,
+          unit: item.unit || 'пог.м',
+          type: item.type,
+          material: item.material,
+          price: item.price == null ? null : parseFloat(item.price),
+          prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices,
+          description: item.description,
+          notes: item.notes
+        })),
+        plotterCutting: (data.plotterCutting || []).map(item => ({
+          id: String(item.id),
+          material: item.material,
+          operation: item.operation,
+          unit: item.unit || 'м²',
+          price: item.price != null ? parseFloat(item.price) : null,
+          priceText: item.price_text,
+          description: item.description,
+          notes: item.notes
+        })),
+        eventServices: (data.eventServices || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          category: item.category || 'rent',
+          unit: item.unit || 'шт',
+          price: item.price != null ? parseFloat(item.price) : null,
+          priceText: item.price_text,
+          printOptions: typeof item.print_options === 'string' ? JSON.parse(item.print_options) : item.print_options,
+          minHours: item.min_hours ? parseFloat(item.min_hours) : null,
+          description: item.description,
+          notes: item.notes
+        })),
+        designServices: (data.designServices || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          work: item.work,
+          price: item.price != null ? parseFloat(item.price) : null,
+          priceText: item.price_text,
+          description: item.description,
+          notes: item.notes
+        })),
+        garmentPrinting: (data.garmentPrinting || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          type: item.type,
+          unit: item.unit || 'кв.см',
+          pricePerSqCm: parseFloat(item.price_per_sqcm),
+          minQty: item.min_qty,
+          minAmount: item.min_amount ? parseFloat(item.min_amount) : null,
+          note: item.note
+        })),
+        embroidery: (data.embroidery || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          unit: item.unit || 'за 1000 стежков',
+          price: parseFloat(item.price),
+          note: item.note
         })),
         stateSymbols: (data.stateSymbols || []).map(item => ({
           id: String(item.id),
@@ -58,15 +153,16 @@ export function PricingProvider({ children }) {
           price: item.price == null ? null : parseFloat(item.price)
         })),
         additionalServices: (data.additionalServices || []).map(item => ({
-          id: String(item.id),
-          name: item.name,
-          price: parseFloat(item.price),
-          unit: item.unit,
-          description: item.description,
-          applicableTo: typeof item.applicable_to === 'string'
-            ? JSON.parse(item.applicable_to)
-            : (item.applicable_to || ['all'])
-        })),
+                  id: String(item.id),
+                  name: item.name,
+                  price: (item.price != null && !item.price_text) ? parseFloat(item.price) : null,
+                                    priceText: item.price_text || (item.price != null && !item.price_text ? null : (item.price != null ? item.price : null)),
+                  unit: item.unit,
+                  description: item.description,
+                  applicableTo: typeof item.applicable_to === 'string'
+                    ? JSON.parse(item.applicable_to)
+                    : (item.applicable_to || ['all'])
+                })),
         // additionalOperations из БД приходит как массив, преобразуем в объект
         additionalOperations: Array.isArray(data.additionalOperations) 
           ? data.additionalOperations.reduce((acc, item) => {
@@ -82,6 +178,9 @@ export function PricingProvider({ children }) {
                   ? JSON.parse(item.options) 
                   : item.options,
                 price: item.price ? parseFloat(item.price) : undefined,
+                prices: typeof item.prices === 'string'
+                  ? JSON.parse(item.prices)
+                  : item.prices,
                 unit: item.unit,
                 description: item.description,
                 defaultQuantity: item.default_quantity

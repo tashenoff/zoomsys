@@ -188,6 +188,10 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
     selectedServices.forEach(id => {
       const op = availableOperations.find(o => o.id === id)
       if (!op) return
+      if (op.priceText) {
+        extras.push({ name: `${op.name} (${op.priceText})`, price: 0, byRequest: true })
+        return
+      }
       const price = Number(op.price) || 0
       const add = op.unit === 'тг/шт' ? price * qty : price
       extrasTotal += add
@@ -313,7 +317,7 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
                             : selectedServices.filter(id => id !== op.id))
                         }}
                       />
-                      <span>{op.name}{op.price ? ` (${op.price} ${op.unit || 'тг'})` : ''}</span>
+                      <span>{op.name}{op.priceText ? ` (${op.priceText} ${op.unit || 'тг'})` : (op.price ? ` (${op.price} ${op.unit || 'тг'})` : '')}</span>
                     </label>
                   ))}
                 </div>

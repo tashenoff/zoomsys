@@ -102,11 +102,15 @@ export default function PrintingCalculator({ client: externalClient }) {
   // Получаем уникальные категории
   const categories = useMemo(() => {
     const categoryMap = {
-      'flyers': { name: 'Флаера, Листовки, Афиши', icon: '📄' },
-      'booklets': { name: 'Буклеты', icon: '📒' },
-      'certificates': { name: 'Дипломы, Грамоты, Сертификаты, Пригласительные', icon: '🎓' },
-      'notebooks': { name: 'Дипломы, Грамоты, Пригласительные', icon: '📔' }
-    }
+          'flyers': { name: 'Флаера, Листовки, Афиши', icon: '📄' },
+          'booklets': { name: 'Буклеты', icon: '📒' },
+          'certificates': { name: 'Дипломы, Грамоты, Сертификаты, Пригласительные', icon: '🎓' },
+          'notebooks': { name: 'Дипломы, Грамоты, Пригласительные', icon: '📔' },
+          'folders': { name: 'Папки', icon: '📁' },
+                    'paper-bags': { name: 'Бумажные пакеты', icon: '🛍️' },
+                    'digital-printing': { name: 'Цифровая печать', icon: '🖨️' },
+                    'paper-density': { name: 'Печать на бумаге разной плотности', icon: '📄' }
+                  }
     
     const uniqueCategories = [...new Set(pricing.map(p => p.category))]
     return uniqueCategories.map((cat, index) => ({
@@ -236,12 +240,17 @@ export default function PrintingCalculator({ client: externalClient }) {
     let servicesDetails = []
 
     // Обрабатываем допоперации
-    selectedServices.forEach(serviceId => {
-      const operation = availableOperations.find(op => op.id === serviceId)
-      if (operation) {
-        let servicePrice = operation.unit === 'тг/шт' 
-          ? operation.price * quantity 
-          : operation.price
+        selectedServices.forEach(serviceId => {
+          const operation = availableOperations.find(op => op.id === serviceId)
+          if (operation) {
+            // Услуга с ценой «от/диапазон» — не добавляем к сумме, помечаем «по запросу»
+            if (operation.priceText) {
+              servicesDetails.push({ name: `${operation.name} (${operation.priceText})`, price: 0, byRequest: true })
+              return
+            }
+            let servicePrice = operation.unit === 'тг/шт' 
+              ? operation.price * quantity 
+              : operation.price
         
         // Применяем скидку на препресс при перезаказе
         if (operation.id === 'prepress' && selectedReorder !== 'no') {
@@ -564,9 +573,9 @@ export default function PrintingCalculator({ client: externalClient }) {
                   />
                   <div className="flex-1">
                     <span className="font-medium block">{operation.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {operation.price} {operation.unit}
-                    </span>
+                                        <span className="text-xs text-gray-500">
+                                          {operation.priceText || (operation.price != null ? `${operation.price} ${operation.unit}` : '')}
+                                        </span>
                   </div>
                   {selectedServices.includes(operation.id) && (
                     <span className="text-green-600 text-xl">✓</span>

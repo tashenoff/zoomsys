@@ -8,6 +8,14 @@ import WideFormatCalculator from './components/WideFormatCalculator'
 import UVPrintingCalculator from './components/UVPrintingCalculator'
 import StateSymbolsCalculator from './components/StateSymbolsCalculator'
 import EventServicesCalculator from './components/EventServicesCalculator'
+import TextilePrintingCalculator from './components/TextilePrintingCalculator'
+import FlagsProductsCalculator from './components/FlagsProductsCalculator'
+import AdvertisingStandsCalculator from './components/AdvertisingStandsCalculator'
+import CncLaserCalculator from './components/CncLaserCalculator'
+import PlotterCuttingCalculator from './components/PlotterCuttingCalculator'
+import GarmentPrintingCalculator from './components/GarmentPrintingCalculator'
+import EmbroideryCalculator from './components/EmbroideryCalculator'
+import SpecialistsCalculator from './components/SpecialistsCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
@@ -172,6 +180,38 @@ function AppContent() {
                   {selectedCategory.slug === 'event-services' && (
                     <EventServicesCalculator client={selectedClient} />
                   )}
+
+                  {selectedCategory.slug === 'textile' && (
+                    <TextilePrintingCalculator client={selectedClient} />
+                  )}
+
+                  {selectedCategory.slug === 'flags-products' && (
+                    <FlagsProductsCalculator client={selectedClient} />
+                  )}
+
+                  {selectedCategory.slug === 'advertising-stands' && (
+                    <AdvertisingStandsCalculator client={selectedClient} />
+                  )}
+
+                  {selectedCategory.slug === 'cnc-laser' && (
+                    <CncLaserCalculator client={selectedClient} />
+                  )}
+
+                  {selectedCategory.slug === 'plotter-cutting' && (
+                                      <PlotterCuttingCalculator client={selectedClient} />
+                                    )}
+
+                                    {selectedCategory.slug === 'garment-printing' && (
+                                      <GarmentPrintingCalculator client={selectedClient} />
+                                    )}
+
+                                    {selectedCategory.slug === 'embroidery' && (
+                                                                          <EmbroideryCalculator client={selectedClient} />
+                                                                        )}
+
+                                                                        {selectedCategory.slug === 'specialists' && (
+                                                                          <SpecialistsCalculator client={selectedClient} />
+                                                                        )}
                 </>
               )}
             </div>

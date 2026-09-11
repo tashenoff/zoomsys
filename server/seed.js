@@ -75,11 +75,139 @@ async function seed() {
       for (let i = 0; i < pricingData.wideFormat.length; i++) {
         const item = pricingData.wideFormat[i]
         await pool.query(
-          'INSERT INTO wide_format_pricing (name, price_per_sqm, sort_order) VALUES ($1, $2, $3)',
-          [item.name, item.pricePerSqm, i]
+          `INSERT INTO wide_format_pricing
+           (name, price_per_sqm, category, unit, prices, description, notes, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [item.name, item.pricePerSqm, item.category || null, item.unit || 'м²',
+           item.prices ? JSON.stringify(item.prices) : null, item.description || null, item.notes || null, i]
         )
       }
       console.log(`✅ Широкоформат: ${pricingData.wideFormat.length} позиций`)
+    }
+
+    // Textile
+    if (pricingData.textile) {
+      for (let i = 0; i < pricingData.textile.length; i++) {
+        const item = pricingData.textile[i]
+        await pool.query(
+          `INSERT INTO textile_pricing
+           (name, price_per_sqm, category, unit, prices, description, notes, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [item.name, item.pricePerSqm, item.category || null, item.unit || 'м²',
+           item.prices ? JSON.stringify(item.prices) : null, item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Текстиль: ${pricingData.textile.length} позиций`)
+    }
+
+    // Flags products
+    if (pricingData.flagsProducts) {
+      for (let i = 0; i < pricingData.flagsProducts.length; i++) {
+        const item = pricingData.flagsProducts[i]
+        await pool.query(
+          `INSERT INTO flags_products_pricing
+           (name, category, unit, price, prices, description, notes, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [item.name, item.category || null, item.unit || 'шт', item.price ?? null,
+           item.prices ? JSON.stringify(item.prices) : null, item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Готовая продукция: ${pricingData.flagsProducts.length} позиций`)
+    }
+
+    // Advertising stands
+    if (pricingData.advertisingStands) {
+      for (let i = 0; i < pricingData.advertisingStands.length; i++) {
+        const item = pricingData.advertisingStands[i]
+        await pool.query(
+          `INSERT INTO advertising_stands_pricing
+           (name, type, unit, price, prices, description, notes, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [item.name, item.type || 'fixed', item.unit || 'шт', item.price ?? null,
+           item.prices ? JSON.stringify(item.prices) : null, item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Рекламные стенды: ${pricingData.advertisingStands.length} позиций`)
+    }
+
+    // CNC / laser
+    if (pricingData.cncLaser) {
+      for (let i = 0; i < pricingData.cncLaser.length; i++) {
+        const item = pricingData.cncLaser[i]
+        await pool.query(
+          `INSERT INTO cnc_laser_pricing
+           (name, category, unit, type, material, price, prices, description, notes, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [item.name, item.category || null, item.unit || 'пог.м', item.type || null, item.material || null,
+           item.price ?? null, item.prices ? JSON.stringify(item.prices) : null,
+           item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Фрезер/лазер: ${pricingData.cncLaser.length} позиций`)
+    }
+
+    // Plotter cutting
+    if (pricingData.plotterCutting) {
+      for (let i = 0; i < pricingData.plotterCutting.length; i++) {
+        const item = pricingData.plotterCutting[i]
+        await pool.query(
+          `INSERT INTO plotter_cutting_pricing (material, operation, unit, price, price_text, description, notes, sort_order)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [item.material, item.operation, item.unit || 'м²', typeof item.price === 'number' ? item.price : null,
+           typeof item.price === 'string' ? item.price : null, item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Плоттерная резка: ${pricingData.plotterCutting.length} позиций`)
+    }
+
+    // Event services
+    if (pricingData.eventServices) {
+      for (let i = 0; i < pricingData.eventServices.length; i++) {
+        const item = pricingData.eventServices[i]
+        await pool.query(
+          `INSERT INTO event_services_pricing (name, category, unit, price, price_text, print_options, min_hours, description, notes, sort_order)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+          [item.name, item.category || 'rent', item.unit || 'шт',
+           typeof item.price === 'number' ? item.price : null,
+           typeof item.price === 'string' ? item.price : (item.price_text || null),
+           item.printOptions ? JSON.stringify(item.printOptions) : null,
+           item.minHours || null, item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Мероприятия: ${pricingData.eventServices.length} позиций`)
+    }
+
+    // Design services
+    if (pricingData.designServices) {
+      for (let i = 0; i < pricingData.designServices.length; i++) {
+        const item = pricingData.designServices[i]
+        await pool.query(
+          `INSERT INTO design_services_pricing (name, work, price, price_text, description, notes, sort_order)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [item.name, item.work || null, typeof item.price === 'number' ? item.price : null,
+           typeof item.price === 'string' ? item.price : (item.priceText || null),
+           item.description || null, item.notes || null, i]
+        )
+      }
+      console.log(`✅ Дизайн: ${pricingData.designServices.length} позиций`)
+    }
+
+    // Garment printing
+    if (pricingData.garmentPrinting) {
+      for (let i=0;i<pricingData.garmentPrinting.length;i++) {
+        const it=pricingData.garmentPrinting[i]
+        await pool.query(`INSERT INTO garment_printing_pricing (name,type,unit,price_per_sqcm,min_qty,min_amount,note,sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [it.name,it.type||null,it.unit||'кв.см',it.pricePerSqCm,it.minQty||null,it.minAmount||null,it.note||null,i])
+      }
+      console.log(`✅ Одежда/посуда: ${pricingData.garmentPrinting.length}`)
+    }
+    if (pricingData.embroidery) {
+      for (let i=0;i<pricingData.embroidery.length;i++) {
+        const it=pricingData.embroidery[i]
+        await pool.query(`INSERT INTO embroidery_pricing (name,unit,price,note,sort_order) VALUES ($1,$2,$3,$4,$5)`,
+          [it.name,it.unit||'за 1000 стежков',it.price,it.note||null,i])
+      }
+      console.log(`✅ Вышивка: ${pricingData.embroidery.length}`)
     }
 
     // State Symbols
@@ -95,16 +223,17 @@ async function seed() {
     }
 
     // Additional Services
-    if (pricingData.additionalServices) {
-      for (let i = 0; i < pricingData.additionalServices.length; i++) {
-        const item = pricingData.additionalServices[i]
-        await pool.query(
-          'INSERT INTO additional_services (name, price, unit, description, applicable_to, sort_order) VALUES ($1, $2, $3, $4, $5, $6)',
-          [item.name, item.price, item.unit, item.description, JSON.stringify(item.applicableTo || ['all']), i]
-        )
-      }
-      console.log(`✅ Доп. услуги: ${pricingData.additionalServices.length} позиций`)
-    }
+        if (pricingData.additionalServices) {
+          for (let i = 0; i < pricingData.additionalServices.length; i++) {
+            const item = pricingData.additionalServices[i]
+            const isNumeric = typeof item.price === 'number'
+            await pool.query(
+              'INSERT INTO additional_services (name, price, price_text, unit, description, applicable_to, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+              [item.name, isNumeric ? item.price : null, isNumeric ? null : item.price, item.unit, item.description, JSON.stringify(item.applicableTo || ['all']), i]
+            )
+          }
+          console.log(`✅ Доп. услуги: ${pricingData.additionalServices.length} позиций`)
+        }
 
     // Additional Operations (ламинация, фольгирование, скругление углов и т.д.)
     if (pricingData.additionalOperations) {
@@ -112,15 +241,16 @@ async function seed() {
       for (let i = 0; i < operations.length; i++) {
         const [key, item] = operations[i]
         await pool.query(
-          `INSERT INTO additional_operations 
-           (name, operation_type, applicable_to, options, price, unit, description, default_quantity, sort_order) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          `INSERT INTO additional_operations
+           (name, operation_type, applicable_to, options, price, prices, unit, description, default_quantity, sort_order)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [
             item.name, 
             item.type || null, 
             JSON.stringify(item.applicableTo || ['all']),
             item.options ? JSON.stringify(item.options) : null,
             item.price || null,
+            item.prices ? JSON.stringify(item.prices) : null,
             item.unit || null,
             item.description || null,
             item.defaultQuantity || null,

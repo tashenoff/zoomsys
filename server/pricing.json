@@ -84,6 +84,62 @@
           "description": "Портрет Президента Республики Казахстан"
         }
       ]
+    },
+    {
+      "id": "4",
+      "name": "Печать на текстиле",
+      "slug": "textile",
+      "description": "Печать на текстиле, готовые флаги и доп. услуги",
+      "icon": "🧵"
+    },
+    {
+      "id": "5",
+      "name": "Готовая флаговая продукция",
+      "slug": "flags-products",
+      "description": "Готовые флаги, знамена, вымпелы, шевроны, ленты, шарфы",
+      "icon": "🚩"
+    },
+    {
+      "id": "6",
+      "name": "Рекламные стенды",
+      "slug": "advertising-stands",
+      "description": "Настенные стенды за м², хэштеги, инстрамамки, кармашки, кайма, подрамник",
+      "icon": "🪧"
+    },
+    {
+      "id": "7",
+      "name": "Фрезерный и лазерный станок",
+      "slug": "cnc-laser",
+      "description": "Резка и гравировка: ПВХ, акрил, оргстекло, алюкобонд, двухслойный пластик",
+      "icon": "🪚"
+    },
+    {
+      "id": "8",
+      "name": "Плоттерная резка",
+      "slug": "plotter-cutting",
+      "description": "Резка плёнки: цветная и металлизированная самоклеящаяся, выборка, перенос",
+      "icon": "✂️"
+    },
+    {
+      "id": "9",
+      "name": "Мероприятия",
+      "slug": "event-services",
+      "description": "Мобильные конструкции, аренда, работа специалистов и техники",
+      "icon": "🎤"
+    },
+    {
+      "id": "11",
+      "name": "Нанесение на одежду/посуду",
+      "slug": "garment-printing",
+      "description": "Терморезина/флекс/ДТФ, сублимация, металлографика",
+      "icon": "👕"
+    },
+    {
+      "id": "12",
+      "name": "Вышивка",
+      "slug": "embroidery",
+      "description": "Вышивка на крое, готовых изделиях, шевроны",
+      "icon": "🧵"
     }
   ],
   "businessCards": [
@@ -518,6 +574,19 @@
         "300to499": 150,
         "from500": 150
       }
+    },
+    {
+      "id": "bdg1",
+      "name": "Бейджи 11,5×7,8 см, закругленные углы",
+      "colorType": "4+0",
+      "prices": {
+        "upTo49": 7,
+        "50to99": 7,
+        "100to299": 7,
+        "300to499": 7,
+        "from500": 7
+      },
+      "description": "Цена за партию из 100 (700 тг)"
     }
   ],
   "additionalOperations": {
@@ -734,6 +803,399 @@
       "applicableTo": [
         "flyers"
       ]
+    },
+    "bannerGluing": {
+      "id": "bannerGluing",
+      "name": "Проклейка баннера",
+      "type": "quantity",
+      "price": 350,
+      "prices": {
+        "upTo100": 350,
+        "upTo500": 300
+      },
+      "unit": "пог.м",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "bannerJoining": {
+      "id": "bannerJoining",
+      "name": "Склейка баннера со стыковкой",
+      "type": "quantity",
+      "price": 1000,
+      "prices": {
+        "upTo100": 1000,
+        "upTo500": 700
+      },
+      "unit": "пог.м",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "wideFormatCutting": {
+      "id": "wideFormatCutting",
+      "name": "Обрезка готовой продукции",
+      "type": "quantity",
+      "price": 100,
+      "prices": {
+        "upTo100": 100,
+        "upTo500": 50
+      },
+      "unit": "пог.м",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "meshStitching": {
+      "id": "meshStitching",
+      "name": "Прошивка баннерной сетки",
+      "type": "quantity",
+      "price": 600,
+      "prices": {
+        "upTo100": 600,
+        "upTo500": 450
+      },
+      "unit": "пог.м",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "vinylLamination": {
+      "id": "vinylLamination",
+      "name": "Ламинация винила",
+      "type": "quantity",
+      "price": 2000,
+      "prices": {
+        "upTo100": 2000,
+        "upTo500": 1500
+      },
+      "unit": "м²",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "eyeletsInstallation": {
+      "id": "eyeletsInstallation",
+      "name": "Установка люверсов",
+      "type": "quantity",
+      "price": 100,
+      "prices": {
+        "upTo100": 100,
+        "upTo500": 85
+      },
+      "unit": "шт.",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "rebarPerimeter": {
+      "id": "rebarPerimeter",
+      "name": "Арматура (по периметру)",
+      "type": "quantity",
+      "price": 650,
+      "prices": {
+        "default": 650
+      },
+      "unit": "пог.м",
+      "description": "Доп. услуга широкоформатной печати",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "contourCutting": {
+      "id": "contourCutting",
+      "name": "Обрезка по контуру напечатанных элементов",
+      "type": "quantity",
+      "price": 2000,
+      "prices": {
+        "upTo50": 2000,
+        "upTo100": 1500
+      },
+      "unit": "м²",
+      "description": "Из блока Roland + плоттер",
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    "uvDarkSurface": {
+      "id": "uvDarkSurface",
+      "name": "Печать на тёмных/прозрачных поверхностях (белая подложка + лак)",
+      "type": "coefficient",
+      "price": 1.5,
+      "unit": "К",
+      "description": "К=1.5 к стоимости печати",
+      "applicableTo": [
+        "uv-printing"
+      ]
+    },
+    "uvPartialVarnish": {
+      "id": "uvPartialVarnish",
+      "name": "Частичная лакировка поверхности изображения",
+      "type": "coefficient",
+      "price": 1.3,
+      "unit": "К",
+      "description": "К=1.3 к стоимости печати",
+      "applicableTo": [
+        "uv-printing"
+      ]
+    },
+    "uvTemplate": {
+      "id": "uvTemplate",
+      "name": "Шаблон для нестандартных предметов",
+      "type": "select",
+      "options": [
+        {
+          "id": "template-2000",
+          "name": "Простой шаблон",
+          "price": 2000,
+          "unit": "тг"
+        },
+        {
+          "id": "template-3000",
+          "name": "Сложный шаблон",
+          "price": 3000,
+          "unit": "тг"
+        }
+      ],
+      "description": "Для нестандартных предметов изготавливается шаблон 2 000–3 000 тг",
+      "applicableTo": [
+        "uv-printing"
+      ]
+    },
+    "uvMakeready": {
+      "id": "uvMakeready",
+      "name": "Приладка 1-го экземпляра",
+      "price": 1500,
+      "unit": "тг",
+      "description": "Клиент предоставляет 1–3 экземпляра для настройки печати",
+      "applicableTo": [
+        "uv-printing"
+      ]
+    },
+    "flagStitching": {
+      "id": "flagStitching",
+      "name": "Прошивка флага",
+      "type": "quantity",
+      "price": 750,
+      "prices": {
+        "upTo500": 750
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 750 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "flagCutting": {
+      "id": "flagCutting",
+      "name": "Обрезка флага",
+      "type": "quantity",
+      "price": 750,
+      "prices": {
+        "upTo500": 750
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 750 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "cordLacing": {
+      "id": "cordLacing",
+      "name": "Шнуровка",
+      "type": "quantity",
+      "price": 800,
+      "prices": {
+        "upTo500": 800
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 800 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "fringe": {
+      "id": "fringe",
+      "name": "Бахрома (в т.ч. прошивка)",
+      "type": "quantity",
+      "price": 1000,
+      "prices": {
+        "upTo500": 1000
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 1000 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "textileEyelets": {
+      "id": "textileEyelets",
+      "name": "Установка люверсов (текстиль)",
+      "type": "quantity",
+      "price": 120,
+      "prices": {
+        "upTo500": 120
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 120 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "clampTape": {
+      "id": "clampTape",
+      "name": "Сутяжная лента",
+      "type": "quantity",
+      "price": 500,
+      "prices": {
+        "upTo500": 500
+      },
+      "unit": "пог.м",
+      "description": "до 500 пог.м — 500 тг, свыше — договорная",
+      "applicableTo": [
+        "textile"
+      ]
+    },
+    "pockets": {
+      "id": "pockets",
+      "name": "Кармашки",
+      "type": "quantity-select",
+      "options": [
+        {
+          "id": "a5",
+          "name": "A5",
+          "price": 800
+        },
+        {
+          "id": "a4",
+          "name": "A4",
+          "price": 1500
+        },
+        {
+          "id": "a3",
+          "name": "A3",
+          "price": 4000
+        }
+      ],
+      "unit": "шт",
+      "description": "A5-800, A4-1500, A3-4000 тг/шт",
+      "applicableTo": [
+        "advertising-stands"
+      ]
+    },
+    "border": {
+      "id": "border",
+      "name": "Декоративная кайма",
+      "type": "quantity",
+      "price": 750,
+      "unit": "пог.м",
+      "description": "750 тг/п.м",
+      "applicableTo": [
+        "advertising-stands"
+      ]
+    },
+    "canvasStretch": {
+      "id": "canvasStretch",
+      "name": "Натяжка холста",
+      "type": "quantity",
+      "price": 3500,
+      "unit": "м²",
+      "description": "3500 тг/м²",
+      "applicableTo": [
+        "advertising-stands"
+      ]
+    },
+    "subframe": {
+      "id": "subframe",
+      "name": "Подрамник",
+      "type": "quantity",
+      "price": 3000,
+      "unit": "пог.м",
+      "description": "3000 тг/п.м",
+      "applicableTo": [
+        "advertising-stands"
+      ]
+    },
+    "cncTape": {
+      "id": "cncTape",
+      "name": "Скотч для фрезерной резки",
+      "type": "quantity",
+      "price": 2000,
+      "unit": "м²",
+      "description": "Скотч для фрезерной резки (на 1 м²)",
+      "applicableTo": [
+        "cnc-laser"
+      ]
+    },
+    "folderPocket": {
+      "id": "folderPocket",
+      "name": "Карман, ламинация (для папки)",
+      "type": "quantity",
+      "price": null,
+      "prices": {
+        "default": "по запросу"
+      },
+      "unit": "шт",
+      "description": "Доп. опция для папок",
+      "applicableTo": [
+        "folders"
+      ]
+    },
+    "badgeCorner": {
+      "id": "badgeCorner",
+      "name": "Закругление углов (бейджи)",
+      "type": "quantity",
+      "price": 0.12,
+      "unit": "тг/шт",
+      "description": "12 тг за 100 шт",
+      "applicableTo": [
+        "badges"
+      ]
+    },
+    "badgeLanyard": {
+      "id": "badgeLanyard",
+      "name": "Ланьярд с карабином (без нанесения)",
+      "type": "quantity",
+      "price": 2.5,
+      "unit": "тг/шт",
+      "description": "250 тг за 100 шт",
+      "applicableTo": [
+        "badges"
+      ]
+    },
+    "garmentFile": {
+      "id": "garmentFile",
+      "name": "Подготовка файла, образца (одежда/металлографика)",
+      "price": 1500,
+      "unit": "тг",
+      "applicableTo": [
+        "garment-printing"
+      ]
+    },
+    "embFile": {
+      "id": "embFile",
+      "name": "Подготовка файла, образца (вышивка)",
+      "price": 5000,
+      "unit": "тг",
+      "applicableTo": [
+        "embroidery"
+      ]
+    },
+    "embMetalThread": {
+      "id": "embMetalThread",
+      "name": "Вышивка металлизированной нитью (золото/серебро)",
+      "price": 25,
+      "unit": "% к стоимости",
+      "type": "coefficient",
+      "applicableTo": [
+        "embroidery"
+      ]
     }
   },
   "reorderOptions": [
@@ -763,16 +1225,80 @@
   ],
   "additionalServices": [
     {
-      "id": "s1",
-      "name": "Фольгирование",
-      "price": 15,
-      "unit": "тг/шт"
+      "id": "sv-biz",
+      "name": "Разработка дизайна визитки",
+      "price": 3500,
+      "unit": "тг",
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards"
+      ]
     },
     {
-      "id": "s2",
-      "name": "Дизайн визитки",
+      "id": "sv-flyer",
+      "name": "Разработка дизайна флаера (1 сторона)",
+      "price": "от 5000 до 6000",
+      "applicableTo": [
+        "flyers"
+      ]
+    },
+    {
+      "id": "sv-leaflet",
+      "name": "Разработка дизайна листовки/афиши",
+      "price": 5000,
+      "applicableTo": [
+        "flyers"
+      ]
+    },
+    {
+      "id": "sv-book",
+      "name": "Разработка буклета (концепт)",
+      "price": 15000,
+      "applicableTo": [
+        "booklets"
+      ]
+    },
+    {
+      "id": "sv-cert",
+      "name": "Разработка диплома/сертификата",
+      "price": "от 6000 до 8000",
+      "applicableTo": [
+        "certificates"
+      ]
+    },
+    {
+      "id": "sv-uv",
+      "name": "Разработка макета для УФ-печати",
       "price": 3000,
-      "unit": "тг"
+      "applicableTo": [
+        "uv-printing"
+      ]
+    },
+    {
+      "id": "sv-wide",
+      "name": "Разработка макета для широкоформатной печати",
+      "price": 5000,
+      "applicableTo": [
+        "wide-format"
+      ]
+    },
+    {
+      "id": "sv-stand",
+      "name": "Разработка дизайна стенда",
+      "price": "от 15000 до 20000",
+      "applicableTo": [
+        "advertising-stands",
+        "stands"
+      ]
+    },
+    {
+      "id": "sv-sign",
+      "name": "Разработка дизайна вывески",
+      "price": "от 15000 до 25000",
+      "applicableTo": [
+        "signs"
+      ]
     }
   ],
   "printing": [
@@ -951,11 +1477,387 @@
       }
     },
     {
-      "id": "p12",
+      "id": "p13",
+      "category": "folders",
+      "name": "Папка A4, 4+0, картон 300 г/м",
+      "format": "А4",
+      "prices": {
+        "100": 1300,
+        "300": 1200,
+        "500": 1100
+      },
+      "description": "Папки"
+    },
+    {
+      "id": "p14",
+      "category": "paper-bags",
+      "name": "Бумажный пакет A3",
+      "format": "А3",
+      "prices": {
+        "10": 5200,
+        "50": 5200
+      },
+      "description": "Бумажные пакеты"
+    },
+    {
+      "id": "p15",
+      "category": "paper-bags",
+      "name": "Бумажный пакет A4",
+      "format": "А4",
+      "prices": {
+        "10": 2500,
+        "50": 1900
+      },
+      "description": "Бумажные пакеты"
+    },
+    {
+      "id": "p16",
+      "category": "paper-bags",
+      "name": "Бумажный пакет A5",
+      "format": "А5",
+      "prices": {
+        "10": 1200,
+        "50": 1000
+      },
+      "description": "Бумажные пакеты"
+    },
+    {
+      "id": "dig1",
+      "category": "digital-printing",
+      "name": "Цифровая печать A4 (210×297), 80 гр",
+      "format": "A4",
+      "colorTypes": [
+        {
+          "type": "4+0",
+          "prices": {
+            "5": 175,
+            "10": 170,
+            "50": 150,
+            "100": 140
+          }
+        },
+        {
+          "type": "4+4",
+          "prices": {
+            "5": 290,
+            "10": 280,
+            "50": 260,
+            "100": 240
+          }
+        }
+      ]
+    },
+    {
+      "id": "dig2",
+      "category": "digital-printing",
+      "name": "Цифровая печать A4 принтер",
+      "format": "A4 принтер",
+      "colorTypes": [
+        {
+          "type": "1+0",
+          "prices": {
+            "5": 70
+          }
+        },
+        {
+          "type": "1+1",
+          "prices": {
+            "5": 90
+          }
+        }
+      ]
+    },
+    {
+      "id": "dig3",
+      "category": "digital-printing",
+      "name": "Цифровая печать A4 ксерокс",
+      "format": "A4 ксерокс",
+      "colorTypes": [
+        {
+          "type": "1+0",
+          "prices": {
+            "5": 140
+          }
+        },
+        {
+          "type": "1+1",
+          "prices": {
+            "5": 185
+          }
+        }
+      ]
+    },
+    {
+      "id": "dig4",
+      "category": "digital-printing",
+      "name": "Цифровая печать A3 (297×420), 80 гр",
+      "format": "A3",
+      "colorTypes": [
+        {
+          "type": "4+0",
+          "prices": {
+            "5": 290,
+            "10": 280,
+            "50": 270,
+            "100": 260
+          }
+        },
+        {
+          "type": "4+4",
+          "prices": {
+            "5": 550,
+            "10": 460,
+            "50": 420,
+            "100": 400
+          }
+        }
+      ]
+    },
+    {
+      "id": "dig5",
+      "category": "digital-printing",
+      "name": "Цифровая печать A3 (297×420)",
+      "format": "A3",
+      "colorTypes": [
+        {
+          "type": "1+0",
+          "prices": {
+            "5": 210
+          }
+        },
+        {
+          "type": "1+1",
+          "prices": {
+            "5": 230
+          }
+        }
+      ]
+    },
+    {
+      "id": "d1_120_ColotechA3",
+      "category": "paper-density",
+      "name": "Плотность 120 гр — A3(Colotech)",
+      "format": "A3(Colotech)",
+      "prices": {
+        "default": 100
+      }
+    },
+    {
+      "id": "d1_120_SRA3",
+      "category": "paper-density",
+      "name": "Плотность 120 гр — SRA3",
+      "format": "SRA3",
+      "prices": {
+        "default": 160
+      }
+    },
+    {
+      "id": "d2_160_ColotechA3",
+      "category": "paper-density",
+      "name": "Плотность 160 гр — A3(Colotech)",
+      "format": "A3(Colotech)",
+      "prices": {
+        "default": 180
+      }
+    },
+    {
+      "id": "d2_160_SRA3",
+      "category": "paper-density",
+      "name": "Плотность 160 гр — SRA3",
+      "format": "SRA3",
+      "prices": {
+        "default": 190
+      }
+    },
+    {
+      "id": "d3_200_ColotechA3",
+      "category": "paper-density",
+      "name": "Плотность 200 гр — A3(Colotech)",
+      "format": "A3(Colotech)",
+      "prices": {
+        "default": 190
+      }
+    },
+    {
+      "id": "d3_200_SRA3",
+      "category": "paper-density",
+      "name": "Плотность 200 гр — SRA3",
+      "format": "SRA3",
+      "prices": {
+        "default": 210
+      }
+    },
+    {
+      "id": "d4_250_ColotechA3",
+      "category": "paper-density",
+      "name": "Плотность 250 гр — A3(Colotech)",
+      "format": "A3(Colotech)",
+      "prices": {
+        "default": 250
+      }
+    },
+    {
+      "id": "d4_250_SRA3",
+      "category": "paper-density",
+      "name": "Плотность 250 гр — SRA3",
+      "format": "SRA3",
+      "prices": {
+        "default": 280
+      }
+    },
+    {
+      "id": "d5_300_ColotechA3",
+      "category": "paper-density",
+      "name": "Плотность 300 гр — A3(Colotech)",
+      "format": "A3(Colotech)",
+      "prices": {
+        "default": 320
+      }
+    },
+    {
+      "id": "d5_300_SRA3",
+      "category": "paper-density",
+      "name": "Плотность 300 гр — SRA3",
+      "format": "SRA3",
+      "prices": {
+        "default": 350
+      }
+    },
+    {
+      "id": "d6",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Лен",
+      "format": "A3",
+      "price": 620,
+      "prices": {
+        "default": 620
+      },
+      "colorType": null
+    },
+    {
+      "id": "d7",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сирио",
+      "format": "A3",
+      "price": 750,
+      "prices": {
+        "default": 750
+      },
+      "colorType": null
+    },
+    {
+      "id": "d8",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сплендергель",
+      "format": "A3",
+      "price": 600,
+      "prices": {
+        "default": 600
+      },
+      "colorType": null
+    },
+    {
+      "id": "d9",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Акварелла (160 гр)",
+      "format": "A3",
+      "price": 450,
+      "prices": {
+        "default": 450
+      },
+      "colorType": null
+    },
+    {
+      "id": "d10",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Тачкавер",
+      "format": "A3",
+      "price": 1700,
+      "prices": {
+        "default": 1700
+      },
+      "colorType": null
+    },
+    {
+      "id": "d11",
+      "category": "paper-density",
+      "name": "Печать на самоклейке A4",
+      "format": "A4",
+      "price": 200,
+      "prices": {
+        "default": 200
+      },
+      "colorType": null
+    },
+    {
+      "id": "d12",
+      "category": "paper-density",
+      "name": "Печать на самоклейке A3 (матовая)",
+      "format": "A3",
+      "price": 400,
+      "prices": {
+        "default": 400
+      },
+      "colorType": null
+    },
+    {
+      "id": "d13",
+      "category": "paper-density",
+      "name": "Печать на самоклейке A3 (глянцевая)",
+      "format": "A3",
+      "price": 400,
+      "prices": {
+        "default": 400
+      },
+      "colorType": null
+    },
+    {
+      "id": "d14",
+      "category": "paper-density",
+      "name": "Печать на фотобумаге A4",
+      "format": "A4",
+      "price": 400,
+      "prices": {
+        "default": 400
+      },
+      "colorType": null
+    },
+    {
+      "id": "d15",
+      "category": "paper-density",
+      "name": "Печать на фотобумаге A3",
+      "format": "A3",
+      "price": 700,
+      "prices": {
+        "default": 700
+      },
+      "colorType": null
+    },
+    {
+      "id": "nb1",
       "category": "notebooks",
-      "name": "Блокнот А4(210*297мм); А5 (148*210)",
-      "format": "А4/А5",
-      "description": "При печати на бумагах плотностью 250гр/кв.м и 300гр/кв.м добавляем плотность бумаги по прайсу"
+      "name": "Блокнот A4 (210×297)",
+      "format": "A4",
+      "prices": {
+        "50": 1850,
+        "100": 1800,
+        "200": 1700,
+        "300": 1600
+      },
+      "description": "Обложка и подложка 4+0 картон 250-300 гр, пружина, блок 80 гр 50 листов"
+    },
+    {
+      "id": "nb2",
+      "category": "notebooks",
+      "name": "Блокнот A5 (148×210)",
+      "format": "A5",
+      "prices": {
+        "50": 950,
+        "100": 900,
+        "200": 850,
+        "300": 800
+      },
+      "description": "Обложка и подложка 4+0 картон 250-300 гр, пружина, блок 80 гр 50 листов"
     }
   ],
   "uvPrinting": [
@@ -1096,24 +1998,394 @@
   ],
   "wideFormat": [
     {
-      "id": "w1",
-      "name": "Баннер",
-      "pricePerSqm": 350
+      "id": "wf-phaeton-banner-400",
+      "category": "phaeton",
+      "name": "Баннер (матовый, глянец) 400 гр.",
+      "unit": "м²",
+      "pricePerSqm": 2500,
+      "prices": {
+        "upTo100": 2500,
+        "upTo500": 1750,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P, 720 dpi, рабочее поле 3200 мм"
     },
     {
-      "id": "w2",
-      "name": "Пленка",
-      "pricePerSqm": 450
+      "id": "wf-phaeton-reflective-banner",
+      "category": "phaeton",
+      "name": "Баннер светоотражающий",
+      "unit": "м²",
+      "pricePerSqm": 3500,
+      "prices": {
+        "upTo100": 3500,
+        "upTo500": 3200,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
     },
     {
-      "id": "w3",
+      "id": "wf-phaeton-mesh",
+      "category": "phaeton",
+      "name": "Баннерная сетка",
+      "unit": "м²",
+      "pricePerSqm": 2000,
+      "prices": {
+        "upTo100": 2000,
+        "upTo500": 1800,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
+    },
+    {
+      "id": "wf-phaeton-vinyl-china",
+      "category": "phaeton",
+      "name": "Винил пр-во Китай (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 1700,
+      "prices": {
+        "upTo100": 1700,
+        "upTo500": 1000,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
+    },
+    {
+      "id": "wf-phaeton-transparent-vinyl",
+      "category": "phaeton",
+      "name": "Винил прозрачный (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 1500,
+      "prices": {
+        "upTo100": 1500,
+        "upTo500": 1050,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
+    },
+    {
+      "id": "wf-phaeton-perforated-vinyl",
+      "category": "phaeton",
+      "name": "Винил перфорированный",
+      "unit": "м²",
+      "pricePerSqm": 2100,
+      "prices": {
+        "upTo100": 2100,
+        "upTo500": 1950,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
+    },
+    {
+      "id": "wf-phaeton-backed-banner",
+      "category": "phaeton",
+      "name": "Баннер 400 гр. с подложкой",
+      "unit": "м²",
+      "pricePerSqm": 1750,
+      "prices": {
+        "upTo100": 1750,
+        "upTo500": 950,
+        "over500": "договорная"
+      },
+      "description": "Широкоформатная печать Phaeton UD-3208P"
+    },
+    {
+      "id": "wf-mimaki-banner-440",
+      "category": "mimaki",
+      "name": "Баннер (матовый, глянец) 440 гр.",
+      "unit": "м²",
+      "pricePerSqm": 4000,
+      "prices": {
+        "upTo50": 4000,
+        "upTo100": 3750,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4, 1400×720 dpi, рабочее поле 3200 мм"
+    },
+    {
+      "id": "wf-mimaki-grey-backed-banner",
+      "category": "mimaki",
+      "name": "Баннер 400 гр. с серой подложкой",
+      "unit": "м²",
+      "pricePerSqm": 5000,
+      "prices": {
+        "upTo50": 5000,
+        "upTo100": 4750,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-reflective-banner",
+      "category": "mimaki",
+      "name": "Баннер светоотражающий",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5000,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-vinyl-4pass",
+      "category": "mimaki",
+      "name": "Винил 4 прохода (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 3500,
+      "prices": {
+        "upTo50": 3500,
+        "upTo100": 3100,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-vinyl-8pass",
+      "category": "mimaki",
+      "name": "Винил 8 проходов (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 4000,
+      "prices": {
+        "upTo50": 4000,
+        "upTo100": 3800,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-transparent-vinyl",
+      "category": "mimaki",
+      "name": "Винил прозрачный (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 4500,
+      "prices": {
+        "upTo50": 4500,
+        "upTo100": 4200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-black-backed-vinyl",
+      "category": "mimaki",
+      "name": "Винил с черной подложкой",
+      "unit": "м²",
+      "pricePerSqm": 4750,
+      "prices": {
+        "upTo50": 4750,
+        "upTo100": 4500,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-frontlit",
+      "category": "mimaki",
+      "name": "Фронтлит (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 4500,
+      "prices": {
+        "upTo50": 4500,
+        "upTo100": 4200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-backlit",
+      "category": "mimaki",
+      "name": "Бэклит (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 5000,
+      "prices": {
+        "upTo50": 5000,
+        "upTo100": 4750,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-perforated-vinyl",
+      "category": "mimaki",
+      "name": "Винил перфорированный",
+      "unit": "м²",
+      "pricePerSqm": 4500,
+      "prices": {
+        "upTo50": 4500,
+        "upTo100": 4200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-mesh",
+      "category": "mimaki",
+      "name": "Баннерная сетка",
+      "unit": "м²",
+      "pricePerSqm": 3500,
+      "prices": {
+        "upTo50": 3500,
+        "upTo100": 3400,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
+    },
+    {
+      "id": "wf-mimaki-canvas",
+      "category": "mimaki",
       "name": "Холст",
-      "pricePerSqm": 550
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать MIMAKI SWJ-320 S4"
     },
     {
-      "id": "w4",
-      "name": "Бумага",
-      "pricePerSqm": 250
+      "id": "wf-roland-vinyl-4pass",
+      "category": "roland",
+      "name": "Винил 4 прохода (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 4500,
+      "prices": {
+        "upTo50": 4500,
+        "upTo100": 4300,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер, 1440×1440 dpi, рабочее поле 1600 мм"
+    },
+    {
+      "id": "wf-roland-vinyl-8pass",
+      "category": "roland",
+      "name": "Винил 8 проходов (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5000,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-static-vinyl",
+      "category": "roland",
+      "name": "Винил статический (1200 мм)",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-black-backed-vinyl",
+      "category": "roland",
+      "name": "Винил с черной подложкой",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-transparent-vinyl",
+      "category": "roland",
+      "name": "Винил прозрачный (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-frontlit",
+      "category": "roland",
+      "name": "Фронтлит (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 4700,
+      "prices": {
+        "upTo50": 4700,
+        "upTo100": 4200,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-backlit",
+      "category": "roland",
+      "name": "Бэклит (матовый, глянец)",
+      "unit": "м²",
+      "pricePerSqm": 5000,
+      "prices": {
+        "upTo50": 5000,
+        "upTo100": 4700,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-photo-paper",
+      "category": "roland",
+      "name": "Фото бумага",
+      "unit": "м²",
+      "pricePerSqm": 5000,
+      "prices": {
+        "upTo50": 5000,
+        "upTo100": 3750,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-wallpaper",
+      "category": "roland",
+      "name": "Обои флизелиновые",
+      "unit": "м²",
+      "pricePerSqm": 2500,
+      "prices": {
+        "upTo50": 2500,
+        "upTo100": 2000,
+        "over100": "договорная"
+      },
+      "description": "В стоимость входит только печать. Обои предоставляет заказчик."
+    },
+    {
+      "id": "wf-roland-canvas",
+      "category": "roland",
+      "name": "Холст",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5000,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
+    },
+    {
+      "id": "wf-roland-reflective-vinyl",
+      "category": "roland",
+      "name": "Винил светоотражающий",
+      "unit": "м²",
+      "pricePerSqm": 5500,
+      "prices": {
+        "upTo50": 5500,
+        "upTo100": 5300,
+        "over100": "договорная"
+      },
+      "description": "Интерьерная печать Roland VS-640 + плоттер"
     }
   ],
   "stateSymbols": [
@@ -1280,21 +2552,21 @@
     },
     {
       "category": "flags-rk",
-      "name": "Настольный флаг: тафта, габардин двухсторонний 150250 мм",
+      "name": "Настольный флаг: тафта, габардин двухсторонний 150×250 мм",
       "option": "шт.",
       "price": 2500,
       "id": "24"
     },
     {
       "category": "flags-rk",
-      "name": "Настольный флаг: сетка, односторонний 150250 мм",
+      "name": "Настольный флаг: сетка, односторонний 150×250 мм",
       "option": "шт.",
       "price": 1200,
       "id": "25"
     },
     {
       "category": "flags-rk",
-      "name": "Автомобильный двухсторонний, сетка 200300 мм",
+      "name": "Автомобильный двухсторонний, сетка 200×300 мм",
       "option": "шт.",
       "price": 6000,
       "id": "26"
@@ -1303,21 +2575,21 @@
       "category": "flagpoles",
       "name": "Настольный флагшток (хром) 1 рожковый",
       "option": "шт.",
-      "price": null,
+      "price": 2650,
       "id": "27"
     },
     {
       "category": "flagpoles",
       "name": "Настольный флагшток (хром) 2-х рожковый",
       "option": "шт.",
-      "price": null,
+      "price": 3000,
       "id": "28"
     },
     {
       "category": "flagpoles",
       "name": "Настольный флагшток (хром) 3-х рожковый",
       "option": "шт.",
-      "price": null,
+      "price": 3500,
       "id": "29"
     },
     {
@@ -1350,14 +2622,14 @@
     },
     {
       "category": "signs",
-      "name": "Вывеска 600800 мм, ПВХ, голубая пленка, плоттерная резка, герб 125 мм",
+      "name": "Вывеска 600×800 мм, ПВХ, голубая пленка, плоттерная резка, герб 125 мм",
       "option": "шт.",
       "price": 60000,
       "id": "34"
     },
     {
       "category": "signs",
-      "name": "Вывеска 600800 мм, ПВХ, накладные буквы акрил золото, герб 125 мм",
+      "name": "Вывеска 600×800 мм, ПВХ, накладные буквы акрил золото, герб 125 мм",
       "option": "шт.",
       "price": 98000,
       "id": "35"
@@ -1365,56 +2637,56 @@
     {
       "category": "stands",
       "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
-      "option": "15001000 мм",
+      "option": "1500×1000 мм",
       "price": 33000,
       "id": "36"
     },
     {
       "category": "stands",
       "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
-      "option": "20001000 мм",
+      "option": "2000×1000 мм",
       "price": 44000,
       "id": "37"
     },
     {
       "category": "stands",
       "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
-      "option": "24001200 мм",
+      "option": "2400×1200 мм",
       "price": 64000,
       "id": "38"
     },
     {
       "category": "stands",
       "name": "Стенд без объемных элементов (ПВХ, интерьерная печать, декоративная кайма)",
-      "option": "25001500 мм",
+      "option": "2500×1500 мм",
       "price": 100000,
       "id": "39"
     },
     {
       "category": "stands",
       "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
-      "option": "15001000 мм",
+      "option": "1500×1000 мм",
       "price": 110000,
       "id": "40"
     },
     {
       "category": "stands",
       "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
-      "option": "20001000 мм",
+      "option": "2000×1000 мм",
       "price": 150000,
       "id": "41"
     },
     {
       "category": "stands",
       "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
-      "option": "24001200 мм",
+      "option": "2400×1200 мм",
       "price": 220000,
       "id": "42"
     },
     {
       "category": "stands",
       "name": "Стенд составной с объемными элементами (ПВХ, накладные буквы; герб +27 500 тг)",
-      "option": "25001500 мм",
+      "option": "2500×1500 мм",
       "price": 285000,
       "id": "43"
     },
@@ -1564,6 +2836,730 @@
       "option": "Холст в рамке",
       "price": 90000,
       "id": "64"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Настольный флагшток (дерево) 1 рожковый",
+      "option": "шт.",
+      "price": 2500,
+      "id": "fp-04"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Напольный флагшток 2,5 м выс (аренда)",
+      "option": "тг/день",
+      "price": 20000,
+      "id": "fp-06"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Изготовление уличного флагштока 6-8 м с установкой (цена от)",
+      "option": "шт.",
+      "price": 180000,
+      "id": "fp-10"
+    },
+    {
+      "category": "flagpoles",
+      "name": "Аренда мобильного уличного флагштока 6 м",
+      "option": "тг/день",
+      "price": 30000,
+      "id": "fp-11"
+    }
+  ],
+  "textile": [
+    {
+      "id": "tx-1",
+      "name": "Атлас, габардин (сублимация)",
+      "unit": "м²",
+      "pricePerSqm": 7500,
+      "prices": {
+        "upTo100": 7500,
+        "upTo500": 7300,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-2",
+      "name": "Флажная сетка (сублимация)",
+      "unit": "м²",
+      "pricePerSqm": 7200,
+      "prices": {
+        "upTo100": 7200,
+        "upTo500": 7000,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-3",
+      "name": "Polytex (прямая печать)",
+      "unit": "м²",
+      "pricePerSqm": 6900,
+      "prices": {
+        "upTo100": 6900,
+        "upTo500": 6200,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-4",
+      "name": "Сетка (двухстор. печать + прожиг)",
+      "unit": "м²",
+      "pricePerSqm": 9000,
+      "prices": {
+        "upTo100": 9000,
+        "upTo500": 8500,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-5",
+      "name": "Перфорированная сетка (прямая печать)",
+      "unit": "м²",
+      "pricePerSqm": 8000,
+      "prices": {
+        "upTo100": 8000,
+        "upTo500": 4000,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-6",
+      "name": "Сетка без печати",
+      "unit": "м²",
+      "pricePerSqm": 3000,
+      "prices": {
+        "upTo100": 3000,
+        "upTo500": 2800,
+        "over500": "договорная"
+      },
+      "description": "Материал текстиль"
+    },
+    {
+      "id": "tx-7",
+      "name": "Печать на сублимационной бумаге",
+      "unit": "м²",
+      "pricePerSqm": 4550,
+      "prices": {
+        "upTo100": 4550,
+        "upTo500": 4000,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    },
+    {
+      "id": "tx-8",
+      "name": "Прожиг",
+      "unit": "м²",
+      "pricePerSqm": 2000,
+      "prices": {
+        "upTo100": 2000,
+        "upTo500": 800,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле"
+    },
+    {
+      "id": "tx-9",
+      "name": "Тафта (сублимация)",
+      "unit": "м²",
+      "pricePerSqm": 6500,
+      "prices": {
+        "upTo100": 6500,
+        "upTo500": 6200,
+        "over500": "договорная"
+      },
+      "description": "Изготовление печати на текстиле, рабочее поле 1600 мм"
+    }
+  ],
+  "flagsProducts": [
+    {
+      "id": "fp-1",
+      "category": "flags-size",
+      "name": "Флаг: атлас, габардин односторонний",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 16000,
+        "1*2": 21000,
+        "1.5*3": 38000,
+        "2*4": "по запросу"
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-2",
+      "category": "flags-size",
+      "name": "Флаг: атлас, габардин двухсторонний",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 22500,
+        "1*2": 37000,
+        "1.5*3": 73000,
+        "2*4": "по запросу"
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-3",
+      "category": "flags-size",
+      "name": "Флаг: тафта двухсторонняя",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 26500,
+        "1*2": 40250,
+        "1.5*3": 80000,
+        "2*4": "по запросу"
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-4",
+      "category": "flags-size",
+      "name": "Знамя: атлас, габардин двухсторонний, бахрома",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 29500,
+        "1*2": 43000,
+        "1.5*3": 85000,
+        "2*4": "по запросу"
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-5",
+      "category": "flags-size",
+      "name": "Флаг: сетка односторонняя",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 14000,
+        "1*2": 16000,
+        "1.5*3": 32000,
+        "2*4": 60000
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-6",
+      "category": "flags-size",
+      "name": "Флаг: сетка двухсторонняя",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 17500,
+        "1*2": 21000,
+        "1.5*3": 40000,
+        "2*4": 80000
+      },
+      "description": "Готовая продукция, цена с учетом материала"
+    },
+    {
+      "id": "fp-7",
+      "category": "flags-size",
+      "name": "Прошивка флага (сетка)",
+      "unit": "шт",
+      "prices": {
+        "1*1.5": 2700,
+        "1*2": 4500,
+        "1.5*3": 5500,
+        "2*4": 16000
+      },
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-8",
+      "category": "desk-flags",
+      "name": "Настольный флаг: атлас, двухсторонний 150×250 мм",
+      "unit": "шт",
+      "price": 2500,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-9",
+      "category": "desk-flags",
+      "name": "Настольный флаг: атлас, односторонний 150×250 мм",
+      "unit": "шт",
+      "price": 2000,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-10",
+      "category": "desk-flags",
+      "name": "Настольный флаг: сетка, односторонний 150×250 мм",
+      "unit": "шт",
+      "price": 1400,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-11",
+      "category": "auto-flags",
+      "name": "Автомобильный флаг, атлас, двухсторонний 200×300 мм",
+      "unit": "шт",
+      "price": 6000,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-12",
+      "category": "auto-flags",
+      "name": "Автомобильный флаг, сетка, двухсторонний 200×300 мм",
+      "unit": "шт",
+      "price": 3500,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-13",
+      "category": "other",
+      "name": "Вымпел (простой) ~150×250 мм",
+      "unit": "шт",
+      "price": null,
+      "description": "Цена от",
+      "prices": {
+        "default": "от 7500"
+      }
+    },
+    {
+      "id": "fp-14",
+      "category": "other",
+      "name": "Шеврон Ø 80×80 мм",
+      "unit": "шт",
+      "price": null,
+      "description": "Цена от",
+      "prices": {
+        "default": "от 850"
+      }
+    },
+    {
+      "id": "fp-15",
+      "category": "ribbons",
+      "name": "Наградные ленты 1-сторонние 150×2000 мм",
+      "unit": "шт",
+      "price": 8500,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-16",
+      "category": "ribbons",
+      "name": "Наградные ленты 2-сторонние 150×2000 мм",
+      "unit": "шт",
+      "price": 10500,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-17",
+      "category": "scarves",
+      "name": "Шарф 1-сторонний 120×1200 мм",
+      "unit": "шт",
+      "price": 5000,
+      "description": "Готовая продукция"
+    },
+    {
+      "id": "fp-18",
+      "category": "scarves",
+      "name": "Шарф 1-2-сторонний 120×1200 мм",
+      "unit": "шт",
+      "price": 5700,
+      "description": "Готовая продукция"
+    }
+  ],
+  "advertisingStands": [
+    {
+      "id": "as-1",
+      "type": "sqm",
+      "name": "Стенд настенный: ПВХ, цветная печать на виниле, декоративная кайма",
+      "unit": "м²",
+      "description": "Цена за 1 м² без установки, с учётом материала. При площади меньше 1 м² добавляется кайма.",
+      "prices": {
+        "pvx3": 18500,
+        "pvx5": 20000,
+        "pvx8": 24000
+      },
+      "thicknesses": [
+        {
+          "id": "pvx3",
+          "label": "ПВХ 3 мм",
+          "price": 18500
+        },
+        {
+          "id": "pvx5",
+          "label": "ПВХ 5 мм",
+          "price": 20000
+        },
+        {
+          "id": "pvx8",
+          "label": "ПВХ 8 мм",
+          "price": 24000
+        }
+      ]
+    },
+    {
+      "id": "as-2",
+      "type": "fixed",
+      "name": "Хэштег: ПВХ 8 мм, 0,45, закатка оракалом с одной стороны",
+      "unit": "шт",
+      "price": 20000,
+      "description": "Размер 1000×150 мм, за штуку"
+    },
+    {
+      "id": "as-3",
+      "type": "fixed",
+      "name": "Инстрамамка: ПВХ 8 мм, 0,45, цветная печать на виниле",
+      "unit": "шт",
+      "price": 28000,
+      "description": "Размер 1200×900 мм, за штуку"
+    }
+  ],
+  "cncLaser": [
+    {
+      "id": "cnc-1",
+      "category": "cnc-cut",
+      "name": "Фрезерная/лазерная резка — ПВХ",
+      "unit": "пог.м",
+      "type": "milling",
+      "thicknessNearby": "ПВХ",
+      "prices": {
+        "t01_15": 120,
+        "t02_4": 150,
+        "t05_7": 180,
+        "t08_10": 220,
+        "t11_15": 300,
+        "t16_20": 400
+      }
+    },
+    {
+      "id": "cnc-2",
+      "category": "cnc-cut",
+      "name": "Фрезерная/лазерная резка — Акрил/Оргстекло",
+      "unit": "пог.м",
+      "type": "milling",
+      "material": "Акрил/Оргстекло",
+      "prices": {
+        "t01_15": 120,
+        "t02_4": 180,
+        "t05_7": 200,
+        "t08_10": 300,
+        "t11_15": 350,
+        "t16_20": 500
+      }
+    },
+    {
+      "id": "cnc-3",
+      "category": "cnc-cut",
+      "name": "Фрезерная резка — Алюкобонд",
+      "unit": "пог.м",
+      "type": "milling",
+      "material": "Алюкобонд",
+      "prices": {
+        "t02_4": 220,
+        "t05_7": 220
+      }
+    },
+    {
+      "id": "cnc-4",
+      "category": "cnc-engrave",
+      "name": "Лазерная гравировка — двухслойный пластик",
+      "unit": "кв.см",
+      "type": "engrave",
+      "price": 10,
+      "price_extra": "+ обрезка",
+      "description": "На других материалах — индивидуально"
+    }
+  ],
+  "plotterCutting": [
+    {
+      "id": "pl-1",
+      "material": "Цветная самоклеящаяся плёнка",
+      "operation": "резка",
+      "unit": "м²",
+      "price": 2000,
+      "description": "Цена без материала"
+    },
+    {
+      "id": "pl-2",
+      "material": "Цветная самоклеящаяся плёнка",
+      "operation": "выборка (очистка)",
+      "unit": "м²",
+      "price": "от 2000",
+      "description": "Цена без материала"
+    },
+    {
+      "id": "pl-3",
+      "material": "Цветная самоклеящаяся плёнка",
+      "operation": "перенос на монтажную плёнку",
+      "unit": "м²",
+      "price": 2000,
+      "description": "Цена с учётом монтажной плёнки"
+    },
+    {
+      "id": "pl-4",
+      "material": "Металлизированная самоклеящаяся плёнка",
+      "operation": "резка",
+      "unit": "м²",
+      "price": 2200,
+      "description": "Цена без материала"
+    },
+    {
+      "id": "pl-5",
+      "material": "Металлизированная самоклеящаяся плёнка",
+      "operation": "выборка (очистка)",
+      "unit": "м²",
+      "price": "от 2000 до 4000",
+      "description": "Цена без материала"
+    },
+    {
+      "id": "pl-6",
+      "material": "Металлизированная самоклеящаяся плёнка",
+      "operation": "перенос на монтажную плёнку",
+      "unit": "м²",
+      "price": 2000,
+      "description": "Цена с учётом монтажной плёнки"
+    }
+  ],
+  "eventServices": [
+    {
+      "id": "es-mob1",
+      "category": "mobile",
+      "name": "X-стенд 0,8×1,8 м",
+      "unit": "шт",
+      "printOptions": {
+        "mimaki": 20000,
+        "roland": 22000,
+        "none": 10000
+      }
+    },
+    {
+      "id": "es-mob2",
+      "category": "mobile",
+      "name": "Roll Up 0,8×2 м",
+      "unit": "шт",
+      "printOptions": {
+        "mimaki": 28000,
+        "roland": 30000,
+        "none": 14000
+      }
+    },
+    {
+      "id": "es-mob3",
+      "category": "mobile",
+      "name": "Roll Up 1,2×2 м",
+      "unit": "шт",
+      "printOptions": {
+        "mimaki": 40000,
+        "roland": 47000,
+        "none": 28000
+      }
+    },
+    {
+      "id": "es-mob4",
+      "category": "mobile",
+      "name": "Roll Up 1,5×2 м",
+      "unit": "шт",
+      "printOptions": {
+        "mimaki": 50000,
+        "roland": 47000,
+        "none": 32000
+      }
+    },
+    {
+      "id": "es-mob5",
+      "category": "mobile",
+      "name": "Телескопические стойки",
+      "unit": "шт",
+      "printOptions": {
+        "none": 45000
+      }
+    },
+    {
+      "id": "es-rent1",
+      "category": "rent",
+      "name": "Аренда конструкций (высота до 3 м)",
+      "unit": "кв.м",
+      "price": "4500"
+    },
+    {
+      "id": "es-rent2",
+      "category": "rent",
+      "name": "Аренда конструкций (от 3 - 5 м)",
+      "unit": "кв.м",
+      "price": "7000"
+    },
+    {
+      "id": "es-rent3",
+      "category": "rent",
+      "name": "Аренда конструкций (свыше 5 м)",
+      "unit": "кв.м",
+      "price": "10000"
+    },
+    {
+      "id": "es-rent4",
+      "category": "rent",
+      "name": "Аренда выставочных панелей (1×2,3 м)",
+      "unit": "шт",
+      "price": "10000"
+    },
+    {
+      "id": "es-rent5",
+      "category": "rent",
+      "name": "Подсветка выставочных панелей",
+      "unit": "шт",
+      "price": "20000"
+    },
+    {
+      "id": "es-rent6",
+      "category": "rent",
+      "name": "Аренда тумбочек световых",
+      "unit": "шт",
+      "price": "25000"
+    },
+    {
+      "id": "es-rent7",
+      "category": "rent",
+      "name": "Аренда столбов световых (указатели)",
+      "unit": "шт",
+      "price": "25000"
+    },
+    {
+      "id": "es-rent8",
+      "category": "rent",
+      "name": "Аренда кресел",
+      "unit": "шт",
+      "price": "от 25000"
+    },
+    {
+      "id": "es-rent9",
+      "category": "rent",
+      "name": "Аренда трибуны для спикера",
+      "unit": "шт",
+      "price": "от 40000 (до 90000)"
+    },
+    {
+      "id": "es-rent10",
+      "category": "rent",
+      "name": "Аренда Roll Up (без печати)",
+      "unit": "шт",
+      "price": "12000"
+    },
+    {
+      "id": "es-rent11",
+      "category": "rent",
+      "name": "Аренда телескопических стоек",
+      "unit": "шт",
+      "price": "15000"
+    },
+    {
+      "id": "es-work1",
+      "category": "specialists",
+      "name": "Монтаж цветной печати",
+      "unit": "м²",
+      "price": "3500"
+    },
+    {
+      "id": "es-work2",
+      "category": "specialists",
+      "name": "Выезд на замеры менеджера и монтажника",
+      "unit": "выезд",
+      "price": "от 10000"
+    },
+    {
+      "id": "es-work3",
+      "category": "specialists",
+      "name": "Работа монтажника",
+      "unit": "час",
+      "price": "5000"
+    },
+    {
+      "id": "es-work4",
+      "category": "specialists",
+      "name": "Работа электрика",
+      "unit": "час",
+      "price": "7000"
+    },
+    {
+      "id": "es-work5",
+      "category": "specialists",
+      "name": "Транспортные услуги, не габаритный груз",
+      "unit": "час",
+      "price": "5000"
+    },
+    {
+      "id": "es-work6",
+      "category": "specialists",
+      "name": "Транспортные услуги, габаритный груз",
+      "unit": "час",
+      "price": "10000"
+    },
+    {
+      "id": "es-work7",
+      "category": "specialists",
+      "name": "АГП до 22 м",
+      "unit": "час",
+      "price": "40000",
+      "minHours": 2
+    },
+    {
+      "id": "es-work8",
+      "category": "specialists",
+      "name": "АГП от 23 м до 30 м",
+      "unit": "час",
+      "price": "50000",
+      "minHours": 3
+    },
+    {
+      "id": "es-work9",
+      "category": "specialists",
+      "name": "АГП до 48 м",
+      "unit": "час",
+      "price": "по запросу"
+    }
+  ],
+  "garmentPrinting": [
+    {
+      "id": "gm1",
+      "type": "flex",
+      "name": "Терморезина (флекс) / ДТФ / печать на терморезине с вырезкой и нанесением",
+      "unit": "кв.см",
+      "pricePerSqCm": 23,
+      "minQty": 5,
+      "minAmount": 6000,
+      "note": "Мин. тираж от 5 шт, не менее 6000 тг"
+    },
+    {
+      "id": "gm2",
+      "type": "sublimation",
+      "name": "Сублимационная печать на кружках, бейсболках, футболках",
+      "unit": "кв.см",
+      "pricePerSqCm": 20,
+      "note": "Только синтетические материалы"
+    },
+    {
+      "id": "gm3",
+      "type": "metal",
+      "name": "Металлографика (с учётом материала)",
+      "unit": "кв.см",
+      "pricePerSqCm": 18,
+      "note": "Срок/цена/дизайн — индивидуально"
+    }
+  ],
+  "embroidery": [
+    {
+      "id": "em1",
+      "name": "Вышивка на крое и полотне",
+      "unit": "за 1000 стежков",
+      "price": 220
+    },
+    {
+      "id": "em2",
+      "name": "Вышивка на готовых изделиях",
+      "unit": "за 1000 стежков",
+      "price": 250
+    },
+    {
+      "id": "em3",
+      "name": "Изготовление шевронов",
+      "unit": "за 1000 стежков",
+      "price": 750,
+      "note": "Вкл: материал, дублирин, припаривание. Мет. нить +25%"
     }
   ]
 }

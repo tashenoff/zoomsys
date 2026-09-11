@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useClients } from '../hooks/useClients'
+import { useAuth } from '../hooks/useAuth'
 
 export default function ClientSelector({ selectedClient, onSelectClient }) {
-  const [clients, setClients] = useState([])
+  const { clients, loading, isOnline, createClient } = useClients()
+  const { hasPermission } = useAuth()
   const [isCreating, setIsCreating] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [saving, setSaving] = useState(false)
   const [newClient, setNewClient] = useState({
     name: '',
     phone: '',
@@ -12,33 +16,20 @@ export default function ClientSelector({ selectedClient, onSelectClient }) {
     notes: ''
   })
 
-  useEffect(() => {
-    loadClients()
-  }, [])
-
-  const loadClients = () => {
-    const stored = localStorage.getItem('clients')
-    if (stored) {
-      setClients(JSON.parse(stored))
-    }
-  }
-
-  const handleCreateClient = (e) => {
+  const handleCreateClient = async (e) => {
     e.preventDefault()
+    setSaving(true)
     
-    const client = {
-      id: Date.now().toString(),
-      ...newClient,
-      createdAt: new Date().toISOString()
+    try {
+      const client = await createClient(newClient)
+      onSelectClient(client)
+      setIsCreating(false)
+      setNewClient({ name: '', phone: '', email: '', company: '', notes: '' })
+    } catch (err) {
+      alert('Ошибка создания клиента: ' + err.message)
+    } finally {
+      setSaving(false)
     }
-
-    const updatedClients = [client, ...clients]
-    setClients(updatedClients)
-    localStorage.setItem('clients', JSON.stringify(updatedClients))
-    
-    onSelectClient(client)
-    setIsCreating(false)
-    setNewClient({ name: '', phone: '', email: '', company: '', notes: '' })
   }
 
   const filteredClients = clients.filter(client =>
@@ -132,9 +123,10 @@ export default function ClientSelector({ selectedClient, onSelectClient }) {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              disabled={saving}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
             >
-              Создать клиента
+              {saving ? 'Сохранение...' : 'Создать клиента'}
             </button>
             <button
               type="button"
@@ -151,7 +143,14 @@ export default function ClientSelector({ selectedClient, onSelectClient }) {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Выбор клиента</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Выбор клиента</h2>
+        {!isOnline && (
+          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+            📴 Offline
+          </span>
+        )}
+      </div>
 
       {selectedClient ? (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -184,12 +183,14 @@ export default function ClientSelector({ selectedClient, onSelectClient }) {
               placeholder="Поиск клиента..."
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              onClick={() => setIsCreating(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition whitespace-nowrap"
-            >
-              + Новый
-            </button>
+            {hasPermission('manageClients') && (
+              <button
+                onClick={() => setIsCreating(true)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition whitespace-nowrap"
+              >
+                + Новый
+              </button>
+            )}
           </div>
 
           <div className="max-h-64 overflow-y-auto space-y-2">

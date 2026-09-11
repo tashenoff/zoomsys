@@ -1,16 +1,25 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
 export default function BusinessCardsCalculator({ client: externalClient }) {
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext, loading: pricingLoading } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  
+  // Используем данные из контекста или fallback
+  const pricingData = pricingContext || pricingDataFallback
+  
   // Состояние для выбора типа карточки
   const [selectedCardType, setSelectedCardType] = useState(null)
   
-  const [pricing, setPricing] = useState(pricingData.businessCards)
-  const [additionalOperations] = useState(pricingData.additionalOperations || {})
-  const [reorderOptions] = useState(pricingData.reorderOptions || [])
-  const [additionalServices, setAdditionalServices] = useState(pricingData.additionalServices)
+  const pricing = pricingData.businessCards || []
+  const additionalOperations = pricingData.additionalOperations || {}
+  const reorderOptions = pricingData.reorderOptions || []
+  const additionalServices = pricingData.additionalServices || []
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -35,7 +44,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   const [selectedReorder, setSelectedReorder] = useState('no')
   const [customNotes, setCustomNotes] = useState([]) // Массив кастомных услуг
 
-  const urgentSurcharge = pricingData.settings.urgentSurcharge
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   // Refs для автоскролла
   const colorTypeRef = useRef(null)
@@ -50,13 +59,38 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     }
   }, [externalClient])
 
-  // Получаем доступные допоперации для выбранного типа карточки
+  // Получаем доступные допоперации и доп. услуги для выбранного типа карточки
   const availableOperations = useMemo(() => {
     if (!selectedCardType) return []
-    return Object.values(additionalOperations).filter(op => 
-      op.applicableTo.includes('all') || op.applicableTo.includes(selectedCardType)
-    )
-  }, [selectedCardType, additionalOperations])
+    const seen = new Set()
+
+    // Из доп. операций
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          if (!op || !op.applicableTo) return false
+          const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Из доп. услуг (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [selectedCardType, additionalOperations, additionalServices])
 
   // Получаем уникальные материалы
   const uniqueMaterials = useMemo(() => {
@@ -72,15 +106,19 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     )
   }, [uniqueMaterials, searchMaterial])
 
-  // Получаем доступные цветности для выбранного материала
+  // Получаем доступные цветности для выбранного материала (уникальные)
   const availableColorTypes = useMemo(() => {
     if (!selectedMaterial) return []
-    return pricing
+    const colorTypesMap = new Map()
+    pricing
       .filter(p => p.name === selectedMaterial)
-      .map(p => ({
-        colorType: p.colorType,
-        product: p
-      }))
+      .forEach(p => {
+        // Берём только первый продукт для каждой цветности
+        if (!colorTypesMap.has(p.colorType)) {
+          colorTypesMap.set(p.colorType, { colorType: p.colorType, product: p })
+        }
+      })
+    return Array.from(colorTypesMap.values())
   }, [selectedMaterial, pricing])
 
   // При выборе материала сбрасываем цветность и скроллим к цветности
@@ -225,19 +263,23 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         
         servicesTotal += servicePrice
       } else {
-        // Fallback на старые additionalServices
-        const service = additionalServices.find(s => s.id === serviceId)
-        if (service) {
-          const servicePrice = service.unit === 'тг/шт' 
-            ? service.price * quantity 
-            : service.price
-          servicesTotal += servicePrice
-          servicesDetails.push({
-            name: service.name,
-            price: servicePrice
-          })
-        }
-      }
+              // Fallback на старые additionalServices
+              const service = additionalServices.find(s => s.id === serviceId)
+              if (service) {
+                if (service.priceText) {
+                  servicesDetails.push({ name: `${service.name} (${service.priceText})`, price: 0, byRequest: true })
+                  return
+                }
+                const servicePrice = service.unit === 'тг/шт' 
+                  ? service.price * quantity 
+                  : service.price
+                servicesTotal += servicePrice
+                servicesDetails.push({
+                  name: service.name,
+                  price: servicePrice
+                })
+              }
+            }
     })
 
     // Добавляем кастомные услуги с ценой
@@ -286,47 +328,53 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    // Сохраняем заказ в localStorage
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'business-cards',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      
+      // Сброс формы
+      setSearchMaterial('')
+      setSelectedMaterial(null)
+      setSelectedColorType(null)
+      setSelectedProduct(null)
+      setQuantity(100)
+      setSelectedServices([])
+      setIsUrgent(false)
+      setDiscount(0)
+      setNotes('')
+      setCalculation(null)
+      setOrderStatus('draft')
+      setSelectedReorder('no')
+      setCustomNotes([])
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    // Сброс формы
-    setSearchMaterial('')
-    setSelectedMaterial(null)
-    setSelectedColorType(null)
-    setSelectedProduct(null)
-    setQuantity(100)
-    setSelectedServices([])
-    setIsUrgent(false)
-    setDiscount(0)
-    setNotes('')
-    setCalculation(null)
-    setOrderStatus('draft')
-    setSelectedReorder('no')
-    setCustomNotes([])
   }
 
   // Типы карточек для выбора
   const cardTypes = [
     { id: 'business-cards', name: 'Визитки', icon: '💼', active: true, sectionTitle: 'Визитки и карточки' },
-    { id: 'badges', name: 'Бейджи', icon: '🎫', active: false },
-    { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: false },
+        { id: 'badges', name: 'Бейджи', icon: '🎫', active: true },
+        { id: 'discount-cards', name: 'Дисконтные / клубные карты', icon: '💳', active: true },
     { id: 'invitations', name: 'Пригласительные карточки', icon: '💌', active: false },
     { id: 'certificates', name: 'Сертификаты малого формата', icon: '🎓', active: false },
     { id: 'custom-cards', name: 'Карточки произвольного типа', icon: '📇', active: false },
@@ -634,7 +682,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
           </div>
         )}
 
-        {/* СЕКЦИЯ 4.5: Перезаказ */}
+        {/* СЕКЦИЯ 4.5: Перезаказ - Временно скрыто */}
+        {/* 
         {reorderOptions.length > 0 && (
           <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
             <div className="mb-3">
@@ -679,6 +728,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             )}
           </div>
         )}
+        */}
 
         {/* СЕКЦИЯ 4.6: Дополнительные услуги с ценой (множественные) */}
         <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
@@ -961,10 +1011,10 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
           <button
             onClick={handleSaveOrder}
-            disabled={!client}
+            disabled={!client || savingOrder}
             className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg uppercase tracking-wide"
           >
-            💾 Сохранить заказ
+            {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
           </button>
 
           {!client && (

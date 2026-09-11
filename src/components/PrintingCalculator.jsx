@@ -1,12 +1,20 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
 export default function PrintingCalculator({ client: externalClient }) {
-  const [pricing, setPricing] = useState(pricingData.printing || [])
-  const [additionalOperations] = useState(pricingData.additionalOperations || {})
-  const [reorderOptions] = useState(pricingData.reorderOptions || [])
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  const pricingData = pricingContext || pricingDataFallback
+  
+  const pricing = pricingData.printing || []
+  const additionalOperations = pricingData.additionalOperations || {}
+  const reorderOptions = pricingData.reorderOptions || []
+  const additionalServices = pricingData.additionalServices || []
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -29,7 +37,7 @@ export default function PrintingCalculator({ client: externalClient }) {
   const [selectedReorder, setSelectedReorder] = useState('no')
   const [customNotes, setCustomNotes] = useState([])
 
-  const urgentSurcharge = pricingData.settings.urgentSurcharge
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   // Refs для автоскролла
   const productsRef = useRef(null)
@@ -43,13 +51,38 @@ export default function PrintingCalculator({ client: externalClient }) {
     }
   }, [externalClient])
 
-  // Получаем доступные допоперации для выбранной категории
+  // Получаем доступные допоперации и доп. услуги для выбранной категории
   const availableOperations = useMemo(() => {
     if (!selectedCategory) return []
-    return Object.values(additionalOperations).filter(op => 
-      op.applicableTo.includes('all') || op.applicableTo.includes(selectedCategory)
-    )
-  }, [selectedCategory, additionalOperations])
+    const seen = new Set()
+
+    // Из доп. операций
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          if (!op || !op.applicableTo) return false
+          const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Из доп. услуг (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [selectedCategory, additionalOperations, additionalServices])
 
   // Функции для работы с кастомными услугами
   const addCustomNote = () => {
@@ -69,11 +102,15 @@ export default function PrintingCalculator({ client: externalClient }) {
   // Получаем уникальные категории
   const categories = useMemo(() => {
     const categoryMap = {
-      'flyers': { name: 'Флаера, Листовки, Афиши', icon: '📄' },
-      'booklets': { name: 'Буклеты', icon: '📒' },
-      'certificates': { name: 'Дипломы, Грамоты, Сертификаты, Пригласительные', icon: '🎓' },
-      'notebooks': { name: 'Дипломы, Грамоты, Пригласительные', icon: '📔' }
-    }
+          'flyers': { name: 'Флаера, Листовки, Афиши', icon: '📄' },
+          'booklets': { name: 'Буклеты', icon: '📒' },
+          'certificates': { name: 'Дипломы, Грамоты, Сертификаты, Пригласительные', icon: '🎓' },
+          'notebooks': { name: 'Дипломы, Грамоты, Пригласительные', icon: '📔' },
+          'folders': { name: 'Папки', icon: '📁' },
+                    'paper-bags': { name: 'Бумажные пакеты', icon: '🛍️' },
+                    'digital-printing': { name: 'Цифровая печать', icon: '🖨️' },
+                    'paper-density': { name: 'Печать на бумаге разной плотности', icon: '📄' }
+                  }
     
     const uniqueCategories = [...new Set(pricing.map(p => p.category))]
     return uniqueCategories.map((cat, index) => ({
@@ -203,12 +240,17 @@ export default function PrintingCalculator({ client: externalClient }) {
     let servicesDetails = []
 
     // Обрабатываем допоперации
-    selectedServices.forEach(serviceId => {
-      const operation = availableOperations.find(op => op.id === serviceId)
-      if (operation) {
-        let servicePrice = operation.unit === 'тг/шт' 
-          ? operation.price * quantity 
-          : operation.price
+        selectedServices.forEach(serviceId => {
+          const operation = availableOperations.find(op => op.id === serviceId)
+          if (operation) {
+            // Услуга с ценой «от/диапазон» — не добавляем к сумме, помечаем «по запросу»
+            if (operation.priceText) {
+              servicesDetails.push({ name: `${operation.name} (${operation.priceText})`, price: 0, byRequest: true })
+              return
+            }
+            let servicePrice = operation.unit === 'тг/шт' 
+              ? operation.price * quantity 
+              : operation.price
         
         // Применяем скидку на препресс при перезаказе
         if (operation.id === 'prepress' && selectedReorder !== 'no') {
@@ -285,41 +327,47 @@ export default function PrintingCalculator({ client: externalClient }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      type: 'printing',
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'printing',
+        type: 'printing',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      
+      // Сброс формы
+      setSelectedCategory(null)
+      setSearchProduct('')
+      setSelectedProduct(null)
+      setSelectedColorType(null)
+      setQuantity(100)
+      setSelectedServices([])
+      setIsUrgent(false)
+      setDiscount(0)
+      setNotes('')
+      setCalculation(null)
+      setOrderStatus('draft')
+      setSelectedReorder('no')
+      setCustomNotes([])
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    
-    // Сброс формы
-    setSelectedCategory(null)
-    setSearchProduct('')
-    setSelectedProduct(null)
-    setSelectedColorType(null)
-    setQuantity(100)
-    setSelectedServices([])
-    setIsUrgent(false)
-    setDiscount(0)
-    setNotes('')
-    setCalculation(null)
-    setOrderStatus('draft')
-    setSelectedReorder('no')
-    setCustomNotes([])
   }
 
   const canCalculate = selectedProduct && 
@@ -525,9 +573,9 @@ export default function PrintingCalculator({ client: externalClient }) {
                   />
                   <div className="flex-1">
                     <span className="font-medium block">{operation.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {operation.price} {operation.unit}
-                    </span>
+                                        <span className="text-xs text-gray-500">
+                                          {operation.priceText || (operation.price != null ? `${operation.price} ${operation.unit}` : '')}
+                                        </span>
                   </div>
                   {selectedServices.includes(operation.id) && (
                     <span className="text-green-600 text-xl">✓</span>
@@ -874,10 +922,10 @@ export default function PrintingCalculator({ client: externalClient }) {
 
           <button
             onClick={handleSaveOrder}
-            disabled={!client}
+            disabled={!client || savingOrder}
             className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg uppercase tracking-wide"
           >
-            💾 Сохранить заказ
+            {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
           </button>
 
           {!client && (

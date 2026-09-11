@@ -1,0 +1,14 @@
+[33mfe8ce75[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m .
+[33m78ea4b4[m .
+[33m0ea8669[m .
+[33m5650ab2[m .
+[33m6669f38[m .
+[33m1d4048f[m fix: переход на pnpm для корректной установки зависимостей на Vercel
+[33m7e61e3e[m fix: добавить свежий package-lock.json со всеми зависимостями
+[33mbb94a2b[m fix: добавить .nvmrc для Node 20 и удалить некорректный .npmrc
+[33mee05928[m fix: запускать vite через node напрямую
+[33m40b9308[m fix: использовать npx vite build для обхода проблемы с правами
+[33m2e139f3[m fix: добавить engines и .npmrc для корректной установки зависимостей на Vercel
+[33md07b0ef[m fix: удалить package-lock.json для пересоздания на Vercel
+[33m1da71c0[m .
+[33mb9b4334[m first commit

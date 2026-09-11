@@ -1,10 +1,26 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import pricingData from '../data/pricing.json'
+import { usePricing } from '../hooks/usePricing'
+import { useOrders } from '../hooks/useOrders'
+import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
 export default function UVPrintingCalculator({ client: externalClient }) {
-  const [pricing, setPricing] = useState(pricingData.uvPrinting || [])
+  // Получаем данные из контекста прайсов и заказов
+  const { pricing: pricingContext } = usePricing()
+  const { createOrder, isOnline } = useOrders()
+  const pricingData = pricingContext || pricingDataFallback
+  
+  const pricing = pricingData.uvPrinting || []
+  const additionalOperations = pricingData.additionalOperations || {}
+
+  const uvOperations = useMemo(() => {
+    if (!additionalOperations || typeof additionalOperations !== 'object') return []
+    return Object.values(additionalOperations).filter(op => {
+      const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
+      return applicableTo.includes('uv-printing')
+    })
+  }, [additionalOperations])
   
   const [client, setClient] = useState(externalClient)
   
@@ -19,10 +35,12 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   const [isUrgent, setIsUrgent] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState('')
+  const [selectedUvOps, setSelectedUvOps] = useState([])
+  const [selectedUvOptions, setSelectedUvOptions] = useState({})
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
 
-  const urgentSurcharge = pricingData.settings.urgentSurcharge
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const productsRef = useRef(null)
   const sidesRef = useRef(null)
@@ -116,7 +134,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       if (selectedProduct.materials && !selectedMaterial) return
       calculatePrice()
     }
-  }, [selectedProduct, selectedSide, selectedMaterial, quantity, area, isUrgent, discount])
+  }, [selectedProduct, selectedSide, selectedMaterial, quantity, area, isUrgent, discount, selectedUvOps, selectedUvOptions])
 
   const getPriceForQuantity = (pricesObj, qty) => {
     if (!pricesObj) return 0
@@ -225,11 +243,40 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       }
     }
 
-    let subtotal = baseTotal
+    let extrasTotal = 0
+    const extras = []
+    let coefficient = 1
 
-    const urgentAmount = isUrgent ? (subtotal * urgentSurcharge / 100) : 0
+    selectedUvOps.forEach(id => {
+      const op = uvOperations.find(o => String(o.id) === String(id))
+      if (!op) return
+
+      if (op.type === 'coefficient') {
+        const k = Number(op.price) || 1
+        coefficient *= k
+        extras.push({ name: `${op.name} (×${k})`, price: 0, coefficient: k })
+        return
+      }
+
+      if (op.type === 'select') {
+        const optionId = selectedUvOptions[id]
+        const option = (op.options || []).find(opt => String(opt.id) === String(optionId))
+        if (!option) return
+        const add = Number(option.price) || 0
+        extrasTotal += add
+        extras.push({ name: `${op.name}: ${option.name}`, price: add })
+        return
+      }
+
+      const add = Number(op.price) || 0
+      extrasTotal += add
+      extras.push({ name: op.name, price: add })
+    })
+
+    const printTotal = baseTotal * coefficient
+    const subtotal = printTotal + extrasTotal
+    const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
     const totalAfterUrgent = subtotal + urgentAmount
-
     const discountAmount = totalAfterUrgent * (discount / 100)
     const total = totalAfterUrgent - discountAmount
 
@@ -242,6 +289,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       area: (selectedProduct.priceType === 'sqcm' || selectedProduct.materials || (sideData && sideData.priceType === 'sqcm')) ? area : null,
       unitPrice,
       baseTotal,
+      coefficient,
+      extras,
+      extrasTotal,
+      printTotal,
       subtotal,
       calculationType,
       isUrgent,
@@ -254,38 +305,46 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     })
   }
 
-  const handleSaveOrder = () => {
+  const [savingOrder, setSavingOrder] = useState(false)
+
+  const handleSaveOrder = async () => {
     if (!client || !calculation) {
       alert('Выберите клиента и сделайте расчет')
       return
     }
 
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-    const newOrder = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-${Date.now()}`,
-      client,
-      type: 'uv-printing',
-      ...calculation,
-      status: orderStatus,
-      createdAt: new Date().toISOString()
+    setSavingOrder(true)
+    try {
+      const orderData = {
+        client,
+        category: 'uv-printing',
+        type: 'uv-printing',
+        ...calculation,
+        status: orderStatus,
+        paymentStatus: 'not_paid'
+      }
+      
+      await createOrder(orderData)
+      alert('Заказ успешно сохранен!')
+      
+      setSelectedCategory(null)
+      setSearchProduct('')
+      setSelectedProduct(null)
+      setSelectedSide(null)
+      setQuantity(100)
+      setArea(1)
+      setIsUrgent(false)
+      setDiscount(0)
+      setNotes('')
+      setSelectedUvOps([])
+      setSelectedUvOptions({})
+      setCalculation(null)
+      setOrderStatus('draft')
+    } catch (err) {
+      alert('Ошибка сохранения заказа: ' + err.message)
+    } finally {
+      setSavingOrder(false)
     }
-    orders.push(newOrder)
-    localStorage.setItem('orders', JSON.stringify(orders))
-
-    alert('Заказ успешно сохранен!')
-    
-    setSelectedCategory(null)
-    setSearchProduct('')
-    setSelectedProduct(null)
-    setSelectedSide(null)
-    setQuantity(100)
-    setArea(1)
-    setIsUrgent(false)
-    setDiscount(0)
-    setNotes('')
-    setCalculation(null)
-    setOrderStatus('draft')
   }
 
   const canCalculate = selectedProduct && 
@@ -335,6 +394,8 @@ export default function UVPrintingCalculator({ client: externalClient }) {
           setIsUrgent(false)
           setDiscount(0)
           setNotes('')
+          setSelectedUvOps([])
+          setSelectedUvOptions({})
           setCalculation(null)
           setOrderStatus('draft')
         }}
@@ -563,6 +624,58 @@ export default function UVPrintingCalculator({ client: externalClient }) {
           </div>
         )}
 
+        {canCalculate && uvOperations.length > 0 && (
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
+              ⭐ Дополнительные операции УФ
+            </label>
+            <p className="text-xs text-gray-600 mb-3">Цена указана без материала. Коэффициенты применяются к стоимости печати.</p>
+            <div className="space-y-3">
+              {uvOperations.map((op) => {
+                const isSelected = selectedUvOps.includes(op.id)
+                return (
+                  <div key={op.id} className={`p-4 border-2 rounded-lg ${isSelected ? 'bg-green-100 border-green-500' : 'bg-white border-green-300'}`}>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedUvOps([...selectedUvOps, op.id])
+                          else {
+                            setSelectedUvOps(selectedUvOps.filter(id => id !== op.id))
+                            const next = { ...selectedUvOptions }
+                            delete next[op.id]
+                            setSelectedUvOptions(next)
+                          }
+                        }}
+                        className="mt-1 w-5 h-5"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{op.name}</div>
+                        {op.description && <div className="text-xs text-gray-500 mt-1">{op.description}</div>}
+                        {op.type === 'coefficient' && <div className="text-sm text-gray-600 mt-1">×{op.price}</div>}
+                        {op.type !== 'coefficient' && op.type !== 'select' && op.price && <div className="text-sm text-gray-600 mt-1">{op.price} {op.unit || 'тг'}</div>}
+                        {op.type === 'select' && isSelected && (
+                          <select
+                            value={selectedUvOptions[op.id] || ''}
+                            onChange={(e) => setSelectedUvOptions({ ...selectedUvOptions, [op.id]: e.target.value })}
+                            className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          >
+                            <option value="">Выберите опцию</option>
+                            {(op.options || []).map(opt => (
+                              <option key={opt.id} value={opt.id}>{opt.name} — {opt.price} тг</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
         {canCalculate && (
           <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -578,7 +691,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
                 className="mr-3 w-5 h-5"
               />
               <span className="flex-1 font-medium text-red-700">
-                🔥 Срочный заказ (+{urgentSurcharge}%)
+                🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)
               </span>
             </label>
 
@@ -678,6 +791,22 @@ export default function UVPrintingCalculator({ client: externalClient }) {
                   </span>
                 </div>
 
+                {calculation.coefficient > 1 && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600">Коэффициент к печати:</span>
+                    <span className="font-semibold">×{calculation.coefficient}</span>
+                  </div>
+                )}
+
+                {(calculation.extras || []).filter(ex => ex.price > 0 || ex.coefficient).map((ex) => (
+                  <div key={ex.name} className="flex justify-between items-center pl-4 py-2">
+                    <span className="text-gray-600">{ex.name}:</span>
+                    <span className="font-semibold text-green-600">
+                      {ex.price ? `${ex.price.toFixed(2)} тг` : 'к печати'}
+                    </span>
+                  </div>
+                ))}
+
                 {calculation.isUrgent && (
                   <div className="flex justify-between items-center py-3 bg-red-50 px-4 rounded">
                     <span className="text-red-700 font-semibold">
@@ -762,10 +891,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
 
               <button
                 onClick={handleSaveOrder}
-                disabled={!client}
+                disabled={!client || savingOrder}
                 className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg uppercase tracking-wide"
               >
-                💾 Сохранить заказ
+                {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
               </button>
 
               {!client && (

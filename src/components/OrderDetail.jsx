@@ -1,48 +1,52 @@
 import { useState, useEffect } from 'react'
+import { useOrders } from '../hooks/useOrders'
+import { useAuth } from '../hooks/useAuth'
 
 export default function OrderDetail({ orderId, onBack }) {
+  const { hasPermission } = useAuth()
+  const { getOrder, fetchOrderDetail, updateOrder, deleteOrder: apiDeleteOrder, isOnline } = useOrders()
   const [order, setOrder] = useState(null)
   const [currentStatus, setCurrentStatus] = useState('draft')
   const [paymentStatus, setPaymentStatus] = useState('not_paid')
 
+  const [updating, setUpdating] = useState(false)
+
   useEffect(() => {
     loadOrder()
-  }, [orderId])
+  }, [orderId, getOrder, fetchOrderDetail])
 
-  const loadOrder = () => {
-    const stored = localStorage.getItem('orders')
-    if (stored) {
-      const orders = JSON.parse(stored)
-      const found = orders.find(o => o.id === orderId)
-      setOrder(found)
-      setCurrentStatus(found?.status || 'draft')
-      setPaymentStatus(found?.paymentStatus || 'not_paid')
-    }
+  const loadOrder = async () => {
+    // Сначала показываем то, что есть локально (или загружаем полный заказ с сервера)
+    const found = await fetchOrderDetail(orderId) || getOrder(orderId)
+    if (!found) return
+    setOrder(found)
+    setCurrentStatus(found.status || 'draft')
+    setPaymentStatus(found.paymentStatus || found.payment_status || 'not_paid')
   }
 
-  const updateStatus = (newStatus) => {
-    const stored = localStorage.getItem('orders')
-    if (stored) {
-      const orders = JSON.parse(stored)
-      const updatedOrders = orders.map(o => 
-        o.id === orderId ? { ...o, status: newStatus } : o
-      )
-      localStorage.setItem('orders', JSON.stringify(updatedOrders))
+  const updateStatus = async (newStatus) => {
+    setUpdating(true)
+    try {
+      await updateOrder(orderId, { status: newStatus })
       setCurrentStatus(newStatus)
       setOrder({ ...order, status: newStatus })
+    } catch (err) {
+      alert('Ошибка обновления статуса: ' + err.message)
+    } finally {
+      setUpdating(false)
     }
   }
 
-  const updatePaymentStatus = (newPaymentStatus) => {
-    const stored = localStorage.getItem('orders')
-    if (stored) {
-      const orders = JSON.parse(stored)
-      const updatedOrders = orders.map(o => 
-        o.id === orderId ? { ...o, paymentStatus: newPaymentStatus } : o
-      )
-      localStorage.setItem('orders', JSON.stringify(updatedOrders))
+  const updatePaymentStatus = async (newPaymentStatus) => {
+    setUpdating(true)
+    try {
+      await updateOrder(orderId, { paymentStatus: newPaymentStatus })
       setPaymentStatus(newPaymentStatus)
       setOrder({ ...order, paymentStatus: newPaymentStatus })
+    } catch (err) {
+      alert('Ошибка обновления статуса оплаты: ' + err.message)
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -75,14 +79,13 @@ export default function OrderDetail({ orderId, onBack }) {
     )
   }
 
-  const deleteOrder = () => {
+  const deleteOrder = async () => {
     if (confirm('Удалить этот заказ?')) {
-      const stored = localStorage.getItem('orders')
-      if (stored) {
-        const orders = JSON.parse(stored)
-        const updated = orders.filter(o => o.id !== orderId)
-        localStorage.setItem('orders', JSON.stringify(updated))
+      try {
+        await apiDeleteOrder(orderId)
         onBack()
+      } catch (err) {
+        alert('Ошибка удаления: ' + err.message)
       }
     }
   }
@@ -105,6 +108,22 @@ export default function OrderDetail({ orderId, onBack }) {
 
   return (
     <div className="space-y-6">
+      {/* Индикатор offline */}
+      {!isOnline && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
+          <span>📴</span>
+          <span className="text-yellow-700 text-sm">Работа в offline режиме. Изменения синхронизируются при восстановлении связи.</span>
+        </div>
+      )}
+
+      {/* Индикатор обновления */}
+      {updating && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <span className="text-blue-700 text-sm">Сохранение изменений...</span>
+        </div>
+      )}
+
       {/* Навигация назад */}
       <button
         onClick={onBack}
@@ -144,55 +163,61 @@ export default function OrderDetail({ orderId, onBack }) {
           <span className="text-sm font-medium text-gray-700">Текущий статус:</span>
           {getStatusBadge(currentStatus)}
         </div>
+        {hasPermission('editOrders') ? (
         <div className="border-t pt-4">
           <p className="text-sm font-medium text-gray-700 mb-3">Изменить статус:</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <button
               onClick={() => updateStatus('draft')}
-              disabled={currentStatus === 'draft'}
+              disabled={currentStatus === 'draft' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 currentStatus === 'draft'
                   ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
-                  : 'bg-white border-gray-300 hover:border-gray-500 hover:bg-gray-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-gray-300 hover:border-gray-500 hover:bg-gray-50'
               }`}
             >
               📝 Черновик
             </button>
             <button
               onClick={() => updateStatus('in_progress')}
-              disabled={currentStatus === 'in_progress'}
+              disabled={currentStatus === 'in_progress' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 currentStatus === 'in_progress'
                   ? 'bg-blue-300 text-blue-500 border-blue-300 cursor-not-allowed'
-                  : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'
               }`}
             >
               ⚙️ В процессе
             </button>
             <button
               onClick={() => updateStatus('approved')}
-              disabled={currentStatus === 'approved'}
+              disabled={currentStatus === 'approved' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 currentStatus === 'approved'
                   ? 'bg-green-300 text-green-500 border-green-300 cursor-not-allowed'
-                  : 'bg-white border-green-300 hover:border-green-500 hover:bg-green-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-green-300 hover:border-green-500 hover:bg-green-50'
               }`}
             >
               ✅ Утверждено
             </button>
             <button
               onClick={() => updateStatus('completed')}
-              disabled={currentStatus === 'completed'}
+              disabled={currentStatus === 'completed' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 currentStatus === 'completed'
                   ? 'bg-purple-300 text-purple-500 border-purple-300 cursor-not-allowed'
-                  : 'bg-white border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-purple-300 hover:border-purple-500 hover:bg-purple-50'
               }`}
             >
               🎉 Исполнено
             </button>
           </div>
         </div>
+        ) : (
+          <div className="border-t pt-4 text-gray-500 text-sm">
+            У вас нет прав для изменения статуса заказа
+          </div>
+        )}
       </div>
 
       {/* Управление статусом платежа */}
@@ -202,44 +227,50 @@ export default function OrderDetail({ orderId, onBack }) {
           <span className="text-sm font-medium text-gray-700">Текущий статус:</span>
           {getPaymentStatusBadge(paymentStatus)}
         </div>
+        {hasPermission('editOrders') ? (
         <div className="border-t pt-4">
           <p className="text-sm font-medium text-gray-700 mb-3">Изменить статус платежа:</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
               onClick={() => updatePaymentStatus('not_paid')}
-              disabled={paymentStatus === 'not_paid'}
+              disabled={paymentStatus === 'not_paid' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 paymentStatus === 'not_paid'
                   ? 'bg-red-300 text-red-500 border-red-300 cursor-not-allowed'
-                  : 'bg-white border-red-300 hover:border-red-500 hover:bg-red-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-red-300 hover:border-red-500 hover:bg-red-50'
               }`}
             >
               ❌ Не оплачено
             </button>
             <button
               onClick={() => updatePaymentStatus('prepaid')}
-              disabled={paymentStatus === 'prepaid'}
+              disabled={paymentStatus === 'prepaid' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 paymentStatus === 'prepaid'
                   ? 'bg-yellow-300 text-yellow-600 border-yellow-300 cursor-not-allowed'
-                  : 'bg-white border-yellow-300 hover:border-yellow-500 hover:bg-yellow-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-yellow-300 hover:border-yellow-500 hover:bg-yellow-50'
               }`}
             >
               💵 Предоплата получена
             </button>
             <button
               onClick={() => updatePaymentStatus('paid')}
-              disabled={paymentStatus === 'paid'}
+              disabled={paymentStatus === 'paid' || updating}
               className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
                 paymentStatus === 'paid'
                   ? 'bg-green-300 text-green-600 border-green-300 cursor-not-allowed'
-                  : 'bg-white border-green-300 hover:border-green-600 hover:bg-green-50'
+                  : updating ? 'opacity-50 cursor-wait' : 'bg-white border-green-300 hover:border-green-600 hover:bg-green-50'
               }`}
             >
               ✅ Оплачено 100%
             </button>
           </div>
         </div>
+        ) : (
+          <div className="border-t pt-4 text-gray-500 text-sm">
+            У вас нет прав для изменения статуса платежа
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -408,16 +439,18 @@ export default function OrderDetail({ orderId, onBack }) {
       </div>
 
       {/* Действия */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex gap-4">
-          <button
-            onClick={deleteOrder}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-          >
-            🗑️ Удалить заказ
-          </button>
+      {hasPermission('deleteOrders') && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex gap-4">
+            <button
+              onClick={deleteOrder}
+              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+            >
+              🗑️ Удалить заказ
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

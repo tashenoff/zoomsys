@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ZoomSys — Runtime Architecture",
+    "output": "zoomsys-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "primary-user-path",
+        "label": "Основной путь: заказ",
+        "focus": ["operator", "vite-dev", "webapp", "api", "api-domains", "db"],
+        "note": "Оператор открывает витрину, выбирает услугу, создаёт заказ — от браузера до PostgreSQL."
+      },
+      {
+        "id": "auth-and-session",
+        "label": "Аутентификация и роли",
+        "focus": ["webapp", "api", "auth", "db"],
+        "note": "JWT-вход, bcrypt-проверка пароля и права доступа ролей admin / manager / user."
+      },
+      {
+        "id": "prod-and-cache",
+        "label": "Продакшен и кэш",
+        "focus": ["api", "dist-static", "webapp", "localstorage"],
+        "note": "Отдача dist в production и offline-кэш браузера."
+      }
+    ]
+  },
+  "layout": { "mode": "grid", "origin": [60, 60], "cols": 5, "cellW": 172, "cellH": 108, "gapX": 156, "gapY": 130 },
+  "components": [
+    { "id": "operator", "type": "external", "label": "Оператор", "sublabel": "Менеджер типографии", "row": 2, "col": 0, "size": [150, 62] },
+    { "id": "vite-dev", "type": "frontend", "label": "Vite Dev Server", "sublabel": ":5173 · HMR", "row": 2, "col": 1, "size": [150, 62], "tag": "dev only" },
+    { "id": "webapp", "type": "frontend", "label": "React Web App", "sublabel": "JSX · калькуляторы", "row": 2, "col": 2, "size": [150, 76] },
+    { "id": "api", "type": "backend", "label": "Express API", "sublabel": ":3001 · /api", "row": 2, "col": 3, "size": [150, 76] },
+    { "id": "auth", "type": "security", "label": "JWT Auth", "sublabel": "bcrypt + JWT 24h", "row": 0, "col": 3, "size": [150, 62] },
+    { "id": "api-domains", "type": "backend", "label": "Домены API", "sublabel": "/orders · /pricing · /clients · /users", "row": 4, "col": 3, "size": [150, 62] },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": ":5432 · zoomsys-db", "row": 4, "col": 4, "size": [150, 62] },
+    { "id": "localstorage", "type": "database", "label": "localStorage", "sublabel": "offline-кэш браузера", "row": 4, "col": 2, "size": [150, 62] },
+    { "id": "dist-static", "type": "frontend", "label": "Static dist", "sublabel": "production-сборка", "row": 3, "col": 4, "size": [150, 62] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Клиентская зона (браузер)", "wraps": ["vite-dev", "webapp", "localstorage"] },
+    { "kind": "security-group", "label": "Trust boundary · JWT", "wraps": ["api", "auth", "api-domains"] },
+    { "kind": "region", "label": "Production runtime (Docker / Heroku)", "wraps": ["api", "auth", "api-domains", "db", "dist-static"] }
+  ],
+  "connections": [
+    { "id": "operator-vite", "from": "operator", "to": "vite-dev", "label": "HTTP :5173 (dev)" },
+    { "id": "vite-webapp", "from": "vite-dev", "to": "webapp", "label": "serves React" },
+    { "id": "webapp-api", "from": "webapp", "to": "api", "label": "JSON · Bearer JWT", "variant": "security" },
+    { "id": "api-domains", "from": "api", "to": "api-domains", "label": "mounts routes", "labelDy": 24 },
+    { "id": "domains-db", "from": "api-domains", "to": "db", "label": "SQL (pg pool)" },
+    { "id": "auth-api", "from": "auth", "to": "api", "label": "verify JWT · RBAC", "variant": "security", "labelDy": 24 },
+    { "id": "webapp-cache", "from": "webapp", "to": "localstorage", "label": "offline read/write", "variant": "dashed", "labelDy": 24 },
+    { "id": "api-dist", "from": "api", "to": "dist-static", "label": "NODE_ENV=production", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Frontend (React 18 + Vite 5)", "items": ["JSX-компоненты: Auth, Sidebar, Dashboard, OrdersList/OrderDetail, PricingManagement, калькуляторы услуг", "React-контексты (hooks): useAuth, useClients, useOrders, usePricing — общие состояния + offline-кэш", "src/lib/api.js — единый REST-клиент (fetch + Bearer token); src/lib/supabase.js — Supabase SDK задан, в рантайме не вызывается", "Прайсы из src/data/pricing.json — fallback при недоступности API"] },
+    { "dot": "emerald", "title": "Домены API (один Express-процесс)", "items": ["/api/orders — заказы + order_items (JSONB specifications), JOIN клиентов", "/api/pricing — business_cards, printing, uv, wide_format, state_symbols, доп. операции/услуги", "/api/clients — CRUD клиентов (мягкое удаление is_active)", "/api/users — управление пользователями и ролями"] },
+    { "dot": "rose", "title": "Trust boundaries", "items": ["Браузер ↔ API: JWT Bearer; 401 при невалидном токене очищает auth_token и перезагружает", "Middleware: authMiddleware (все /api/users), adminMiddleware, permissionMiddleware — роли admin / manager / user", "API ↔ БД: только сервер имеет DATABASE_URL; параметризованные запросы pg"] },
+    { "dot": "violet", "title": "Данные (PostgreSQL)", "items": ["users (bcrypt-хеш), clients, orders + order_items", "Прайсы в *_pricing таблицах и additional_services / additional_operations (JSONB), reorder_options", "Миграции: server/migrate.js + migrations/001_users.sql, seed.js / seed-state-symbols.js"] },
+    { "dot": "amber", "title": "Деплой и внешние зависимости", "items": ["docker-compose: app + postgres (postgres:15-alpine); Dockerfile multi-stage (vite build → node:18-alpine)", "Procfile: web: node server/index.js (Heroku); pnpm run migrate / seed", "Env: DATABASE_URL, JWT_SECRET, VITE_API_URL (prod → /api); VITE_SUPABASE_URL + ANON_KEY зарезервированы"] }
+  ]
+}

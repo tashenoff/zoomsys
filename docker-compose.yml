@@ -1,0 +1,51 @@
+# Docker Compose для ZoomSys на VPS
+# 
+# Использование:
+#   1. Скопировать .env.production.example → .env
+#   2. Заполнить переменные
+#   3. docker compose up -d --build
+#   4. docker compose exec app node migrate.js
+#   5. docker compose exec app node seed.js
+#
+# Открыть в браузере: http://IP-сервера:3001
+
+version: '3.8'
+
+services:
+  # ============ PostgreSQL ============
+  postgres:
+    image: postgres:15-alpine
+    container_name: zoomsys-db
+    environment:
+      POSTGRES_DB: zoomsys
+      POSTGRES_USER: zoomsys
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zoomsys -d zoomsys"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ ZoomSys App (Frontend + API) ============
+  app:
+    build: .
+    container_name: zoomsys-app
+    environment:
+      DATABASE_URL: postgresql://zoomsys:${DB_PASSWORD}@postgres:5432/zoomsys
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

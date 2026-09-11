@@ -11,19 +11,39 @@ export function OrdersProvider({ children }) {
   const [isOnline, setIsOnline] = useState(true)
 
   // Преобразование snake_case из API в camelCase для фронтенда
-  const normalizeOrder = (order) => ({
-    ...order,
-    id: order.id?.toString(),
-    orderNumber: order.order_number || order.orderNumber,
-    clientId: order.client_id || order.clientId,
-    clientName: order.client_name || order.clientName,
-    clientPhone: order.client_phone || order.clientPhone,
-    paymentStatus: order.payment_status || order.paymentStatus || 'not_paid',
-    totalAmount: order.total_amount || order.totalAmount,
-    total: order.total_amount || order.total || 0,
-    createdAt: order.created_at || order.createdAt,
-    updatedAt: order.updated_at || order.updatedAt
-  })
+  const normalizeOrder = (order) => {
+    // Данные клиента могут прийти из JOIN (client_name), либо из specifications.items[0].client
+    const specClient = order.items && order.items[0] && order.items[0].specifications && order.items[0].specifications.client
+    const firstName = order.client_name || order.clientName || specClient?.name
+    return {
+      ...order,
+      id: order.id?.toString(),
+      orderNumber: order.order_number || order.orderNumber,
+      clientId: order.client_id || order.clientId || specClient?.id,
+      clientName: firstName,
+      clientPhone: order.client_phone || order.clientPhone || specClient?.phone,
+      paymentStatus: order.payment_status || order.paymentStatus || 'not_paid',
+      totalAmount: order.total_amount || order.totalAmount,
+      total: order.total_amount || order.total || 0,
+      createdAt: order.created_at || order.createdAt,
+      updatedAt: order.updated_at || order.updatedAt,
+      // Позиции заказа (только в детальном запросе GET /:id)
+      productName: order.product_name || order.productName || (order.items && order.items[0] && order.items[0].product_name),
+      materialName: order.material_name || order.materialName,
+      colorType: order.color_type || order.colorType,
+      quantity: order.quantity || (order.items && order.items[0] && order.items[0].quantity),
+      unitPrice: order.unit_price || order.unitPrice,
+      // Собираем объект клиента из плоских полей/спеки, которые отдаёт API (JOIN с clients)
+      client: order.client || {
+        id: order.client_id || order.clientId || specClient?.id,
+        name: firstName,
+        company: order.client_company || order.clientCompany || specClient?.company,
+        phone: order.client_phone || order.clientPhone || specClient?.phone,
+        email: order.client_email || order.clientEmail || specClient?.email,
+        notes: order.client_notes || order.clientNotes || specClient?.notes
+      }
+    }
+  }
 
   const loadOrders = useCallback(async () => {
     setLoading(true)
@@ -38,7 +58,7 @@ export function OrdersProvider({ children }) {
       console.warn('API недоступен:', err.message)
       setIsOnline(false)
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setOrders(JSON.parse(stored))
+      if (stored) setOrders(JSON.parse(stored).map(normalizeOrder))
       setError('Работа в offline режиме')
     } finally {
       setLoading(false)
@@ -97,8 +117,20 @@ export function OrdersProvider({ children }) {
 
   const getOrder = useCallback((orderId) => orders.find(o => o.id == orderId), [orders])
 
+  // Полный заказ с сервера (items + клиент), с нормализацией. Fallback на локальный массив.
+  const fetchOrderDetail = useCallback(async (orderId) => {
+    const local = orders.find(o => o.id == orderId)
+    try {
+      if (isOnline) {
+        const raw = await api.getOrder(orderId)
+        if (raw) return normalizeOrder({ ...local, ...raw })
+      }
+    } catch (err) { console.warn('Не удалось получить детали заказа:', err.message) }
+    return local
+  }, [orders, isOnline])
+
   return (
-    <OrdersContext.Provider value={{ orders, loading, error, isOnline, loadOrders, createOrder, updateOrder, deleteOrder, getOrder }}>
+    <OrdersContext.Provider value={{ orders, loading, error, isOnline, loadOrders, createOrder, updateOrder, deleteOrder, getOrder, fetchOrderDetail }}>
       {children}
     </OrdersContext.Provider>
   )

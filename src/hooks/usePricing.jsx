@@ -62,7 +62,10 @@ export function PricingProvider({ children }) {
           name: item.name,
           price: parseFloat(item.price),
           unit: item.unit,
-          description: item.description
+          description: item.description,
+          applicableTo: typeof item.applicable_to === 'string'
+            ? JSON.parse(item.applicable_to)
+            : (item.applicable_to || ['all'])
         })),
         // additionalOperations из БД приходит как массив, преобразуем в объект
         additionalOperations: Array.isArray(data.additionalOperations) 

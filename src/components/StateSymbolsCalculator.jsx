@@ -75,19 +75,38 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
     [pricingData, categorySlug]
   )
   const additionalOperations = pricingData.additionalOperations || {}
+  const additionalServices = pricingData.additionalServices || []
   const availableOperations = useMemo(() => {
-    if (!additionalOperations || typeof additionalOperations !== 'object') return []
     const seen = new Set()
-    return Object.values(additionalOperations).filter(op => {
-      const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
-      const matches = applicableTo.includes('state-symbols') || applicableTo.includes(categorySlug)
-      if (!matches) return false
-      const key = String(op.id || op.name)
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-  }, [additionalOperations, categorySlug])
+
+    // Из доп. операций
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
+          const matches = applicableTo.includes('state-symbols') || applicableTo.includes(categorySlug)
+          if (!matches) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Из доп. услуг (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          const matches = applicableTo.includes('all') || applicableTo.includes('state-symbols') || applicableTo.includes(categorySlug)
+          if (!matches) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [additionalOperations, additionalServices, categorySlug])
   const parsedItems = useMemo(
     () => items.map(i => ({ ...i, ...parseItem(i, categorySlug) })),
     [items, categorySlug]

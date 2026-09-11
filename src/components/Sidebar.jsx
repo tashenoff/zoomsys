@@ -197,6 +197,21 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           🚧 В разработке
         </div>
 
+        {/* МОБИЛЬНЫЕ КОНСТРУКЦИИ */}
+        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
+          🏗️ Мобильные конструкции
+        </p>
+        <button
+          onClick={() => onSelectCategory({ id: 'event-services', name: 'Сопровождение мероприятий', slug: 'event-services', description: 'Услуги по комплексному сопровождению мероприятий' })}
+          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+            selectedCategory?.slug === 'event-services'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          🎤 Сопровождение мероприятий
+        </button>
+
         {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ */}
         <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
           ✨ Специализированная печать

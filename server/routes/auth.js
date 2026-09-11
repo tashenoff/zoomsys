@@ -56,7 +56,7 @@ module.exports = (pool) => {
         }
       })
     } catch (err) {
-      console.error('Login error:', err)
+      console.error('[auth.login]', err)
       res.status(500).json({ error: 'Ошибка сервера при авторизации' })
     }
   })

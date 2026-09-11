@@ -7,7 +7,7 @@ module.exports = (pool) => {
     try {
       const result = await pool.query('SELECT * FROM clients WHERE is_active=true ORDER BY name')
       res.json(result.rows)
-    } catch (e) { res.status(500).json({ error: 'Ошибка загрузки клиентов' }) }
+    } catch (e) { console.error('[clients.get]', e); res.status(500).json({ error: 'Ошибка загрузки клиентов' }) }
   })
 
   router.get('/:id', async (req, res) => {

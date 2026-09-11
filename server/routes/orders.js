@@ -6,7 +6,7 @@ module.exports = (pool) => {
   router.get('/', async (req, res) => {
     try {
       const result = await pool.query(`
-        SELECT o.*, c.name as client_name, c.phone as client_phone
+        SELECT o.*, c.name as client_name, c.phone as client_phone, c.company as client_company, c.email as client_email
         FROM orders o LEFT JOIN clients c ON o.client_id = c.id
         ORDER BY o.created_at DESC
       `)

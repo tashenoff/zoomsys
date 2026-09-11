@@ -14,15 +14,15 @@ export default function OrdersList({ onViewOrder }) {
   const [groupByClient, setGroupByClient] = useState(false)
   const [viewMode, setViewMode] = useState('list')
 
-  // Сортировка: новые сверху
-  const orders = [...rawOrders].sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at))
-
   useEffect(() => {
     filterOrders()
-  }, [orders, searchTerm, dateFrom, dateTo, statusFilter, paymentStatusFilter])
+  }, [rawOrders, searchTerm, dateFrom, dateTo, statusFilter, paymentStatusFilter])
 
   const filterOrders = () => {
-    let filtered = [...orders]
+    // Сортировка: новые сверху (копию массива создаём здесь, а не на каждом рендере)
+    let filtered = [...rawOrders].sort(
+      (a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
+    )
 
     // Поиск по клиенту или номеру заказа
     if (searchTerm) {

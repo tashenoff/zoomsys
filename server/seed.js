@@ -99,8 +99,8 @@ async function seed() {
       for (let i = 0; i < pricingData.additionalServices.length; i++) {
         const item = pricingData.additionalServices[i]
         await pool.query(
-          'INSERT INTO additional_services (name, price, unit, description, sort_order) VALUES ($1, $2, $3, $4, $5)',
-          [item.name, item.price, item.unit, item.description, i]
+          'INSERT INTO additional_services (name, price, unit, description, applicable_to, sort_order) VALUES ($1, $2, $3, $4, $5, $6)',
+          [item.name, item.price, item.unit, item.description, JSON.stringify(item.applicableTo || ['all']), i]
         )
       }
       console.log(`✅ Доп. услуги: ${pricingData.additionalServices.length} позиций`)

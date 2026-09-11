@@ -10,6 +10,7 @@ server/.env
 
 # Build output (optional - remove if you want dist in git for deployment)
 # dist/
+/graphify-out/
 
 # Logs
 logs

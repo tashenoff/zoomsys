@@ -59,16 +59,38 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     }
   }, [externalClient])
 
-  // Получаем доступные допоперации для выбранного типа карточки
+  // Получаем доступные допоперации и доп. услуги для выбранного типа карточки
   const availableOperations = useMemo(() => {
     if (!selectedCardType) return []
-    if (!additionalOperations || typeof additionalOperations !== 'object') return []
-    return Object.values(additionalOperations).filter(op => {
-      if (!op || !op.applicableTo) return false
-      const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
-      return applicableTo.includes('all') || applicableTo.includes(selectedCardType)
-    })
-  }, [selectedCardType, additionalOperations])
+    const seen = new Set()
+
+    // Из доп. операций
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          if (!op || !op.applicableTo) return false
+          const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Из доп. услуг (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [selectedCardType, additionalOperations, additionalServices])
 
   // Получаем уникальные материалы
   const uniqueMaterials = useMemo(() => {

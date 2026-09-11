@@ -7,7 +7,7 @@ const pool = new Pool({
 })
 
 async function addColumns() {
-  console.log('🔧 Добавляем недостающие колонки в additional_operations...')
+  console.log('🔧 Добавляем недостающие колонки...')
   try {
     // Добавляем колонки если их нет
     await pool.query(`
@@ -17,7 +17,14 @@ async function addColumns() {
       ADD COLUMN IF NOT EXISTS description TEXT,
       ADD COLUMN IF NOT EXISTS default_quantity INTEGER
     `)
-    console.log('✅ Колонки добавлены!')
+    console.log('✅ Колонки в additional_operations добавлены!')
+
+    // Добавляем колонку applicable_to в additional_services
+    await pool.query(`
+      ALTER TABLE additional_services
+      ADD COLUMN IF NOT EXISTS applicable_to JSONB DEFAULT '["all"]'
+    `)
+    console.log('✅ Колонка applicable_to в additional_services добавлена!')
   } catch (e) {
     console.error('❌ Ошибка:', e.message)
   } finally {

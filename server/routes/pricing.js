@@ -23,7 +23,7 @@ module.exports = (pool) => {
         wideFormat: wide.rows, stateSymbols: state.rows, additionalServices: services.rows,
         additionalOperations: operations.rows, reorderOptions: reorder.rows
       })
-    } catch (e) { console.error(e); res.status(500).json({ error: 'Ошибка загрузки' }) }
+    } catch (e) { console.error('[pricing.get]', e); res.status(500).json({ error: 'Ошибка загрузки' }) }
   })
 
   // BUSINESS CARDS CRUD

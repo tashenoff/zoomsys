@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export default function OrderDetail({ orderId, onBack }) {
   const { hasPermission } = useAuth()
-  const { getOrder, updateOrder, deleteOrder: apiDeleteOrder, isOnline } = useOrders()
+  const { getOrder, fetchOrderDetail, updateOrder, deleteOrder: apiDeleteOrder, isOnline } = useOrders()
   const [order, setOrder] = useState(null)
   const [currentStatus, setCurrentStatus] = useState('draft')
   const [paymentStatus, setPaymentStatus] = useState('not_paid')
@@ -13,13 +13,15 @@ export default function OrderDetail({ orderId, onBack }) {
 
   useEffect(() => {
     loadOrder()
-  }, [orderId, getOrder])
+  }, [orderId, getOrder, fetchOrderDetail])
 
-  const loadOrder = () => {
-    const found = getOrder(orderId)
+  const loadOrder = async () => {
+    // Сначала показываем то, что есть локально (или загружаем полный заказ с сервера)
+    const found = await fetchOrderDetail(orderId) || getOrder(orderId)
+    if (!found) return
     setOrder(found)
-    setCurrentStatus(found?.status || 'draft')
-    setPaymentStatus(found?.paymentStatus || found?.payment_status || 'not_paid')
+    setCurrentStatus(found.status || 'draft')
+    setPaymentStatus(found.paymentStatus || found.payment_status || 'not_paid')
   }
 
   const updateStatus = async (newStatus) => {

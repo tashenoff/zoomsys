@@ -14,6 +14,7 @@ export default function PrintingCalculator({ client: externalClient }) {
   const pricing = pricingData.printing || []
   const additionalOperations = pricingData.additionalOperations || {}
   const reorderOptions = pricingData.reorderOptions || []
+  const additionalServices = pricingData.additionalServices || []
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -50,16 +51,38 @@ export default function PrintingCalculator({ client: externalClient }) {
     }
   }, [externalClient])
 
-  // Получаем доступные допоперации для выбранной категории
+  // Получаем доступные допоперации и доп. услуги для выбранной категории
   const availableOperations = useMemo(() => {
     if (!selectedCategory) return []
-    if (!additionalOperations || typeof additionalOperations !== 'object') return []
-    return Object.values(additionalOperations).filter(op => {
-      if (!op || !op.applicableTo) return false
-      const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
-      return applicableTo.includes('all') || applicableTo.includes(selectedCategory)
-    })
-  }, [selectedCategory, additionalOperations])
+    const seen = new Set()
+
+    // Из доп. операций
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          if (!op || !op.applicableTo) return false
+          const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Из доп. услуг (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [selectedCategory, additionalOperations, additionalServices])
 
   // Функции для работы с кастомными услугами
   const addCustomNote = () => {

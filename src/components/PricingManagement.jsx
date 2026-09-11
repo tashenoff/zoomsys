@@ -1,10 +1,32 @@
 import { useState, useEffect } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import api from '../lib/api'
+// Все доступные типы для поля "Применимо к"
+const ALL_TYPES = [
+  { id: 'all', name: 'Все типы' },
+  { id: 'business-cards', name: 'Визитки' },
+  { id: 'badges', name: 'Бейджи' },
+  { id: 'discount-cards', name: 'Дисконтные карты' },
+  { id: 'invitations', name: 'Пригласительные' },
+  { id: 'certificates', name: 'Сертификаты' },
+  { id: 'flyers', name: 'Флаеры' },
+  { id: 'booklets', name: 'Буклеты' },
+  { id: 'notebooks', name: 'Блокноты' },
+  { id: 'uv-printing', name: 'УФ печать' },
+  { id: 'wide-format', name: 'Широкоформат' },
+  { id: 'state-symbols', name: 'Гос. символика (все)' },
+  { id: 'coat-of-arms', name: 'Герб' },
+  { id: 'flags-rk', name: 'Флаги РК' },
+  { id: 'flagpoles', name: 'Флагштоки' },
+  { id: 'signs', name: 'Вывески' },
+  { id: 'stands', name: 'Стенды' },
+  { id: 'president-portrait', name: 'Портрет президента' }
+]
 
 export default function PricingManagement() {
   const { pricing, loading, error, isOffline, refreshPricing } = usePricing()
   const [activeTab, setActiveTab] = useState('businessCards')
+   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -105,7 +127,42 @@ export default function PricingManagement() {
         </div>
       </div>
 
-      {/* Табы */}
+      {/* Глобальный поиск по всем позициям прайса */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="flex items-center gap-3">
+          <span className="text-gray-400 text-xl">🔍</span>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Поиск по всем позициям прайса (название, категория)…"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-gray-400 hover:text-gray-600 px-2 text-xl"
+              title="Очистить поиск"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Результаты глобального поиска */}
+      {searchTerm.trim() ? (
+        <GlobalSearchResults
+          localPricing={localPricing}
+          additionalOperationsList={additionalOperationsList}
+          query={searchTerm.trim().toLowerCase()}
+          onEdit={(item, category) => {
+            setEditingItem({ ...item, category, pricingTab: category })
+            setIsModalOpen(true)
+          }}
+          onDelete={(category, id) => handleDelete(category, id)}
+        />
+      ) : (
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="flex flex-wrap border-b border-gray-200">
           {tabs.map(tab => (
@@ -203,12 +260,13 @@ export default function PricingManagement() {
           )}
         </div>
       </div>
+      )}
 
       {/* Модальное окно редактирования */}
       {isModalOpen && (
         <EditModal
           item={editingItem}
-          category={activeTab}
+          category={editingItem?.pricingTab || activeTab}
           onClose={() => {
             setIsModalOpen(false)
             setEditingItem(null)
@@ -245,7 +303,7 @@ export default function PricingManagement() {
                   price: updatedItem.price === '' || updatedItem.price == null ? null : updatedItem.price
                 }
               } else if (category === 'additionalServices') {
-                apiData = { name: updatedItem.name, price: updatedItem.price, unit: updatedItem.unit, description: updatedItem.description }
+                apiData = { name: updatedItem.name, price: updatedItem.price, unit: updatedItem.unit, description: updatedItem.description, applicable_to: updatedItem.applicableTo }
               } else if (category === 'additionalOperations') {
                 apiData = { 
                   name: updatedItem.name,
@@ -329,6 +387,113 @@ function PricingGroups({ items, getGroup, children }) {
           {children(groupItems)}
         </div>
       ))}
+    </div>
+  )
+}
+
+// Поисковые предикаты для каждой категории
+function matchText(value, query) { return String(value ?? '').toLowerCase().includes(query) }
+function matchesQuery(item, query) {
+  return matchText(item.name, query) ||
+    matchText(item.colorType, query) ||
+    matchText(item.category, query) ||
+    matchText(item.option, query) ||
+    matchText(item.description, query) ||
+    matchText(item.unit, query)
+}
+
+// Глобальные результаты поиска: группируем по категориям и рендерим через их собственные таблицы,
+// чтобы сохранить ту же структуру столбцов, что и в обычном (не-поисковом) виде.
+function GlobalSearchResults({ localPricing, additionalOperationsList, query, onEdit, onDelete }) {
+  // Предикаты по подкатегории (для полиграфии / УФ / гос. символики)
+  const printingMatch = (i) => matchesQuery(i, query) || matchText(PRINTING_CATEGORY_LABELS[i.category] || '', query)
+  const uvMatch = (i) => matchesQuery(i, query) || matchText(UV_CATEGORY_LABELS[i.category] || '', query)
+  const stateMatch = (i) => matchesQuery(i, query) || matchText(STATE_SYMBOL_CATEGORIES.find(c => c.id === i.category)?.label || '', query)
+  const opMatch = (i) => matchesQuery(i, query)
+
+  const bcItems = (localPricing.businessCards || []).filter(i => matchesQuery(i, query))
+  const prItems = (localPricing.printing || []).filter(printingMatch)
+  const uvItems = (localPricing.uvPrinting || []).filter(uvMatch)
+  const wfItems = (localPricing.wideFormat || []).filter(i => matchesQuery(i, query))
+  const ssItems = (localPricing.stateSymbols || []).filter(stateMatch)
+  const opItems = (additionalOperationsList || []).filter(i => matchesQuery(i, query))
+  const svItems = (localPricing.additionalServices || []).filter(i => matchesQuery(i, query))
+
+  const found = bcItems.length + prItems.length + uvItems.length + wfItems.length + ssItems.length + opItems.length + svItems.length
+
+  // Обёртки onEdit / onDelete с привязкой категории к позиции + счётчик для заголовка
+  const editOf = (catKey) => (item) => onEdit(item, catKey)
+  const delOf = (catKey) => (id) => onDelete(catKey, id)
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md px-6 py-4 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-800">Результаты поиска по всем категориям</h2>
+        <span className="text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-1">Найдено: {found}</span>
+      </div>
+
+      {found === 0 && (
+        <div className="bg-white rounded-lg shadow-md p-10 text-center">
+          <div className="text-4xl mb-3">🔍</div>
+          <p className="text-gray-600 text-lg">По запросу «{query}» ничего не найдено</p>
+          <p className="text-sm text-gray-400 mt-2">Попробуйте изменить поисковый запрос</p>
+        </div>
+      )}
+
+      {bcItems.length > 0 && (
+        <CategoryBlock title="💼 Визитки" count={bcItems.length}>
+          <BusinessCardsTable items={bcItems} onEdit={editOf('businessCards')} onDelete={delOf('businessCards')} />
+        </CategoryBlock>
+      )}
+
+      {prItems.length > 0 && (
+        <CategoryBlock title="📄 Полиграфия" count={prItems.length}>
+          <PrintingTable items={prItems} onEdit={editOf('printing')} onDelete={delOf('printing')} />
+        </CategoryBlock>
+      )}
+
+      {uvItems.length > 0 && (
+        <CategoryBlock title="🖨️ УФ печать" count={uvItems.length}>
+          <UVPrintingTable items={uvItems} onEdit={editOf('uvPrinting')} onDelete={delOf('uvPrinting')} />
+        </CategoryBlock>
+      )}
+
+      {wfItems.length > 0 && (
+        <CategoryBlock title="🖼️ Широкоформат" count={wfItems.length}>
+          <WideFormatTable items={wfItems} onEdit={editOf('wideFormat')} onDelete={delOf('wideFormat')} />
+        </CategoryBlock>
+      )}
+
+      {ssItems.length > 0 && (
+        <CategoryBlock title="🇰🇿 Гос. символика" count={ssItems.length}>
+          <StateSymbolsTable items={ssItems} onEdit={editOf('stateSymbols')} onDelete={delOf('stateSymbols')} />
+        </CategoryBlock>
+      )}
+
+      {opItems.length > 0 && (
+        <CategoryBlock title="⚙️ Доп. операции" count={opItems.length}>
+          <AdditionalOperationsTable items={opItems} onEdit={editOf('additionalOperations')} onDelete={delOf('additionalOperations')} />
+        </CategoryBlock>
+      )}
+
+      {svItems.length > 0 && (
+        <CategoryBlock title="➕ Доп. услуги" count={svItems.length}>
+          <AdditionalServicesTable items={svItems} onEdit={editOf('additionalServices')} onDelete={delOf('additionalServices')} />
+        </CategoryBlock>
+      )}
+    </div>
+  )
+}
+
+// Обёртка для блока категории с заголовком
+function CategoryBlock({ title, count, children }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+        <span className="text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-1">{count}</span>
+      </div>
+      <div className="p-6">{children}</div>
     </div>
   )
 }
@@ -666,6 +831,7 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Название</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Цена</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Единица</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Применимо к</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
           </tr>
         </thead>
@@ -675,6 +841,11 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">{item.price} ₸</td>
               <td className="px-4 py-3 text-sm text-gray-600">{item.unit}</td>
+              <td className="px-4 py-3 text-sm text-gray-600">
+                {item.applicableTo?.includes('all') ? 
+                  <span className="text-green-600">Все типы</span> : 
+                  <span className="text-xs">{item.applicableTo?.slice(0, 2).join(', ')}{item.applicableTo?.length > 2 ? '...' : ''}</span>}
+              </td>
               <td className="px-4 py-3 text-right">
                 <button
                   onClick={() => onEdit(item)}
@@ -699,26 +870,6 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
 
 // Форма редактирования операций
 function OperationEditForm({ formData, setFormData }) {
-  const types = [
-    { id: 'all', name: 'Все типы' },
-    { id: 'business-cards', name: 'Визитки' },
-    { id: 'badges', name: 'Бейджи' },
-    { id: 'discount-cards', name: 'Дисконтные карты' },
-    { id: 'invitations', name: 'Пригласительные' },
-    { id: 'certificates', name: 'Сертификаты' },
-    { id: 'flyers', name: 'Флаеры' },
-    { id: 'booklets', name: 'Буклеты' },
-    { id: 'notebooks', name: 'Блокноты' },
-    { id: 'uv-printing', name: 'УФ печать' },
-    { id: 'wide-format', name: 'Широкоформат' },
-    { id: 'state-symbols', name: 'Гос. символика (все)' },
-    { id: 'coat-of-arms', name: 'Герб' },
-    { id: 'flags-rk', name: 'Флаги РК' },
-    { id: 'flagpoles', name: 'Флагштоки' },
-    { id: 'signs', name: 'Вывески' },
-    { id: 'stands', name: 'Стенды' },
-    { id: 'president-portrait', name: 'Портрет президента' }
-  ]
   return (
     <>
       <div>
@@ -770,7 +921,7 @@ function OperationEditForm({ formData, setFormData }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Применимо к</label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {types.map(t => (
+          {ALL_TYPES.map(t => (
             <label key={t.id} className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={(formData.applicableTo || []).includes(t.id)}
                 onChange={(e) => {
@@ -813,7 +964,7 @@ function EditModal({ item, category, onClose, onSave }) {
       return { category: 'coat-of-arms', name: '', option: '', price: null }
     }
     if (category === 'additionalServices') {
-      return { name: '', price: 0, unit: '', description: '' }
+      return { name: '', price: 0, unit: '', description: '', applicableTo: ['all'] }
     }
     if (category === 'additionalOperations') {
       return { 
@@ -1155,6 +1306,21 @@ function EditModal({ item, category, onClose, onSave }) {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="тг/шт"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Применимо к</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {ALL_TYPES.map(t => (
+                      <label key={t.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={(formData.applicableTo || []).includes(t.id)}
+                          onChange={(e) => {
+                            let a = [...(formData.applicableTo || [])]
+                            a = e.target.checked ? (t.id === 'all' ? ['all'] : [...a.filter(x => x !== 'all'), t.id]) : a.filter(x => x !== t.id)
+                            setFormData({ ...formData, applicableTo: a })
+                          }} className="rounded" />{t.name}
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </>
             )}

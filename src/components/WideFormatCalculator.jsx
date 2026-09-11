@@ -9,19 +9,37 @@ export default function WideFormatCalculator({ client }) {
   const pricingData = pricingContext || pricingDataFallback
   const wideFormatPricing = pricingData.wideFormat || []
   const additionalOperations = pricingData.additionalOperations || {}
+  const additionalServices = pricingData.additionalServices || []
 
   const availableOperations = useMemo(() => {
-    if (!additionalOperations || typeof additionalOperations !== 'object') return []
     const seen = new Set()
-    return Object.values(additionalOperations).filter(op => {
-      const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
-      if (!applicableTo.includes('wide-format')) return false
-      const key = String(op.id || op.name)
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-  }, [additionalOperations])
+
+    // Доп. операции
+    const fromOperations = additionalOperations && typeof additionalOperations === 'object'
+      ? Object.values(additionalOperations).filter(op => {
+          const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
+          if (!applicableTo.includes('wide-format')) return false
+          const key = String(op.id || op.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    // Доп. услуги (с applicableTo)
+    const fromServices = Array.isArray(additionalServices)
+      ? additionalServices.filter(svc => {
+          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+          if (!applicableTo.includes('all') && !applicableTo.includes('wide-format')) return false
+          const key = String(svc.id || svc.name)
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+      : []
+
+    return [...fromOperations, ...fromServices]
+  }, [additionalOperations, additionalServices])
 
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')

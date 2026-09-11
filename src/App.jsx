@@ -7,6 +7,7 @@ import PrintingCalculator from './components/PrintingCalculator'
 import WideFormatCalculator from './components/WideFormatCalculator'
 import UVPrintingCalculator from './components/UVPrintingCalculator'
 import StateSymbolsCalculator from './components/StateSymbolsCalculator'
+import EventServicesCalculator from './components/EventServicesCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
@@ -166,6 +167,10 @@ function AppContent() {
 
                   {['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(selectedCategory.slug) && (
                     <StateSymbolsCalculator client={selectedClient} categorySlug={selectedCategory.slug} />
+                  )}
+
+                  {selectedCategory.slug === 'event-services' && (
+                    <EventServicesCalculator client={selectedClient} />
                   )}
                 </>
               )}

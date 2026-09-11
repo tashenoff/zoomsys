@@ -5,14 +5,14 @@ module.exports = (router, pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/services', async (req, res) => {
-    const { name, price, unit, description, sort_order } = req.body
-    try { res.json((await pool.query('INSERT INTO additional_services (name,price,unit,description,sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [name, price, unit, description, sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const { name, price, unit, description, applicable_to, sort_order } = req.body
+    try { res.json((await pool.query('INSERT INTO additional_services (name,price,unit,description,applicable_to,sort_order) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [name, price, unit, description, JSON.stringify(applicable_to || ['all']), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/services/:id', async (req, res) => {
-    const { name, price, unit, description, is_active, sort_order } = req.body
-    try { res.json((await pool.query('UPDATE additional_services SET name=$1,price=$2,unit=$3,description=$4,is_active=$5,sort_order=$6,updated_at=NOW() WHERE id=$7 RETURNING *',
-      [name, price, unit, description, is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const { name, price, unit, description, applicable_to, is_active, sort_order } = req.body
+    try { res.json((await pool.query('UPDATE additional_services SET name=$1,price=$2,unit=$3,description=$4,applicable_to=$5,is_active=$6,sort_order=$7,updated_at=NOW() WHERE id=$8 RETURNING *',
+      [name, price, unit, description, JSON.stringify(applicable_to || ['all']), is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.delete('/services/:id', async (req, res) => {
     try { await pool.query('UPDATE additional_services SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }

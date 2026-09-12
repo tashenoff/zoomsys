@@ -38,14 +38,16 @@ async function ensureColumns() {
   `)
 
   await pool.query(`
-    ALTER TABLE additional_operations
-    ADD COLUMN IF NOT EXISTS price NUMERIC(10,2),
-    ADD COLUMN IF NOT EXISTS prices JSONB,
-    ADD COLUMN IF NOT EXISTS unit TEXT,
-    ADD COLUMN IF NOT EXISTS description TEXT,
-    ADD COLUMN IF NOT EXISTS default_quantity INTEGER
-  `)
-}
+      ALTER TABLE additional_operations
+      ADD COLUMN IF NOT EXISTS price NUMERIC(10,2),
+      ADD COLUMN IF NOT EXISTS prices JSONB,
+      ADD COLUMN IF NOT EXISTS unit TEXT,
+      ADD COLUMN IF NOT EXISTS description TEXT,
+      ADD COLUMN IF NOT EXISTS default_quantity INTEGER,
+      ADD COLUMN IF NOT EXISTS step_mode BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS step_unit TEXT
+    `)
+  }
 
 async function upsertWideFormatItem(item, sortOrder) {
   const existing = await pool.query(
@@ -93,37 +95,39 @@ async function upsertOperation(item, sortOrder) {
   )
 
   const params = [
-    item.name,
-    item.type || null,
-    JSON.stringify(item.applicableTo || ['wide-format']),
-    item.options ? JSON.stringify(item.options) : null,
-    item.price || null,
-    item.prices ? JSON.stringify(item.prices) : null,
-    item.unit || null,
-    item.description || null,
-    item.defaultQuantity || null,
-    sortOrder
-  ]
+      item.name,
+      item.type || null,
+      JSON.stringify(item.applicableTo || ['wide-format']),
+      item.options ? JSON.stringify(item.options) : null,
+      item.price || null,
+      item.prices ? JSON.stringify(item.prices) : null,
+      item.unit || null,
+      item.description || null,
+      item.defaultQuantity || null,
+      item.stepMode ? true : false,
+      item.stepUnit || null,
+      sortOrder
+    ]
 
-  if (existing.rows[0]) {
+    if (existing.rows[0]) {
+      await pool.query(
+        `UPDATE additional_operations
+         SET name=$1, operation_type=$2, applicable_to=$3, options=$4,
+             price=$5, prices=$6, unit=$7, description=$8, default_quantity=$9,
+             step_mode=$10, step_unit=$11, sort_order=$12, is_active=true, updated_at=NOW()
+         WHERE id=$13`,
+        [...params, existing.rows[0].id]
+      )
+      return 'updated'
+    }
+
     await pool.query(
-      `UPDATE additional_operations
-       SET name=$1, operation_type=$2, applicable_to=$3, options=$4,
-           price=$5, prices=$6, unit=$7, description=$8, default_quantity=$9,
-           sort_order=$10, is_active=true, updated_at=NOW()
-       WHERE id=$11`,
-      [...params, existing.rows[0].id]
+      `INSERT INTO additional_operations
+       (name, operation_type, applicable_to, options, price, prices, unit, description, default_quantity, step_mode, step_unit, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      params
     )
-    return 'updated'
-  }
-
-  await pool.query(
-    `INSERT INTO additional_operations
-     (name, operation_type, applicable_to, options, price, prices, unit, description, default_quantity, sort_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-    params
-  )
-  return 'inserted'
+    return 'inserted'
 }
 
 async function main() {

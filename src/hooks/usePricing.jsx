@@ -182,9 +182,11 @@ export function PricingProvider({ children }) {
                   ? JSON.parse(item.prices)
                   : item.prices,
                 unit: item.unit,
-                description: item.description,
-                defaultQuantity: item.default_quantity
-              }
+                                description: item.description,
+                                defaultQuantity: item.default_quantity,
+                                stepMode: !!item.step_mode,
+                                stepUnit: item.step_unit
+                              }
               return acc
             }, {})
           : (data.additionalOperations || {}),

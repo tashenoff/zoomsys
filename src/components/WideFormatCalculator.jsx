@@ -223,8 +223,16 @@ export default function WideFormatCalculator({ client }) {
           }
         }
       } else if (op.type === 'quantity') {
-        opQty = parseFloat(serviceQuantities[id]) || 0
-        const opPrice = getTierPrice(op.prices, opQty, op.price)
+              if (op.stepMode) {
+                // Ввод: шаг между люверсами (см). Кол-во считаем по периметру одного баннера × количество изделий.
+                const step = parseFloat(serviceQuantities[id]) || 0
+                const perimeterCm = 2 * ((w + h) * 100)
+                const perItem = step > 0 ? Math.round(perimeterCm / step) : 0
+                opQty = perItem * qty
+              } else {
+                opQty = parseFloat(serviceQuantities[id]) || 0
+              }
+              const opPrice = getTierPrice(op.prices, opQty, op.price)
         unitPrice = Number(opPrice.price) || 0
         opTier = opPrice.tier
         add = unitPrice * opQty
@@ -422,11 +430,21 @@ export default function WideFormatCalculator({ client }) {
                           )}
 
                           {op.type === 'quantity' && isSelected && (
-                            <div className="mt-3">
-                              <label className="text-xs text-gray-600 mb-1 block">Количество ({getUnitLabel(op.unit)}):</label>
-                              <input type="number" min="0" step="0.01" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" />
-                            </div>
-                          )}
+                                                      <div className="mt-3">
+                                                        {op.stepMode ? (
+                                                          <>
+                                                            <label className="text-xs text-gray-600 mb-1 block">Шаг между люверсами ({op.stepUnit || 'см'}):</label>
+                                                            <input type="number" min="0" step="0.1" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="20" />
+                                                            <p className="text-xs text-gray-400 mt-1">Кол-во люверсов рассчитается автоматически по периметру (2 × (Ш+В), при шаге {op.stepUnit || 'см'})</p>
+                                                          </>
+                                                        ) : (
+                                                          <>
+                                                            <label className="text-xs text-gray-600 mb-1 block">Количество ({getUnitLabel(op.unit)}):</label>
+                                                            <input type="number" min="0" step="0.01" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" />
+                                                          </>
+                                                        )}
+                                                      </div>
+                                                    )}
                         </div>
                       </div>
                     </div>

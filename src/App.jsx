@@ -144,14 +144,6 @@ function AppContent() {
                 <p className="text-gray-600 mt-2">{selectedCategory.description}</p>
               </div>
 
-              {/* Выбор клиента (не показываем для УФ печати, т.к. он встроен в калькулятор) */}
-              {selectedCategory.slug !== 'uv-printing' && (
-                <ClientSelector
-                  selectedClient={selectedClient}
-                  onSelectClient={setSelectedClient}
-                />
-              )}
-
               {/* Калькулятор в зависимости от категории */}
               {!hasPermission('createOrders') ? (
                 <AccessDenied message="У вас нет прав для создания заказов" />
@@ -214,6 +206,14 @@ function AppContent() {
                                                                         )}
                 </>
               )}
+
+              {/* Выбор клиента (после калькулятора; не показываем для категорий, где выбор встроен в калькулятор) */}
+              {['business-cards', 'printing', 'uv-printing'].includes(selectedCategory.slug) ? null : (
+                <ClientSelector
+                  selectedClient={selectedClient}
+                  onSelectClient={setSelectedClient}
+                />
+              )}
             </div>
           )}
         </div>
@@ -221,7 +221,6 @@ function AppContent() {
     </div>
   )
 }
-
 function App() {
   return (
     <AuthProvider>

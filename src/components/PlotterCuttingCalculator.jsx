@@ -17,6 +17,7 @@ export default function PlotterCuttingCalculator({ client }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+  const [manualPrice, setManualPrice] = useState('')
 
   const materials = useMemo(() => [...new Set(items.map(i => i.material).filter(Boolean))], [items])
   const effectiveMaterial = materials.find(m => m === materialId) || materials[0] || ''
@@ -28,12 +29,28 @@ export default function PlotterCuttingCalculator({ client }) {
     () => operations.find(o => String(o.id) === String(operationId)) || operations[0] || null,
     [operations, operationId]
   )
+  const isRangePrice = (selectedOperation?.priceText && /от|до/.test(selectedOperation.priceText)) || (selectedOperation?.price != null && isNaN(Number(selectedOperation.price)))
+
 
   const handleCalculate = (e) => {
     e.preventDefault()
     if (!selectedOperation) { alert('Выберите операцию'); return }
     const areaM2 = parseFloat(area) || 0
     if (areaM2 <= 0) { alert('Введите площадь'); return }
+
+    // Ручной ввод цены для позиций с диапазоном
+    if (isRangePrice) {
+      const manual = parseFloat(manualPrice) || 0
+      if (manual <= 0) {
+        setCalculation({ note: `Цена по прайсу: ${selectedOperation.priceText || selectedOperation.price} тг/м². Укажите конкретную цену, либо уточните у менеджера.`, material: effectiveMaterial, operation: selectedOperation.operation, areaM2 })
+        return
+      }
+      const baseTotal = manual * areaM2
+      const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
+      const total = baseTotal + urgentAmount
+      setCalculation({ material: effectiveMaterial, operation: selectedOperation.operation, areaM2, unitPrice: manual, baseTotal, isUrgent, urgentSurcharge, urgentAmount, total })
+      return
+    }
 
     // цена числовая или текстовая (от...)
     const numPrice = Number(selectedOperation.price)
@@ -81,7 +98,7 @@ export default function PlotterCuttingCalculator({ client }) {
             <label className="block text-sm font-medium text-gray-700 mb-3">Материал</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {materials.map(m => (
-                <button key={m} type="button" onClick={() => { setMaterialId(m); setOperationId(''); setCalculation(null) }}
+                <button key={m} type="button" onClick={() => { setMaterialId(m); setOperationId(''); setManualPrice(''); setCalculation(null) }}
                   className={`p-4 rounded-lg border-2 transition text-left ${effectiveMaterial === m ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'}`}>
                   <span className="font-semibold">{m}</span>
                 </button>
@@ -93,7 +110,7 @@ export default function PlotterCuttingCalculator({ client }) {
             <label className="block text-sm font-medium text-gray-700 mb-3">Операция</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {operations.map(op => (
-                <button key={op.id} type="button" onClick={() => { setOperationId(String(op.id)); setCalculation(null) }}
+                <button key={op.id} type="button" onClick={() => { setOperationId(String(op.id)); setManualPrice(''); setCalculation(null) }}
                   className={`p-4 rounded-lg border-2 transition text-left ${String(selectedOperation?.id) === String(op.id) ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'}`}>
                   <div className="font-semibold text-gray-800">{op.operation}</div>
                   <div className="text-xs text-gray-500 mt-1">{priceLabel(op)}</div>
@@ -106,6 +123,14 @@ export default function PlotterCuttingCalculator({ client }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">Площадь (м²)</label>
             <input type="number" min="0" step="0.01" value={area} onChange={(e) => setArea(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
+
+          {isRangePrice && (
+            <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">✍️ Указать стоимость услуги (тг/м²)</label>
+              <p className="text-xs text-gray-500 mb-2">Цена по прайсу: {selectedOperation.priceText || selectedOperation.price} тг/м². Введите конкретную сумму — итог посчитается от неё.</p>
+              <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 2500" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          )}
 
           <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />

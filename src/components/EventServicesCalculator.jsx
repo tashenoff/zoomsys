@@ -35,6 +35,7 @@ export default function EventServicesCalculator({ client }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+  const [manualPrice, setManualPrice] = useState('')
 
   const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))].filter(c => c !== 'specialists'), [items])
   const effectiveCategory = categories.includes(category) ? category : (categories[0] || 'mobile')
@@ -50,6 +51,8 @@ export default function EventServicesCalculator({ client }) {
     if (isMobile) return Number(selected.printOptions[effectivePrintOption] || 0)
     return selected.price || (selected.priceText ? null : null)
   }, [selected, isMobile, effectivePrintOption])
+  const isRangePrice = !!selected?.priceText && (/от|до/.test(selected.priceText))
+
 
   const handleCalculate = (e) => {
     e.preventDefault()
@@ -61,6 +64,21 @@ export default function EventServicesCalculator({ client }) {
       const baseTotal = unitPrice * qty
       const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
       setCalculation({ label: `${selected.name} (${PRINT_OPTION_LABELS[effectivePrintOption]})`, unit: 'шт', quantity: qty, days: d, baseTotal, isUrgent, urgentSurcharge, urgentAmount, total: baseTotal + urgentAmount, note: null })
+      return
+    }
+
+    // Позиция с диапазоном цен: менеджер вводит конкретную цену
+    if (isRangePrice) {
+      const manual = parseFloat(manualPrice) || 0
+      if (manual <= 0) {
+        setCalculation({ note: `Цена по прайсу: ${selected.priceText}. Укажите конкретную цену, либо уточните у менеджера.`, label: selected.name, unit: selected.unit, quantity: qty, days: d })
+        return
+      }
+      const hourlyBase = effectiveCategory === 'specialists'
+      let baseTotal = hourlyBase ? manual * qty : manual * qty * d
+      if (hourlyBase && selected.minHours) baseTotal = Math.max(baseTotal, manual * selected.minHours)
+      const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
+      setCalculation({ label: selected.name, unit: selected.unit, quantity: qty, days: hourlyBase ? null : d, priceText: selected.priceText, baseTotal, isUrgent, urgentSurcharge, urgentAmount, total: baseTotal + urgentAmount, note: null })
       return
     }
 
@@ -98,7 +116,7 @@ export default function EventServicesCalculator({ client }) {
             <label className="block text-sm font-medium text-gray-700 mb-3">Раздел</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {categories.map(cat => (
-                <button key={cat} type="button" onClick={() => { setCategory(cat); setSelectedId(''); setCalculation(null) }}
+                <button key={cat} type="button" onClick={() => { setCategory(cat); setSelectedId(''); setManualPrice(''); setCalculation(null) }}
                   className={`p-4 rounded-lg border-2 transition text-left ${effectiveCategory === cat ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'}`}>
                   <span className="font-semibold">{CATEGORY_LABELS[cat] || cat}</span>
                 </button>
@@ -112,7 +130,7 @@ export default function EventServicesCalculator({ client }) {
               {catItems.map(item => {
                 const isSel = String(item.id) === String(selected?.id)
                 return (
-                  <button key={item.id} type="button" onClick={() => { setSelectedId(String(item.id)); setCalculation(null) }}
+                  <button key={item.id} type="button" onClick={() => { setSelectedId(String(item.id)); setManualPrice(''); setCalculation(null) }}
                     className={`w-full text-left p-3 border-2 rounded-lg transition ${isSel ? 'bg-blue-50 border-blue-500' : 'border-gray-200 hover:border-blue-300'}`}>
                     <div className="font-medium text-gray-800">{item.name}</div>
                     <div className="text-xs text-gray-500">{item.printOptions ? 'см. типы печати' : (item.priceText || `${item.price ?? '—'} тг/${item.unit}`)}</div>
@@ -148,6 +166,14 @@ export default function EventServicesCalculator({ client }) {
               </div>
             )}
           </div>
+          {isRangePrice && (
+            <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-2">✍️ Указать стоимость услуги (тг)</label>
+              <p className="text-xs text-gray-500 mb-2">Цена по прайсу: {selected.priceText}. Введите конкретную сумму — итог посчитается от неё.</p>
+              <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 50000" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          )}
+
           {effectiveCategory === 'specialists' && selected?.minHours && (
             <p className="text-xs text-gray-500">Минимальное время: {selected.minHours} ч — именно эта сумма будет базовая.</p>
           )}

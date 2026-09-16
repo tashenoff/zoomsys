@@ -30,3 +30,5 @@ Thumbs.db
 # Temp files
 *.tmp
 *.temp
+/tmp/
+/dev/

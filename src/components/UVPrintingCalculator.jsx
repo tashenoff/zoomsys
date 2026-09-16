@@ -31,8 +31,10 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   const [selectedMaterial, setSelectedMaterial] = useState(null)
   
   const [quantity, setQuantity] = useState(100)
-  const [area, setArea] = useState(1) // для расчета по площади (кв.см)
-  const [isUrgent, setIsUrgent] = useState(false)
+    const [area, setArea] = useState(1) // для расчета по площади (кв.см)
+    const [width, setWidth] = useState(10) // Ширина, см (для блокнотов — площадь = ширина × длина)
+    const [length, setLength] = useState(15) // Длина, см (для блокнотов)
+    const [isUrgent, setIsUrgent] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState('')
   const [selectedUvOps, setSelectedUvOps] = useState([])
@@ -169,6 +171,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     let calculationType = ''
     let materialName = null
     let sideData = null
+    let isNotebookArea = false
 
     // Если продукт со сторонами
     if (selectedProduct.sides && selectedSide) {
@@ -176,19 +179,24 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       if (sideData) {
         // Проверяем, есть ли у стороны свой тип цены (для блокнотов с изображением)
         if (sideData.priceType === 'sqcm' && sideData.prices) {
-          unitPrice = getPriceForQuantity(sideData.prices, area)
+          // Для блокнотов площадь считается автоматически: ширина × длина
+          const notebookArea = width * length
+          unitPrice = getPriceForQuantity(sideData.prices, notebookArea)
           if (unitPrice === "договорная") {
             setCalculation({
               productName: selectedProduct.name,
               side: selectedSide,
               quantity,
-              area,
+              area: notebookArea,
+              width,
+              length,
               note: "Цена договорная, свяжитесь с менеджером"
             })
             return
           }
-          baseTotal = unitPrice * area * quantity
+          baseTotal = unitPrice * notebookArea * quantity
           calculationType = 'sqcm-tiered'
+          isNotebookArea = true
         } else {
           // Обычный расчет по количеству
           unitPrice = getPriceForQuantity(sideData.prices, quantity)
@@ -280,13 +288,18 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     const discountAmount = totalAfterUrgent * (discount / 100)
     const total = totalAfterUrgent - discountAmount
 
+    const reportedArea = isNotebookArea ? (width * length) : area
+
     setCalculation({
       productName: selectedProduct.name,
       description: selectedProduct.description,
       side: selectedSide,
       material: materialName,
       quantity,
-      area: (selectedProduct.priceType === 'sqcm' || selectedProduct.materials || (sideData && sideData.priceType === 'sqcm')) ? area : null,
+      area: (isNotebookArea || selectedProduct.priceType === 'sqcm' || selectedProduct.materials || (sideData && sideData.priceType === 'sqcm')) ? reportedArea : null,
+      width: isNotebookArea ? width : null,
+      length: isNotebookArea ? length : null,
+      isNotebookArea,
       unitPrice,
       baseTotal,
       coefficient,
@@ -333,6 +346,8 @@ export default function UVPrintingCalculator({ client: externalClient }) {
       setSelectedSide(null)
       setQuantity(100)
       setArea(1)
+      setWidth(10)
+      setLength(15)
       setIsUrgent(false)
       setDiscount(0)
       setNotes('')
@@ -366,6 +381,16 @@ export default function UVPrintingCalculator({ client: externalClient }) {
     return false
   }, [selectedProduct, selectedSide, selectedMaterial])
 
+  // Режим блокнота: площадь считается автоматически из ширины × длины
+  const isNotebookSqcm = useMemo(() => {
+    if (!selectedProduct?.sides || !selectedSide) return false
+    const sideData = selectedProduct.sides.find(s => s.type === selectedSide)
+    return !!(sideData && sideData.priceType === 'sqcm')
+  }, [selectedProduct, selectedSide])
+
+  // Автоматически вычисленная площадь (см²)
+  const autoArea = isNotebookSqcm ? (width * length) : area
+
   // Если категория не выбрана, показываем экран выбора
   if (!selectedCategory) {
     return (
@@ -381,28 +406,32 @@ export default function UVPrintingCalculator({ client: externalClient }) {
 
   return (
     <div className="space-y-6">
-      {/* Кнопка "Назад" */}
-      <button
-        onClick={() => {
-          setSelectedCategory(null)
-          setSearchProduct('')
-          setSelectedProduct(null)
-          setSelectedSide(null)
-          setSelectedMaterial(null)
-          setQuantity(100)
-          setArea(1)
-          setIsUrgent(false)
-          setDiscount(0)
-          setNotes('')
-          setSelectedUvOps([])
-          setSelectedUvOptions({})
-          setCalculation(null)
-          setOrderStatus('draft')
-        }}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
-      >
-        ← Назад к выбору категории
-      </button>
+      {/* Плавающая кнопка "Назад" */}
+      <div className="sticky top-0 z-10 bg-gray-100 pt-3 pb-4">
+        <button
+          onClick={() => {
+            setSelectedCategory(null)
+            setSearchProduct('')
+            setSelectedProduct(null)
+            setSelectedSide(null)
+            setSelectedMaterial(null)
+            setQuantity(100)
+            setArea(1)
+            setWidth(10)
+            setLength(15)
+            setIsUrgent(false)
+            setDiscount(0)
+            setNotes('')
+            setSelectedUvOps([])
+            setSelectedUvOptions({})
+            setCalculation(null)
+            setOrderStatus('draft')
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+        >
+          ← Назад к выбору категории
+        </button>
+      </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
@@ -608,22 +637,64 @@ export default function UVPrintingCalculator({ client: externalClient }) {
             {/* Площадь (для продуктов с ценой за кв.см, материалов или изображений) */}
             {(selectedProduct.priceType === 'sqcm' || selectedProduct.materials || needsArea) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Площадь изображения (кв.см)
-                </label>
-                <input
-                  type="number"
-                  value={area}
-                  onChange={(e) => setArea(parseFloat(e.target.value) || 0)}
-                  min="1"
-                  step="0.1"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
-                />
+                {isNotebookSqcm ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Площадь рассчитывается автоматически: Ширина × Длина
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ширина, см
+                        </label>
+                        <input
+                          type="number"
+                          value={width}
+                          onChange={(e) => setWidth(parseFloat(e.target.value) || 0)}
+                          min="0.1"
+                          step="0.1"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Длина, см
+                        </label>
+                        <input
+                          type="number"
+                          value={length}
+                          onChange={(e) => setLength(parseFloat(e.target.value) || 0)}
+                          min="0.1"
+                          step="0.1"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <span className="text-sm font-semibold text-blue-800">
+                        📐 Площадь: {autoArea >= 0 ? autoArea.toFixed(2) : '0.00'} см² (цена за см² / за 1 шт.)
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Площадь изображения (кв.см)
+                    </label>
+                    <input
+                      type="number"
+                      value={area}
+                      onChange={(e) => setArea(parseFloat(e.target.value) || 0)}
+                      min="1"
+                      step="0.1"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                    />
+                  </>
+                )}
               </div>
             )}
           </div>
         )}
-
         {canCalculate && uvOperations.length > 0 && (
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
@@ -773,13 +844,15 @@ export default function UVPrintingCalculator({ client: externalClient }) {
                 {calculation.area && (
                   <div className="flex justify-between items-center py-2 border-b">
                     <span className="text-gray-600 font-medium">Площадь:</span>
-                    <span className="font-bold text-gray-800">{calculation.area} кв.см</span>
+                    <span className="font-bold text-gray-800">
+                      {calculation.isNotebookArea ? `${calculation.width} × ${calculation.length} = ${calculation.area.toFixed(2)} см²` : `${calculation.area} кв.см`}
+                    </span>
                   </div>
                 )}
 
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-gray-600 font-medium">
-                    {calculation.calculationType === 'sqcm' ? 'Цена за кв.см:' : 'Цена за единицу:'}
+                    {calculation.isNotebookArea ? 'Цена за см² / за 1 шт.:' : (calculation.calculationType === 'sqcm' ? 'Цена за кв.см:' : 'Цена за единицу:')}
                   </span>
                   <span className="font-bold text-gray-800">{calculation.unitPrice} тг</span>
                 </div>

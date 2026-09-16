@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import pricingData from '../data/pricing.json'
 import logo from '../logo.svg'
 import { useAuth } from '../hooks/useAuth'
+import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView }) {
   const { user, hasPermission } = useAuth()
@@ -168,9 +169,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   }`}
                 >
                   <span>📄 {category.name}</span>
-                  <span className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
-                    ▶
-                  </span>
+                  <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {isExpanded && (
@@ -221,7 +220,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   }`}
                 >
                   <span>🏳️ {category.name}</span>
-                  <span>{isExpanded ? '▾' : '▸'}</span>
+                  <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </button>
                 {isExpanded && (
                   <div className="ml-4 mt-1 space-y-1">
@@ -256,29 +255,6 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           return null
         })}
 
-        {/* БЛОК: Индивидуальный расчет */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          🛠️ Индивидуальный расчет
-        </p>
-        <div className="text-sm text-gray-500 px-4 py-2 italic bg-gray-50 rounded-lg mx-1">
-          🚧 В разработке
-        </div>
-
-        {/* МОБИЛЬНЫЕ КОНСТРУКЦИИ */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          🏗️ Мобильные конструкции
-        </p>
-        <button
-          onClick={() => onSelectCategory({ id: 'event-services', name: 'Сопровождение мероприятий', slug: 'event-services', description: 'Услуги по комплексному сопровождению мероприятий' })}
-          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-            selectedCategory?.slug === 'event-services'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          🎤 Сопровождение мероприятий
-        </button>
-
         {/* Работа специалистов и техники */}
         <button
           onClick={() => onSelectCategory({ id: 'specialists', name: 'Работа специалистов и техники', slug: 'specialists', description: 'Монтаж, техника, транспорт, АГП' })}
@@ -291,10 +267,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           🔧 Работа специалистов и техники
         </button>
 
-        {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ */}
-        <p className="text-xs uppercase text-gray-500 font-semibold mb-2 mt-4 px-2">
-          ✨ Специализированная печать
-        </p>
+        {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ (разделы без заголовка) */}
         {categories.map((category) => {
           // УФ печать
           if (category.subcategories) {

@@ -56,7 +56,9 @@ function formatPrices(prices, fallbackPrice) {
 
 function getUnitLabel(unit) {
   if (!unit) return 'шт.'
-  return String(unit).replace(/^тг\//, '')
+  const u = String(unit)
+  if (u.trim() === 'пог.м') return 'пог.м / за 1 шт.'
+  return u.replace(/^тг\//, '')
 }
 
 export default function TextilePrintingCalculator({ client }) {
@@ -72,7 +74,6 @@ export default function TextilePrintingCalculator({ client }) {
   const [height, setHeight] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [selectedServices, setSelectedServices] = useState([])
-  const [serviceQuantities, setServiceQuantities] = useState({})
   const [isUrgent, setIsUrgent] = useState(false)
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
@@ -127,16 +128,17 @@ export default function TextilePrintingCalculator({ client }) {
     const baseTotal = factualArea * pricePerSqM
     let extrasTotal = 0
     const extras = []
+    const perimeterPerItem = 2 * (w + h) // пог.м на 1 шт.
 
     selectedServices.forEach(id => {
       const op = availableOperations.find(o => String(o.id) === String(id))
       if (!op) return
-      const opQty = parseFloat(serviceQuantities[id]) || 0
+      const opQty = perimeterPerItem * qty
       const opPrice = getTierPrice(op.prices, opQty, op.price)
       const unitPrice = Number(opPrice.price) || 0
       const add = unitPrice * opQty
       extrasTotal += add
-      extras.push({ name: `${op.name} (${opQty} ${getUnitLabel(op.unit)}${opPrice.tier ? `, ${opPrice.tier}` : ''})`, price: add })
+      extras.push({ name: `${op.name} (${opQty.toLocaleString('ru-RU')} пог.м${opPrice.tier ? `, ${opPrice.tier}` : ''})`, price: add })
     })
 
     const subtotal = baseTotal + extrasTotal
@@ -166,7 +168,7 @@ export default function TextilePrintingCalculator({ client }) {
       })
       alert('Заказ успешно сохранен!')
       setWidth(''); setHeight(''); setQuantity(1)
-      setSelectedServices([]); setServiceQuantities({})
+      setSelectedServices([])
       setIsUrgent(false); setCalculation(null); setOrderStatus('draft')
     } catch (err) {
       alert('Ошибка сохранения заказа: ' + err.message)
@@ -189,7 +191,7 @@ export default function TextilePrintingCalculator({ client }) {
                 <button
                   key={material.id}
                   type="button"
-                  onClick={() => { setSelectedMaterialId(String(material.id)); setSelectedServices([]); setServiceQuantities({}); setCalculation(null) }}
+                  onClick={() => { setSelectedMaterialId(String(material.id)); setSelectedServices([]); setCalculation(null) }}
                   className={`p-4 rounded-lg border-2 transition text-left ${
                     String(selectedMaterial?.id) === String(material.id)
                       ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'
@@ -209,7 +211,7 @@ export default function TextilePrintingCalculator({ client }) {
               <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Высота (м)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Длина (м)</label>
               <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.5" />
             </div>
           </div>
@@ -248,7 +250,6 @@ export default function TextilePrintingCalculator({ client }) {
                           if (e.target.checked) setSelectedServices([...selectedServices, op.id])
                           else {
                             setSelectedServices(selectedServices.filter(id => id !== op.id))
-                            const n = { ...serviceQuantities }; delete n[op.id]; setServiceQuantities(n)
                           }
                           setCalculation(null)
                         }} className="mt-1 w-5 h-5 cursor-pointer" />
@@ -260,10 +261,7 @@ export default function TextilePrintingCalculator({ client }) {
                           {op.description && <p className="text-xs text-gray-600 mb-1">{op.description}</p>}
                           <p className="text-sm text-gray-500">{formatPrices(op.prices, op.price)} тг/{getUnitLabel(op.unit)}</p>
                           {isSelected && (
-                            <div className="mt-2">
-                              <label className="text-xs text-gray-600 mb-1 block">Количество ({getUnitLabel(op.unit)}):</label>
-                              <input type="number" min="0" step="0.01" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" />
-                            </div>
+                            <p className="text-xs text-green-600 mt-1">пог.м считается автоматически по периметру (2 × (ширина + длина))</p>
                           )}
                         </div>
                       </div>

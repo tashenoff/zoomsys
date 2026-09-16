@@ -395,27 +395,29 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   // Если выбран тип карточки, показываем соответствующий калькулятор
   return (
     <div className="space-y-6">
-      {/* Кнопка "Назад" */}
-      <button
-        onClick={() => {
-          setSelectedCardType(null)
-          // Сбрасываем все состояния
-          setSearchMaterial('')
-          setSelectedMaterial(null)
-          setSelectedColorType(null)
-          setSelectedProduct(null)
-          setQuantity(100)
-          setSelectedServices([])
-          setIsUrgent(false)
-          setDiscount(0)
-          setNotes('')
-          setCalculation(null)
-          setOrderStatus('draft')
-        }}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
-      >
-        ← Назад к выбору типа
-      </button>
+      {/* Плавающая кнопка "Назад" */}
+      <div className="sticky top-0 z-10 bg-gray-100 pt-3 pb-4">
+        <button
+          onClick={() => {
+            setSelectedCardType(null)
+            // Сбрасываем все состояния
+            setSearchMaterial('')
+            setSelectedMaterial(null)
+            setSelectedColorType(null)
+            setSelectedProduct(null)
+            setQuantity(100)
+            setSelectedServices([])
+            setIsUrgent(false)
+            setDiscount(0)
+            setNotes('')
+            setCalculation(null)
+            setOrderStatus('draft')
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+        >
+          ← Назад к выбору типа
+        </button>
+      </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">

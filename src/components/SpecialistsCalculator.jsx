@@ -13,39 +13,53 @@ export default function SpecialistsCalculator({ client }) {
 
   const [selectedId, setSelectedId] = useState('')
   const [hours, setHours] = useState(1)
+  const [width, setWidth] = useState('')
+  const [height, setHeight] = useState('')
   const [isUrgent, setIsUrgent] = useState(false)
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
 
   const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
+  const isArea = !!selected && selected.unit === 'м²'
 
   const priceLabel = (item) => {
     if (item.priceText) return item.priceText
-    if (item.price != null) return `${Number(item.price).toLocaleString('ru-RU')} тг/час`
+    if (item.price != null) return `${Number(item.price).toLocaleString('ru-RU')} тг/${item.unit || 'час'}`
     return 'по запросу'
   }
 
   const handleCalculate = (e) => {
     e.preventDefault()
     if (!selected) { alert('Выберите услугу'); return }
-    const h = parseFloat(hours) || 0
-    if (h <= 0) { alert('Введите часы'); return }
-
     if (selected.priceText || selected.price == null) {
-      setCalculation({ note: `Цена: ${selected.priceText || 'по запросу'}. Итог зависит от объёма — уточните у менеджера.`, label: selected.name, hours: h })
+      setCalculation({ note: `Цена: ${selected.priceText || 'по запросу'}. Итог зависит от объёма — уточните у менеджера.`, label: selected.name })
       return
     }
 
     const unitPrice = Number(selected.price)
-    let baseTotal = unitPrice * h
-    if (selected.minHours) baseTotal = Math.max(baseTotal, unitPrice * selected.minHours)
+    let qtyLabel
+    let baseTotal
+    if (isArea) {
+      const w = parseFloat(width) || 0
+      const hh = parseFloat(height) || 0
+      if (w <= 0 || hh <= 0) { alert('Введите ширину и высоту в метрах'); return }
+      const area = w * hh
+      qtyLabel = `${area.toLocaleString('ru-RU')} м²`
+      baseTotal = unitPrice * area
+    } else {
+      const h = parseFloat(hours) || 0
+      if (h <= 0) { alert('Введите часы'); return }
+      qtyLabel = `${h} ч${selected.minHours ? ` (мин. ${selected.minHours} ч)` : ''}`
+      baseTotal = unitPrice * h
+      if (selected.minHours) baseTotal = Math.max(baseTotal, unitPrice * selected.minHours)
+    }
     const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
     const total = baseTotal + urgentAmount
 
     setCalculation({
-      label: selected.name, hours: h, minHours: selected.minHours,
-      unitPrice, baseTotal, isUrgent, urgentSurcharge, urgentAmount, total, note: null
+      label: selected.name, unit: selected.unit || 'час', qtyLabel, unitPrice,
+      baseTotal, isUrgent, urgentSurcharge, urgentAmount, total, note: null
     })
   }
 
@@ -84,10 +98,17 @@ export default function SpecialistsCalculator({ client }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Часы</label>
-            <input type="number" min="0" step="0.5" value={hours} onChange={(e) => setHours(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-sm font-medium text-gray-700 mb-2">{isArea ? 'Площадь (ширина × высота, м)' : 'Часы'}</label>
+            {isArea ? (
+              <div className="flex gap-4">
+                <input type="number" min="0" step="0.1" placeholder="Ширина, м" value={width} onChange={(e) => setWidth(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="number" min="0" step="0.1" placeholder="Высота, м" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              </div>
+            ) : (
+              <input type="number" min="0" step="0.5" value={hours} onChange={(e) => setHours(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            )}
           </div>
-          {selected?.minHours && (
+          {!isArea && selected?.minHours && (
             <p className="text-xs text-gray-500">Минимальное время: {selected.minHours} ч — именно эта сумма будет базовая.</p>
           )}
 
@@ -110,8 +131,8 @@ export default function SpecialistsCalculator({ client }) {
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between"><span className="text-gray-600">Услуга:</span><span className="font-semibold text-right">{calculation.label}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Часы:</span><span className="font-semibold">{calculation.hours} ч {calculation.minHours ? `(мин. ${calculation.minHours} ч)` : ''}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Цена:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг/час</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Объём:</span><span className="font-semibold">{calculation.qtyLabel}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Цена:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг/{calculation.unit}</span></div>
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {calculation.isUrgent && (
                 <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>

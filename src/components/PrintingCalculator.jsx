@@ -36,6 +36,7 @@ export default function PrintingCalculator({ client: externalClient }) {
   // Новые состояния для перезаказа и кастомных услуг
   const [selectedReorder, setSelectedReorder] = useState('no')
   const [customNotes, setCustomNotes] = useState([])
+  const [serviceManualPrices, setServiceManualPrices] = useState({}) // Ручная цена для услуг с диапазоном
 
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
@@ -186,7 +187,7 @@ export default function PrintingCalculator({ client: externalClient }) {
       if (selectedProduct.colorTypes && !selectedColorType) return
       calculatePrice()
     }
-  }, [selectedProduct, selectedColorType, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes])
+  }, [selectedProduct, selectedColorType, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes, serviceManualPrices])
 
   const getPriceForQuantity = (pricesObj, qty) => {
     if (!pricesObj) return 0
@@ -243,9 +244,15 @@ export default function PrintingCalculator({ client: externalClient }) {
         selectedServices.forEach(serviceId => {
           const operation = availableOperations.find(op => op.id === serviceId)
           if (operation) {
-            // Услуга с ценой «от/диапазон» — не добавляем к сумме, помечаем «по запросу»
+            // Услуга с ценой «от/диапазон» — если указана ручная цена, используем её, иначе «по запросу»
             if (operation.priceText) {
-              servicesDetails.push({ name: `${operation.name} (${operation.priceText})`, price: 0, byRequest: true })
+              const manual = parseFloat(serviceManualPrices[operation.id]) || 0
+              if (manual > 0) {
+                servicesTotal += manual
+                servicesDetails.push({ name: `${operation.name} (ручная цена ${manual.toLocaleString('ru-RU')} тг)`, price: manual })
+              } else {
+                servicesDetails.push({ name: `${operation.name} (${operation.priceText})`, price: 0, byRequest: true })
+              }
               return
             }
             let servicePrice = operation.unit === 'тг/шт' 
@@ -388,24 +395,26 @@ export default function PrintingCalculator({ client: externalClient }) {
 
   return (
     <div className="space-y-6">
-      {/* Кнопка "Назад" */}
-      <button
-        onClick={() => {
-          setSelectedCategory(null)
-          setSearchProduct('')
-          setSelectedProduct(null)
-          setSelectedColorType(null)
-          setQuantity(100)
-          setIsUrgent(false)
-          setDiscount(0)
-          setNotes('')
-          setCalculation(null)
-          setOrderStatus('draft')
-        }}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
-      >
-        ← Назад к выбору категории
-      </button>
+      {/* Плавающая кнопка "Назад" */}
+      <div className="sticky top-0 z-10 bg-gray-100 pt-3 pb-4">
+        <button
+          onClick={() => {
+            setSelectedCategory(null)
+            setSearchProduct('')
+            setSelectedProduct(null)
+            setSelectedColorType(null)
+            setQuantity(100)
+            setIsUrgent(false)
+            setDiscount(0)
+            setNotes('')
+            setCalculation(null)
+            setOrderStatus('draft')
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition font-medium"
+        >
+          ← Назад к выбору категории
+        </button>
+      </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
@@ -551,36 +560,52 @@ export default function PrintingCalculator({ client: externalClient }) {
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {availableOperations.map((operation) => (
-                <label 
-                  key={operation.id} 
-                  className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
+                <div
+                  key={operation.id}
+                  className={`p-4 border-2 rounded-lg transition ${
                     selectedServices.includes(operation.id)
                       ? 'bg-green-100 border-green-500 shadow-md'
                       : 'bg-white border-green-300 hover:bg-green-50 hover:border-green-400'
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedServices.includes(operation.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedServices([...selectedServices, operation.id])
-                      } else {
-                        setSelectedServices(selectedServices.filter(id => id !== operation.id))
-                      }
-                    }}
-                    className="mr-3 w-5 h-5"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium block">{operation.name}</span>
-                                        <span className="text-xs text-gray-500">
-                                          {operation.priceText || (operation.price != null ? `${operation.price} ${operation.unit}` : '')}
-                                        </span>
-                  </div>
-                  {selectedServices.includes(operation.id) && (
-                    <span className="text-green-600 text-xl">✓</span>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedServices.includes(operation.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedServices([...selectedServices, operation.id])
+                        } else {
+                          setSelectedServices(selectedServices.filter(id => id !== operation.id))
+                        }
+                      }}
+                      className="mr-3 w-5 h-5"
+                    />
+                    <span className="flex-1">
+                      <span className="font-medium block">{operation.name}</span>
+                      <span className="text-xs text-gray-500">
+                        {operation.priceText || (operation.price != null ? `${operation.price} ${operation.unit}` : '')}
+                      </span>
+                    </span>
+                    {selectedServices.includes(operation.id) && (
+                      <span className="text-green-600 text-xl">✓</span>
+                    )}
+                  </label>
+                  {operation.priceText && selectedServices.includes(operation.id) && (
+                    <div className="mt-3 p-3 bg-white border-2 border-green-300 rounded-lg">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">✍️ Указать стоимость услуги (тг)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={serviceManualPrices[operation.id] || ''}
+                        onChange={(e) => setServiceManualPrices({ ...serviceManualPrices, [operation.id]: e.target.value })}
+                        placeholder="Например 5000"
+                        className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
                   )}
-                </label>
+                </div>
               ))}
             </div>
           </div>

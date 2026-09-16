@@ -30,6 +30,8 @@ export default function CncLaserCalculator({ client }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+  const [manualMode, setManualMode] = useState(false)
+  const [manualPrice, setManualPrice] = useState('')
 
   const millingItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-cut'), [cncItems])
   const engraveItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-engrave'), [cncItems])
@@ -50,15 +52,50 @@ export default function CncLaserCalculator({ client }) {
   const thicknessAvailable = opType === 'milling' && selectedMaterial
     ? (selectedMaterial.prices?.[thickness] !== undefined && selectedMaterial.prices?.[thickness] !== null)
     : true
-  const canCalculate = !!selectedMaterial && (opType === 'engrave' ? !!selectedMaterial.price : thicknessAvailable)
+  const canCalculate = !!selectedMaterial && (manualMode
+    ? (parseFloat(manualPrice) > 0)
+    : (opType === 'engrave' ? !!selectedMaterial.price : thicknessAvailable))
 
   const resetCalc = () => setCalculation(null)
   // при смене типа одновремено сбросить материал
-  const switchType = (t) => { setOpType(t); setMaterialId(''); resetCalc() }
+  const switchType = (t) => { setOpType(t); setMaterialId(''); setManualMode(false); setManualPrice(''); resetCalc() }
 
   const handleCalculate = (e) => {
     e.preventDefault()
     if (!selectedMaterial) { alert('Выберите материал/операцию'); return }
+
+    // Ручной режим: менеджер сам назначает стоимость услуги
+    if (manualMode) {
+      const manual = parseFloat(manualPrice) || 0
+      if (manual <= 0) { alert('Укажите стоимость услуги'); return }
+
+      // допы (скотч)
+      let extrasTotal = 0
+      const extras = []
+      if (extraChecked && opType === 'milling') {
+        availableOps.forEach(op => {
+          extrasTotal += Number(op.price) || 0
+          extras.push({ name: op.name, price: Number(op.price) || 0 })
+        })
+      }
+
+      const baseTotal = manual
+      const subtotal = baseTotal + extrasTotal
+      const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
+      const total = subtotal + urgentAmount
+
+      setCalculation({
+        manualMode: true,
+        opTypeLabel: opType === 'milling' ? 'Резка' : 'Гравировка',
+        materialLabel: selectedMaterial.category === 'cnc-cut' ? (selectedMaterial.material || selectedMaterial.name) : selectedMaterial.name,
+        thicknessLabel: null,
+        unit: 'шт', quantity: 1,
+        unitPrice: manual, baseTotal, extras, extrasTotal,
+        isUrgent, urgentSurcharge, urgentAmount, total
+      })
+      return
+    }
+
     if (!thicknessAvailable) { alert('Для выбранной толщины резка не предусмотрена'); return }
     const qty = parseFloat(quantity) || 0
     if (qty <= 0) { alert('Введите количество'); return }
@@ -92,6 +129,7 @@ export default function CncLaserCalculator({ client }) {
     const total = subtotal + urgentAmount
 
     setCalculation({
+      manualMode: false,
       opTypeLabel: opType === 'milling' ? 'Резка' : 'Гравировка',
       materialLabel: selectedMaterial.category === 'cnc-cut' ? (selectedMaterial.material || selectedMaterial.name) : selectedMaterial.name,
       thicknessLabel,
@@ -173,9 +211,24 @@ export default function CncLaserCalculator({ client }) {
 
           {engraveNote && <p className="text-sm text-gray-500">{engraveNote}</p>}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Количество ({opType === 'milling' ? 'пог.м' : 'кв.см'})</label>
-            <input type="number" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+          {!manualMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Количество ({opType === 'milling' ? 'пог.м' : 'кв.см'})</label>
+              <input type="number" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+          )}
+          <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={manualMode} onChange={(e) => { setManualMode(e.target.checked); setManualPrice(''); resetCalc() }} className="mr-3 w-5 h-5" />
+              <span className="flex-1 text-sm font-medium text-indigo-800">✍️ Указать стоимость услуги вручную</span>
+            </label>
+            {manualMode && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Стоимость услуги (тг)</label>
+                <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 25000" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
+                <p className="text-xs text-gray-500 mt-1">Цена назначается вручную, независимо от расчёта по погонным метрам резки.</p>
+              </div>
+            )}
           </div>
 
           {opType === 'milling' && availableOps.length > 0 && (
@@ -206,8 +259,10 @@ export default function CncLaserCalculator({ client }) {
               <div className="flex justify-between"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right">{calculation.opTypeLabel}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right">{calculation.materialLabel}</span></div>
               {calculation.thicknessLabel && <div className="flex justify-between"><span className="text-gray-600">Толщина:</span><span className="font-semibold">{calculation.thicknessLabel}</span></div>}
-              <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} {calculation.unit}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Цена за ед:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>
+              {!calculation.manualMode && <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} {calculation.unit}</span></div>}
+              {calculation.manualMode
+                ? <div className="flex justify-between"><span className="text-gray-600">Ручная стоимость услуги:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>
+                : <div className="flex justify-between"><span className="text-gray-600">Цена за ед:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>}
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {(calculation.extras || []).map(ex => (
                 <div key={ex.name} className="flex justify-between"><span className="text-gray-600">{ex.name}:</span><span>{Number(ex.price).toLocaleString('ru-RU')} тг</span></div>

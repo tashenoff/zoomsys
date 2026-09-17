@@ -158,8 +158,8 @@ function AppContent() {
                   )}
 
                   {selectedCategory.slug === 'uv-printing' && (
-                    <UVPrintingCalculator client={selectedClient} />
-                  )}
+                                      <UVPrintingCalculator client={selectedClient} initialCategory={selectedCategory.uvSection} />
+                                    )}
 
                   {selectedCategory.slug === 'wide-format' && (
                     <WideFormatCalculator client={selectedClient} />

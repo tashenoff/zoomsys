@@ -7,8 +7,18 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView }) {
   const { user, hasPermission } = useAuth()
   const categories = pricingData.categories
-  const [expandedCategory, setExpandedCategory] = useState(null)
-  const [search, setSearch] = useState('')
+    const [expandedCategory, setExpandedCategory] = useState(null)
+    const [search, setSearch] = useState('')
+
+    // Разделы страницы УФ печати (совпадают с categoryMap в UVPrintingCalculator.jsx)
+    const UV_SECTIONS = [
+      { id: 'pens', name: 'Ручки', icon: '🖊️' },
+      { id: 'cards', name: 'Флеш-карты, пластиковые карты', icon: '💳' },
+      { id: 'promotional', name: 'Промо-продукция', icon: '🎁' },
+      { id: 'notebooks', name: 'Блокноты (логотип)', icon: '📔' },
+      { id: 'notebooks-image', name: 'Блокноты (изображение)', icon: '📓' },
+      { id: 'materials', name: 'На материалах', icon: '🎨' }
+    ]
 
   // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
   const NAV_ITEMS = useMemo(() => {
@@ -47,7 +57,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
   }
 
   return (
-    <div className="w-72 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
+    <div className="w-80 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
       {/* Заголовок */}
       <div className="p-6 border-b border-gray-300">
         <img src={logo} alt="Ra Zoom" className="w-32 h-auto mb-2" />
@@ -77,7 +87,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                       <button
                         key={item.payload?.id || item.label}
                         onClick={() => { onSelectCategory(item.payload); setSearch('') }}
-                        className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                        className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                           selectedCategory?.id === item.payload?.id
                             ? 'bg-blue-600 text-white'
                             : 'bg-white text-gray-800 hover:bg-gray-200 border border-gray-300'
@@ -99,7 +109,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               {/* Главная */}
         <button
           onClick={() => onSelectView('home')}
-          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+          className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
             selectedView === 'home'
               ? 'bg-blue-600 text-white'
               : 'text-gray-700 hover:bg-gray-200'
@@ -112,7 +122,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
         {hasPermission('viewOrders') && (
           <button
             onClick={() => onSelectView('orders')}
-            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
               selectedView === 'orders'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:bg-gray-200'
@@ -126,7 +136,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
         {hasPermission('manageUsers') && (
           <button
             onClick={() => onSelectView('users')}
-            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
               selectedView === 'users'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:bg-gray-200'
@@ -140,7 +150,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
         {hasPermission('editPricing') && (
           <button
             onClick={() => onSelectView('pricing')}
-            className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
               selectedView === 'pricing'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:bg-gray-200'
@@ -162,7 +172,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <div key={category.id} className="mb-2">
                 <button
                   onClick={() => handleCategoryClick(category)}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
+                  className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
                     hasSelectedSubcategory
                       ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
                       : 'text-gray-700 hover:bg-gray-200'
@@ -185,7 +195,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                           <button
                             key={subcategory.id}
                             onClick={() => onSelectCategory(subcategory)}
-                            className={`w-full text-left px-4 py-2 rounded-lg transition text-sm ${
+                            className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
                               selectedCategory?.id === subcategory.id
                                 ? 'bg-blue-600 text-white'
                                 : 'text-gray-600 hover:bg-gray-200'
@@ -213,7 +223,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <div key={category.id}>
                 <button
                   onClick={() => handleCategoryClick(category)}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition font-medium flex items-center justify-between ${
+                  className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
                     hasSelectedSubcategory
                       ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
                       : 'text-gray-700 hover:bg-gray-200'
@@ -237,7 +247,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                         <button
                           key={subcategory.id}
                           onClick={() => onSelectCategory(subcategory)}
-                          className={`w-full text-left px-4 py-2 rounded-lg transition text-sm ${
+                          className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
                             selectedCategory?.id === subcategory.id
                               ? 'bg-blue-600 text-white'
                               : 'text-gray-600 hover:bg-gray-200'
@@ -258,7 +268,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
         {/* Работа специалистов и техники */}
         <button
           onClick={() => onSelectCategory({ id: 'specialists', name: 'Работа специалистов и техники', slug: 'specialists', description: 'Монтаж, техника, транспорт, АГП' })}
-          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+          className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
             selectedCategory?.slug === 'specialists'
               ? 'bg-blue-600 text-white'
               : 'text-gray-700 hover:bg-gray-200'
@@ -269,29 +279,52 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
         {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ (разделы без заголовка) */}
         {categories.map((category) => {
-          // УФ печать
-          if (category.subcategories) {
-            return category.subcategories.filter(sub => sub.slug === 'uv-printing').map((subcategory) => (
-              <button
-                key={subcategory.id}
-                onClick={() => onSelectCategory(subcategory)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
-                  selectedCategory?.id === subcategory.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🖨️ {subcategory.name}
-              </button>
-            ))
-          }
+          // УФ печать — раскрывающийся список разделов (как Государственная символика)
+                    if (category.subcategories) {
+                      return category.subcategories.filter(sub => sub.slug === 'uv-printing').map((subcategory) => {
+                        const isUvExpanded = expandedCategory === 'uv-printing'
+                        const activeUvSection = selectedCategory?.slug === 'uv-printing' ? selectedCategory.uvSection : null
+                        return (
+                          <div key={subcategory.id} className="mb-2">
+                            <button
+                              onClick={() => setExpandedCategory(isUvExpanded ? null : 'uv-printing')}
+                              className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                                selectedCategory?.slug === 'uv-printing'
+                                  ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                  : 'text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              <span>🖨️ {subcategory.name}</span>
+                              <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isUvExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isUvExpanded && (
+                              <div className="ml-4 mt-1 space-y-1">
+                                {UV_SECTIONS.map((section) => (
+                                  <button
+                                    key={section.id}
+                                    onClick={() => onSelectCategory({ ...subcategory, uvSection: section.id })}
+                                    className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                      activeUvSection === section.id
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    {section.icon} {section.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
+                    }
           // Широкоформатная печать
           if (!category.subcategories && category.slug === 'wide-format') {
             return (
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -307,7 +340,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -323,7 +356,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -339,7 +372,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -355,7 +388,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -371,7 +404,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               <button
                 key={category.id}
                 onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                   selectedCategory?.id === category.id
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-200'
@@ -391,7 +424,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                         <button
                           key={cat.slug}
                           onClick={() => onSelectCategory(cat)}
-                          className={`w-full text-left px-4 py-3 rounded-lg transition font-medium ${
+                          className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
                             selectedCategory?.slug === cat.slug ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200'
                           }`}
                         >

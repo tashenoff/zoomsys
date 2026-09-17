@@ -5,7 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
-export default function UVPrintingCalculator({ client: externalClient }) {
+export default function UVPrintingCalculator({ client: externalClient, initialCategory }) {
   // Получаем данные из контекста прайсов и заказов
   const { pricing: pricingContext } = usePricing()
   const { createOrder, isOnline } = useOrders()
@@ -24,7 +24,7 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   
   const [client, setClient] = useState(externalClient)
   
-  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [searchProduct, setSearchProduct] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedSide, setSelectedSide] = useState(null)
@@ -73,9 +73,17 @@ export default function UVPrintingCalculator({ client: externalClient }) {
   }, [pricing])
 
   const filteredByCategory = useMemo(() => {
-    if (!selectedCategory) return []
-    return pricing.filter(p => p.category === selectedCategory)
-  }, [selectedCategory, pricing])
+      if (!selectedCategory) return []
+      return pricing.filter(p => p.category === selectedCategory)
+    }, [selectedCategory, pricing])
+
+    // Если раздел передан из сайдбара (клик по раскрывающемуся списку УФ печати),
+    // предвыбираем его, как только подгрузятся данные прайса
+    useEffect(() => {
+      if (initialCategory && categories.some(c => c.id === initialCategory)) {
+        setSelectedCategory(initialCategory)
+      }
+    }, [initialCategory, categories])
 
   const filteredProducts = useMemo(() => {
     if (!searchProduct) return filteredByCategory

@@ -64,15 +64,17 @@ function AppContent() {
   }
 
   const handleSelectView = (view) => {
-    setSelectedView(view)
-    setSelectedCategory(null)
-    setSelectedClient(null)
-  }
+      setSelectedView(view)
+      setSelectedCategory(null)
+      setSelectedClient(null)
+      setSelectedOrderId(null)
+    }
 
-  const handleSelectCategory = (category) => {
-    setSelectedCategory(category)
-    setSelectedView(null)
-  }
+    const handleSelectCategory = (category) => {
+      setSelectedCategory(category)
+      setSelectedView(null)
+      setSelectedOrderId(null)
+    }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -123,9 +125,10 @@ function AppContent() {
               <div className="flex items-center text-sm text-gray-600">
                 <button
                   onClick={() => {
-                    setSelectedCategory(null)
-                    setSelectedClient(null)
-                  }}
+                                      setSelectedCategory(null)
+                                      setSelectedClient(null)
+                                      setSelectedOrderId(null)
+                                    }}
                   className="hover:text-blue-600"
                 >
                   Главная

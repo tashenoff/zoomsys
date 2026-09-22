@@ -253,8 +253,9 @@ export default function WideFormatCalculator({ client }) {
     const roll = Number(selectedMaterial.rollWidth) || 0
     const wastePrice = Number(selectedMaterial.wastePrice) || 0
     if (includeWaste && roll > 0 && wastePrice > 0) {
-      const printAcross = Math.min(w, h) + margin
-      const printAlong = Math.max(w, h) + margin
+      const candAcross = [Math.min(w, h) + margin, Math.max(w, h) + margin].filter(c => c <= roll)
+            const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
+            const printAlong = printAreaItem / printAcross
       if (printAcross > roll) {
         wasteInfo = { joined: true, roll, printAcross, printAlong }
       } else {

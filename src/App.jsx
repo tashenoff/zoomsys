@@ -159,14 +159,6 @@ function AppContent() {
                 </span>
               </div>
 
-              {/* Заголовок категории */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-3xl font-bold text-gray-800">
-                  {selectedCategory.name}
-                </h1>
-                <p className="text-gray-600 mt-2">{selectedCategory.description}</p>
-              </div>
-
               {/* Калькулятор в зависимости от категории */}
               {!hasPermission('createOrders') ? (
                 <AccessDenied message="У вас нет прав для создания заказов" />

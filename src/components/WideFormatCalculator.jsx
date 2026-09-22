@@ -262,7 +262,7 @@ export default function WideFormatCalculator({ client }) {
         const remainSqm = (roll - printAcross) * printAlong * qty
         const above = remainSqm >= 0.5
         wasteInfo = {
-          joined: false, roll, printAcross, printAlong, itemAcross, margin: wasteMargin, wastePrice,
+          joined: false, roll, printAcross, printAlong, itemAcross, margin, wastePrice,
           remainSqm,
           wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
           belowThreshold: !above

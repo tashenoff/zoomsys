@@ -46,7 +46,10 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS unit TEXT DEFAULT 'м²',
       ADD COLUMN IF NOT EXISTS prices JSONB,
       ADD COLUMN IF NOT EXISTS description TEXT,
-      ADD COLUMN IF NOT EXISTS notes TEXT
+      ADD COLUMN IF NOT EXISTS notes TEXT,
+      ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
+      ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
+      ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2
     `)
     console.log('✅ wide_format_pricing')
 

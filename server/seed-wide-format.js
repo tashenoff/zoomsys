@@ -34,7 +34,10 @@ async function ensureColumns() {
     ADD COLUMN IF NOT EXISTS unit TEXT DEFAULT 'м²',
     ADD COLUMN IF NOT EXISTS prices JSONB,
     ADD COLUMN IF NOT EXISTS description TEXT,
-    ADD COLUMN IF NOT EXISTS notes TEXT
+    ADD COLUMN IF NOT EXISTS notes TEXT,
+    ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
+    ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
+    ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2
   `)
 
   await pool.query(`
@@ -65,6 +68,9 @@ async function upsertWideFormatItem(item, sortOrder) {
     item.prices ? JSON.stringify(item.prices) : null,
     item.description || null,
     item.notes || null,
+    item.rollWidth ?? null,
+    item.wastePrice ?? null,
+    item.wasteMargin ?? 0.2,
     sortOrder
   ]
 
@@ -72,8 +78,9 @@ async function upsertWideFormatItem(item, sortOrder) {
     await pool.query(
       `UPDATE wide_format_pricing
        SET name=$1, price_per_sqm=$2, category=$3, unit=$4, prices=$5,
-           description=$6, notes=$7, sort_order=$8, is_active=true, updated_at=NOW()
-       WHERE id=$9`,
+           description=$6, notes=$7, sort_order=$8, is_active=true, updated_at=NOW(),
+           roll_width=$9, waste_price=$10, waste_margin=$11
+       WHERE id=$12`,
       [...params, existing.rows[0].id]
     )
     return 'updated'
@@ -81,8 +88,8 @@ async function upsertWideFormatItem(item, sortOrder) {
 
   await pool.query(
     `INSERT INTO wide_format_pricing
-     (name, price_per_sqm, category, unit, prices, description, notes, sort_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+     (name, price_per_sqm, category, unit, prices, description, notes, sort_order, roll_width, waste_price, waste_margin)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
     params
   )
   return 'inserted'

@@ -121,6 +121,7 @@ export default function WideFormatCalculator({ client }) {
   const [serviceQuantities, setServiceQuantities] = useState({})
   const [selectedServiceOptions, setSelectedServiceOptions] = useState({})
   const [isUrgent, setIsUrgent] = useState(false)
+  const [includeWaste, setIncludeWaste] = useState(true)
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
@@ -245,7 +246,31 @@ export default function WideFormatCalculator({ client }) {
       extras.push({ name: detailName, price: add, quantity: opQty, unit: op.unit, unitPrice, tier: opTier })
     })
 
-    const subtotal = baseTotal + extrasTotal
+    let wasteInfo = null
+    let wasteTotal = 0
+    const roll = Number(selectedMaterial.rollWidth) || 0
+    const wastePrice = Number(selectedMaterial.wastePrice) || 0
+    const wasteMargin = selectedMaterial.wasteMargin != null ? Number(selectedMaterial.wasteMargin) : 0.2
+
+    if (includeWaste && roll > 0 && wastePrice > 0) {
+      const printAcross = Math.min(w, h) + wasteMargin
+      const printAlong = Math.max(w, h) + wasteMargin
+      if (printAcross > roll) {
+        wasteInfo = { joined: true, roll, printAcross, printAlong }
+      } else {
+        const remainSqm = (roll - printAcross) * printAlong * qty
+        const above = remainSqm >= 0.5
+        wasteInfo = {
+          joined: false, roll, printAcross, printAlong, wastePrice,
+          remainSqm,
+          wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
+          belowThreshold: !above
+        }
+        if (above) wasteTotal = wasteInfo.wasteTotal
+      }
+    }
+
+    const subtotal = baseTotal + extrasTotal + wasteTotal
     const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
     const total = subtotal + urgentAmount
 
@@ -263,6 +288,8 @@ export default function WideFormatCalculator({ client }) {
       baseTotal,
       extras,
       extrasTotal,
+      wasteInfo,
+      wasteTotal,
       isUrgent,
       urgentSurcharge,
       urgentAmount,
@@ -454,6 +481,13 @@ export default function WideFormatCalculator({ client }) {
             </div>
           )}
 
+          {selectedMaterial && selectedMaterial.rollWidth && selectedMaterial.wastePrice && (
+            <label className="flex items-center p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
+              <input type="checkbox" checked={includeWaste} onChange={(e) => { setIncludeWaste(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
+              <span className="flex-1 font-medium text-indigo-700">📐 Учитывать остаток при раскрое (рулон {String(selectedMaterial.rollWidth).replace('.', ',')} м)</span>
+            </label>
+          )}
+
           <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
             <span className="flex-1 font-medium text-red-700">🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)</span>
@@ -491,6 +525,33 @@ export default function WideFormatCalculator({ client }) {
                   <span>{Number(ex.price).toLocaleString('ru-RU')} тг</span>
                 </div>
               ))}
+
+              {calculation.wasteInfo && (
+                <div className="pt-2 mt-1 border-t">
+                  <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Раскладка (рулон {calculation.wasteInfo.roll.toLocaleString('ru-RU')} м):</span><span className="text-right break-words flex-1 min-w-0 font-semibold">{calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span></div>
+                  {calculation.wasteInfo.joined ? (
+                    <div className="bg-yellow-100 border-2 border-yellow-400 rounded p-3 text-yellow-800 text-sm mt-2">
+                      Изделие по раскрою ({calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м) шире рулона ({calculation.wasteInfo.roll.toLocaleString('ru-RU')} м) — требуется склейка кусков. Остаток посчитайте вручную.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex h-6 rounded overflow-hidden border mt-3">
+                        <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.printAcross / calculation.wasteInfo.roll) * 100}%` }}></div>
+                        <div className="bg-gray-300" style={{ width: `${((calculation.wasteInfo.roll - calculation.wasteInfo.printAcross) / calculation.wasteInfo.roll) * 100}%` }}></div>
+                      </div>
+                      <div className="flex text-xs text-gray-500 mt-1">
+                        <span className="flex-1">изделие {calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м</span>
+                        <span>остаток {(calculation.wasteInfo.roll - calculation.wasteInfo.printAcross).toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span>
+                      </div>
+                      {calculation.wasteInfo.belowThreshold ? (
+                        <div className="text-sm text-gray-500 mt-2">Остаток {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — менее 0,5 м², не тарифицируется.</div>
+                      ) : (
+                        <div className="flex justify-between mt-2"><span className="text-gray-600">Остаток (обрезь): {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² × {calculation.wasteInfo.wastePrice} тг</span><span className="font-semibold">{calculation.wasteInfo.wasteTotal.toLocaleString('ru-RU')} тг</span></div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
               {calculation.isUrgent && (
                 <div className="flex justify-between py-2 px-3 bg-red-50 rounded">

@@ -392,7 +392,7 @@ export default function PricingManagement() {
               } else if (category === 'printing') {
                 apiData = { category: updatedItem.category, name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {} }
               } else if (category === 'wideFormat') {
-                apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes }
+                apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes, roll_width: updatedItem.rollWidth ?? null, waste_price: updatedItem.wastePrice ?? null, waste_margin: updatedItem.wasteMargin ?? 0.2 }
               } else if (category === 'stateSymbols') {
                 const productCategory = ['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(updatedItem.category)
                   ? updatedItem.category
@@ -822,6 +822,7 @@ function WideFormatTable({ items, onEdit, onDelete }) {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Группа</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Цены по объему</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ед.</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Рулон / остаток</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
               </tr>
             </thead>
@@ -835,6 +836,7 @@ function WideFormatTable({ items, onEdit, onDelete }) {
                   <td className="px-4 py-3 text-sm text-gray-700">{WIDE_FORMAT_CATEGORY_LABELS[item.category] || item.category || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-700">{priceTiersToText(item.prices, item.pricePerSqm)}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{item.unit || 'м²'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{item.rollWidth ? String(item.rollWidth).replace('.', ',') + ' м' : '—'}{item.wastePrice ? ' / ' + item.wastePrice + ' тг' : ''}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button>
                     <button onClick={() => onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button>
@@ -1385,7 +1387,7 @@ function EditModal({ item, category, onClose, onSave }) {
       }
     }
     if (category === 'wideFormat') {
-      return { name: '', category: 'phaeton', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '' }
+      return { name: '', category: 'phaeton', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '', rollWidth: null, wastePrice: null, wasteMargin: 0.2 }
     }
     if (category === 'textile') {
       return { name: '', category: 'textile', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '' }
@@ -1718,6 +1720,27 @@ function EditModal({ item, category, onClose, onSave }) {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Описание</label>
                   <input type="text" value={formData.description || ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                </div>
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="font-semibold text-gray-800 mb-3">Остатки при раскрое</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Ширина рулона (м)</label>
+                      <input type="number" step="0.01" min="0" value={formData.rollWidth ?? ''} onChange={(e) => setFormData({ ...formData, rollWidth: e.target.value === '' ? null : parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="3.2" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Цена остатка (тг/м²)</label>
+                      <input type="number" step="0.01" min="0" value={formData.wastePrice ?? ''} onChange={(e) => setFormData({ ...formData, wastePrice: e.target.value === '' ? null : parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="1500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Припуск на раскрой (м)</label>
+                      <input type="number" step="0.01" min="0" value={formData.wasteMargin ?? ''} onChange={(e) => setFormData({ ...formData, wasteMargin: e.target.value === '' ? null : parseFloat(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0.2" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">Остаток = (ширина рулона − ширина раскроя × длина). Если поля пустые — остаток для материала не считается.</p>
                 </div>
               </>
             )}

@@ -258,10 +258,11 @@ export default function WideFormatCalculator({ client }) {
       if (printAcross > roll) {
         wasteInfo = { joined: true, roll, printAcross, printAlong }
       } else {
+        const itemAcross = Math.min(w, h)
         const remainSqm = (roll - printAcross) * printAlong * qty
         const above = remainSqm >= 0.5
         wasteInfo = {
-          joined: false, roll, printAcross, printAlong, wastePrice,
+          joined: false, roll, printAcross, printAlong, itemAcross, margin: wasteMargin, wastePrice,
           remainSqm,
           wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
           belowThreshold: !above
@@ -389,6 +390,8 @@ export default function WideFormatCalculator({ client }) {
               <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="2.0" />
             </div>
           </div>
+
+          <p className="text-xs text-gray-500 -mt-2">Вводи размер готового изделия — припуск на раскрой добавится автоматически.</p>
 
           <div>
             <p className="text-sm text-gray-600 mb-2">Стандартные размеры:</p>
@@ -536,15 +539,17 @@ export default function WideFormatCalculator({ client }) {
                   ) : (
                     <>
                       <div className="flex h-6 rounded overflow-hidden border mt-3">
-                        <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.printAcross / calculation.wasteInfo.roll) * 100}%` }}></div>
-                        <div className="bg-gray-300" style={{ width: `${((calculation.wasteInfo.roll - calculation.wasteInfo.printAcross) / calculation.wasteInfo.roll) * 100}%` }}></div>
+                        <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.itemAcross / calculation.wasteInfo.roll) * 100}%` }}></div>
+                        <div className="bg-yellow-300" style={{ width: `${(calculation.wasteInfo.margin / calculation.wasteInfo.roll) * 100}%` }}></div>
+                        <div className="bg-gray-300 flex-1"></div>
                       </div>
                       <div className="flex flex-wrap text-xs text-gray-500 mt-1 gap-x-4 gap-y-1">
-                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>занято изделием (печать)</span>
-                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь, оплачивается по цене остатка)</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>изделие (печать)</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-yellow-300 rounded"></span>припуск без оплаты</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь, тарифицируется)</span>
                       </div>
                       <div className="flex text-xs text-gray-500 mt-1">
-                        <span className="flex-1">изделие {calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м</span>
+                        <span className="flex-1">печать （с припуском) {calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м</span>
                         <span>остаток {(calculation.wasteInfo.roll - calculation.wasteInfo.printAcross).toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span>
                       </div>
                       {calculation.wasteInfo.belowThreshold ? (

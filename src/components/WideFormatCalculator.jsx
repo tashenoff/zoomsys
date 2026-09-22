@@ -511,8 +511,8 @@ export default function WideFormatCalculator({ client }) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Оборудование:</span><span className="font-semibold text-right break-words flex-1 min-w-0">{calculation.equipment}</span></div>
-                            <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Материал:</span><span className="font-semibold text-right break-words flex-1 min-w-0">{calculation.materialName}</span></div>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2"><span className="text-gray-600">Оборудование:</span><span className="font-semibold sm:text-right break-words sm:flex-1 sm:min-w-0">{calculation.equipment}</span></div>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2"><span className="text-gray-600">Материал:</span><span className="font-semibold sm:text-right break-words sm:flex-1 sm:min-w-0">{calculation.materialName}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Размер:</span><span className="font-semibold">{calculation.width} × {calculation.height} м</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь 1 шт:</span><span className="font-semibold">{calculation.itemArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь печати （с припуском）：</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
@@ -545,7 +545,7 @@ export default function WideFormatCalculator({ client }) {
                       </div>
                       <div className="flex flex-wrap text-xs text-gray-500 mt-1 gap-x-4 gap-y-1">
                         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>изделие (печать)</span>
-                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-yellow-300 rounded"></span>припуск без оплаты</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-yellow-300 rounded"></span>припуск (входит в площадь печати)</span>
                         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь, тарифицируется)</span>
                       </div>
                       <div className="flex text-xs text-gray-500 mt-1">

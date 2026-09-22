@@ -539,6 +539,10 @@ export default function WideFormatCalculator({ client }) {
                         <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.printAcross / calculation.wasteInfo.roll) * 100}%` }}></div>
                         <div className="bg-gray-300" style={{ width: `${((calculation.wasteInfo.roll - calculation.wasteInfo.printAcross) / calculation.wasteInfo.roll) * 100}%` }}></div>
                       </div>
+                      <div className="flex flex-wrap text-xs text-gray-500 mt-1 gap-x-4 gap-y-1">
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>занято изделием (печать)</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь, оплачивается по цене остатка)</span>
+                      </div>
                       <div className="flex text-xs text-gray-500 mt-1">
                         <span className="flex-1">изделие {calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м</span>
                         <span>остаток {(calculation.wasteInfo.roll - calculation.wasteInfo.printAcross).toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span>

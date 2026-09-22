@@ -40,9 +40,10 @@ function AccessDenied({ message }) {
 function AppContent() {
   const { isAuthenticated, loading, logout, user, hasPermission } = useAuth()
   const [selectedView, setSelectedView] = useState('home')
-  const [selectedCategory, setSelectedCategory] = useState(null)
-  const [selectedClient, setSelectedClient] = useState(null)
-  const [selectedOrderId, setSelectedOrderId] = useState(null)
+    const [selectedCategory, setSelectedCategory] = useState(null)
+    const [selectedClient, setSelectedClient] = useState(null)
+    const [selectedOrderId, setSelectedOrderId] = useState(null)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -77,19 +78,38 @@ function AppContent() {
     }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Сайдбар */}
-      <Sidebar
-        selectedCategory={selectedCategory}
-        onSelectCategory={handleSelectCategory}
-        onLogout={handleLogout}
-        selectedView={selectedView}
-        onSelectView={handleSelectView}
-      />
+      <div className="flex h-screen bg-gray-100">
+        {/* Затемнение (только мобилка) */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-      {/* Основной контент */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-6">
+        {/* Сайдбар */}
+        <Sidebar
+          selectedCategory={selectedCategory}
+          onSelectCategory={(c) => { handleSelectCategory(c); setSidebarOpen(false) }}
+          onLogout={handleLogout}
+          selectedView={selectedView}
+          onSelectView={(v) => { handleSelectView(v); setSidebarOpen(false) }}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        {/* Основной контент */}
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-7xl mx-auto p-3 md:p-6">
+            {/* Кнопка меню (только мобилка) */}
+            <div className="md:hidden mb-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+              >
+                ☰ Меню
+              </button>
+            </div>
           {selectedOrderId ? (
             <OrderDetail 
               orderId={selectedOrderId} 

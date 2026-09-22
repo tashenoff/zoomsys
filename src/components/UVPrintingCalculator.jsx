@@ -441,84 +441,84 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          {categories.find(c => c.id === selectedCategory)?.icon} {categories.find(c => c.id === selectedCategory)?.name}
-        </h2>
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800">
+                {categories.find(c => c.id === selectedCategory)?.icon} {categories.find(c => c.id === selectedCategory)?.name}
+              </h2>
 
-        {/* СЕКЦИЯ 2: Выбор продукта */}
-        {selectedCategory && (
-          <div ref={productsRef} className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-              📋 Выбор продукта
-            </label>
+              {/* СЕКЦИЯ 2: Выбор продукта */}
+              {selectedCategory && (
+                <div ref={productsRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <label className="block text-sm font-bold text-gray-800 mb-2 md:mb-3 uppercase tracking-wide">
+                    📋 Выбор продукта
+                  </label>
             
-            <div className="mb-3">
-              <input
-                type="text"
-                placeholder="🔍 Поиск продукта..."
-                value={searchProduct}
-                onChange={(e) => setSearchProduct(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
-            </div>
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      placeholder="🔍 Поиск продукта..."
+                      value={searchProduct}
+                      onChange={(e) => setSearchProduct(e.target.value)}
+                      className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-sm"
+                    />
+                  </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto bg-white rounded-lg border border-gray-200 p-2">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => {
-                      setSelectedProduct(product)
-                      setSearchProduct('')
-                    }}
-                    className={`w-full text-left p-3 rounded-lg border-2 transition font-medium ${
-                      selectedProduct?.id === product.id
-                        ? 'bg-blue-500 text-white border-blue-600 shadow-md'
-                        : 'bg-white border-gray-300 hover:border-blue-400 hover:bg-blue-50'
-                    }`}
-                  >
-                    <div className="flex flex-col">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold">{product.name}</span>
-                        {selectedProduct?.id === product.id && (
-                          <span className="text-lg">✓</span>
-                        )}
+                  <div className="space-y-2 max-h-64 overflow-y-auto bg-white rounded-lg border border-gray-200 p-1.5 md:p-2">
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            setSelectedProduct(product)
+                            setSearchProduct('')
+                          }}
+                          className={`w-full text-left p-2 md:p-3 rounded-lg border-2 transition font-medium ${
+                            selectedProduct?.id === product.id
+                              ? 'bg-blue-500 text-white border-blue-600 shadow-md'
+                              : 'bg-white border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                          }`}
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-sm md:text-base">{product.name}</span>
+                              {selectedProduct?.id === product.id && (
+                                <span className="text-lg">✓</span>
+                              )}
+                            </div>
+                            {product.description && (
+                              <span className={`text-xs md:text-sm mt-1 ${
+                                selectedProduct?.id === product.id ? 'text-blue-100' : 'text-gray-500'
+                              }`}>
+                                {product.description}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-3 text-gray-500 text-sm">
+                        Продукт не найден
                       </div>
-                      {product.description && (
-                        <span className={`text-sm mt-1 ${
-                          selectedProduct?.id === product.id ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {product.description}
-                        </span>
-                      )}
+                    )}
+                  </div>
+
+                  {selectedProduct && (
+                    <div className="mt-3 p-2.5 md:p-3 bg-green-100 border border-green-300 rounded-lg">
+                      <span className="text-sm font-semibold text-green-800">
+                        ✓ Выбрано: {selectedProduct.name}
+                      </span>
                     </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  Продукт не найден
+                  )}
                 </div>
               )}
-            </div>
-
-            {selectedProduct && (
-              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
-                <span className="text-sm font-semibold text-green-800">
-                  ✓ Выбрано: {selectedProduct.name}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* СЕКЦИЯ 3: Выбор стороны (если есть) */}
         {selectedProduct && availableSides.length > 0 && (
-          <div ref={sidesRef} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <div ref={sidesRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               🔄 {selectedProduct.id === 'uv4' ? 'Тип нанесения' : 'Количество сторон'}
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {availableSides.map((side) => (
                 <button
                   key={side.type}
@@ -551,7 +551,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
 
         {/* СЕКЦИЯ 3.5: Выбор материала (если есть) */}
         {selectedProduct && availableMaterials.length > 0 && (
-          <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-pink-50 rounded-lg border border-pink-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               🎨 Выбор материала
             </label>
@@ -593,7 +593,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
 
         {/* СЕКЦИЯ 4: Количество и площадь */}
         {canCalculate && (
-          <div ref={quantityRef} className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <div ref={quantityRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               🔢 Параметры заказа
             </label>
@@ -608,7 +608,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 min="1"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold mb-3"
+                className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold mb-3"
               />
               <div className="flex gap-2 flex-wrap">
                 {selectedProduct.priceType === 'sqcm' 
@@ -650,7 +650,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                     <p className="text-sm text-gray-600 mb-2">
                       Площадь рассчитывается автоматически: Ширина × Длина
                     </p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Ширина, см
@@ -661,7 +661,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                           onChange={(e) => setWidth(parseFloat(e.target.value) || 0)}
                           min="0.1"
                           step="0.1"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                          className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
                         />
                       </div>
                       <div>
@@ -674,7 +674,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                           onChange={(e) => setLength(parseFloat(e.target.value) || 0)}
                           min="0.1"
                           step="0.1"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                          className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
                         />
                       </div>
                     </div>
@@ -695,7 +695,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                       onChange={(e) => setArea(parseFloat(e.target.value) || 0)}
                       min="1"
                       step="0.1"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                      className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
                     />
                   </>
                 )}
@@ -704,7 +704,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
           </div>
         )}
         {canCalculate && uvOperations.length > 0 && (
-          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⭐ Дополнительные операции УФ
             </label>
@@ -757,7 +757,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
 
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
         {canCalculate && (
-          <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-orange-50 rounded-lg border border-orange-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⚙️ Дополнительные опции
             </label>
@@ -808,32 +808,32 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
 
       {/* Результат расчета */}
       {calculation && (
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-lg p-6 border-2 border-blue-200">
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-lg p-4 md:p-6 border-2 border-blue-200">
           <h3 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
             <span className="text-3xl mr-2">📊</span>
             Итоговый расчет
           </h3>
           
           {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-6 text-center">
+            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
               <p className="text-gray-700">Для уточнения стоимости свяжитесь с менеджером</p>
             </div>
           ) : (
             <>
               <div className="space-y-3 bg-white rounded-lg p-4">
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600 font-medium">Продукт:</span>
-                  <span className="font-bold text-gray-800">
-                    {calculation.productName}
-                  </span>
-                </div>
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b gap-1">
+                                  <span className="text-gray-600 font-medium">Продукт:</span>
+                                  <span className="font-bold text-gray-800 break-words">
+                                    {calculation.productName}
+                                  </span>
+                                </div>
 
-                {calculation.description && (
-                  <div className="py-2 border-b">
-                    <p className="text-sm text-gray-600">{calculation.description}</p>
-                  </div>
-                )}
+                                {calculation.description && (
+                                  <div className="py-2 border-b">
+                                    <p className="text-sm text-gray-600 break-words">{calculation.description}</p>
+                                  </div>
+                                )}
 
                 {calculation.side && (
                   <div className="flex justify-between items-center py-2 border-b">
@@ -873,18 +873,18 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                 </div>
 
                 {calculation.coefficient > 1 && (
-                  <div className="flex justify-between items-center py-2">
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1 py-2">
                     <span className="text-gray-600">Коэффициент к печати:</span>
                     <span className="font-semibold">×{calculation.coefficient}</span>
                   </div>
                 )}
 
                 {(calculation.extras || []).filter(ex => ex.price > 0 || ex.coefficient).map((ex) => (
-                  <div key={ex.name} className="flex justify-between items-center pl-4 py-2">
-                    <span className="text-gray-600">{ex.name}:</span>
+                  <div key={ex.name} className="flex flex-col gap-1 pl-4 py-2">
                     <span className="font-semibold text-green-600">
                       {ex.price ? `${ex.price.toFixed(2)} тг` : 'к печати'}
                     </span>
+                    <span className="text-gray-600 break-words">{ex.name}:</span>
                   </div>
                 ))}
 
@@ -936,7 +936,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                 <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
                   📋 Статус заказа
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <button
                     onClick={() => setOrderStatus('draft')}
                     className={`p-3 rounded-lg border-2 transition font-semibold text-center ${

@@ -7,11 +7,11 @@ export default function CategorySelector({
 }) {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <h2 className="text-2xl font-bold mb-4 md:mb-6 text-gray-800">
           {categories[0]?.sectionTitle || 'Категории'}
         </h2>
-        <p className="text-gray-600 mb-6">{title}</p>
+        <p className="text-gray-600 mb-4 md:mb-6">{title}</p>
         
         <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
           {categories.map((category) => (

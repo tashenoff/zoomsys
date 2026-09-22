@@ -244,14 +244,14 @@ export default function UserManagement() {
       )}
 
       {/* Заголовок */}
-      <div className="bg-white rounded-lg shadow-md p-6 flex justify-between items-center">
+      <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Управление пользователями</h1>
           <p className="text-gray-600 mt-2">Настройка ролей и прав доступа</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition flex items-center gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full md:w-auto"
         >
           <span className="text-xl">+</span>
           Добавить пользователя
@@ -259,7 +259,7 @@ export default function UserManagement() {
       </div>
 
       {/* Список пользователей */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

@@ -113,35 +113,35 @@ export default function PricingManagement() {
       )}
       
       {/* Заголовок */}
-      <div className="bg-white rounded-lg shadow-md p-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Управление прайсами</h1>
-          <p className="text-gray-600 mt-2">
-            Редактирование цен и добавление новых позиций
-            {!isOffline && <span className="ml-2 text-green-600">● Подключено к БД</span>}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={refreshPricing}
-            disabled={saving}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg transition"
-          >
-            🔄 Обновить
-          </button>
-          <button
-            onClick={() => {
-              setEditingItem(null)
-              setIsModalOpen(true)
-            }}
-            disabled={isOffline || saving}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition flex items-center gap-2"
-          >
-            <span className="text-xl">+</span>
-            Добавить позицию
-          </button>
-        </div>
-      </div>
+      <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">Управление прайсами</h1>
+                <p className="text-gray-600 mt-2">
+                  Редактирование цен и добавление новых позиций
+                  {!isOffline && <span className="ml-2 text-green-600">● Подключено к БД</span>}
+                </p>
+              </div>
+              <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                <button
+                  onClick={refreshPricing}
+                  disabled={saving}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg transition w-full md:w-auto"
+                >
+                  🔄 Обновить
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setIsModalOpen(true)
+                  }}
+                  disabled={isOffline || saving}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full md:w-auto"
+                >
+                  <span className="text-xl">+</span>
+                  Добавить позицию
+                </button>
+              </div>
+            </div>
 
       {/* Глобальный поиск по всем позициям прайса */}
       <div className="bg-white rounded-lg shadow-md p-4">
@@ -1296,7 +1296,7 @@ function OperationEditForm({ formData, setFormData }) {
       </div>
       {formData.type !== 'select' && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Базовая цена</label>
               <input type="number" value={formData.price || ''} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || null })}
@@ -1575,7 +1575,7 @@ function EditModal({ item, category, onClose, onSave }) {
             {/* Полиграфия */}
             {category === 'printing' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Подкатегория</label>
                     <select value={formData.category || 'flyers'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1599,7 +1599,7 @@ function EditModal({ item, category, onClose, onSave }) {
                 </div>
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-800 mb-3">Цены по тиражу (тг/шт)</h3>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     {[['50', '50 шт'], ['100', '100 шт'], ['300', '300 шт'], ['500', '500 шт']].map(([key, label]) => (
                       <div key={key}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
@@ -1615,7 +1615,7 @@ function EditModal({ item, category, onClose, onSave }) {
             {/* УФ печать */}
             {category === 'uvPrinting' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                     <select value={formData.category || 'pens'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1649,7 +1649,7 @@ function EditModal({ item, category, onClose, onSave }) {
                         <button type="button" onClick={() => setFormData({ ...formData, sides: formData.sides.filter((_, i) => i !== sideIdx) })}
                           className="text-red-500 text-sm">Удалить сторону</button>
                       </div>
-                      <div className="grid grid-cols-5 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
                         {['50', '100', '200', '300', '500'].map(qty => (
                           <div key={qty}>
                             <label className="block text-xs text-gray-500">{qty} шт</label>
@@ -1680,7 +1680,7 @@ function EditModal({ item, category, onClose, onSave }) {
             {/* Широкоформат */}
             {category === 'wideFormat' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Группа печати</label>
                     <select value={formData.category || 'phaeton'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1730,7 +1730,7 @@ function EditModal({ item, category, onClose, onSave }) {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Название</label>
                   <input type="text" value={formData.name||''} onChange={(e)=>setFormData({...formData,name:e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className="block text-sm font-medium text-gray-700 mb-2">Цена за кв.см</label><input type="number" value={formData.pricePerSqCm??''} onChange={(e)=>setFormData({...formData,pricePerSqCm:parseFloat(e.target.value)||0})} className="w-full px-4 py-2 border border-gray-300 rounded-lg" /></div>
                   <div><label className="block text-sm font-medium text-gray-700 mb-2">Мин. тираж (шт)</label><input type="number" value={formData.minQty??''} onChange={(e)=>setFormData({...formData,minQty:e.target.value===''?null:parseInt(e.target.value)||0})} className="w-full px-4 py-2 border border-gray-300 rounded-lg" /></div>
                 </div>
@@ -1757,7 +1757,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'eventServices' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                     <select value={formData.category || 'rent'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1776,7 +1776,7 @@ function EditModal({ item, category, onClose, onSave }) {
                 {formData.category === 'mobile' ? (
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-800 mb-3">Цены по типу печати (тг)</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {[['mimaki','Mimaki'],['roland','Roland'],['none','Без печати']].map(([key,label]) => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
@@ -1811,7 +1811,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'plotterCutting' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Материал</label>
                     <input type="text" value={formData.material || ''} onChange={(e) => setFormData({ ...formData, material: e.target.value })}
@@ -1833,7 +1833,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'cncLaser' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                     <select value={formData.category || 'cnc-cut'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1862,7 +1862,7 @@ function EditModal({ item, category, onClose, onSave }) {
                 ) : (
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-800 mb-3">Цены за пог.м по толщине</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {[['t01_15','1–1.5'],['t02_4','2–4'],['t05_7','5–7'],['t08_10','8–10'],['t11_15','11–15'],['t16_20','16–20']].map(([key,label]) => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-gray-600 mb-1">{label} мм</label>
@@ -1883,7 +1883,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'advertisingStands' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Тип</label>
                     <select value={formData.type || 'sqm'} onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -1908,7 +1908,7 @@ function EditModal({ item, category, onClose, onSave }) {
                 {formData.type === 'sqm' && (
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-800 mb-3">Цены за м² по толщине ПВХ</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {['pvx3','pvx5','pvx8'].map(key => (
                         <div key={key}>
                           <label className="block text-xs font-medium text-gray-600 mb-1">{{'pvx3':'ПВХ 3 мм','pvx5':'ПВХ 5 мм','pvx8':'ПВХ 8 мм'}[key]}</label>
@@ -1929,7 +1929,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'flagsProducts' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                     <select value={formData.category || 'flags-size'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -1975,7 +1975,7 @@ function EditModal({ item, category, onClose, onSave }) {
 
             {category === 'textile' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                     <select value={formData.category || 'textile'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}

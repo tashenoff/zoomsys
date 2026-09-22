@@ -4,7 +4,7 @@ import logo from '../logo.svg'
 import { useAuth } from '../hooks/useAuth'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
-export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView }) {
+export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView, open, onClose }) {
   const { user, hasPermission } = useAuth()
   const categories = pricingData.categories
     const [expandedCategory, setExpandedCategory] = useState(null)
@@ -57,12 +57,22 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
   }
 
   return (
-    <div className="w-80 bg-gray-100 text-gray-800 h-screen flex flex-col border-r border-gray-300">
-      {/* Заголовок */}
-      <div className="p-6 border-b border-gray-300">
-        <img src={logo} alt="Ra Zoom" className="w-32 h-auto mb-2" />
-        <p className="text-sm text-gray-600">Система расчета</p>
-      </div>
+    <div className={`fixed inset-y-0 left-0 z-40 w-80 bg-gray-100 text-gray-800 flex flex-col border-r border-gray-300 transition-transform duration-300 md:static md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+          {/* Заголовок */}
+          <div className="p-6 border-b border-gray-300 flex items-start justify-between">
+            <div>
+              <img src={logo} alt="Ra Zoom" className="w-32 h-auto mb-2" />
+              <p className="text-sm text-gray-600">Система расчета</p>
+            </div>
+            {/* Закрыть (только мобилка) */}
+            <button
+              onClick={onClose}
+              className="md:hidden text-2xl leading-none text-gray-500 hover:text-gray-800 p-1"
+              aria-label="Закрыть меню"
+            >
+              ✕
+            </button>
+          </div>
 
       {/* Навигация */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

@@ -154,14 +154,14 @@ export default function CncLaserCalculator({ client }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold mb-2">Фрезерный и лазерный станок</h2>
-        <p className="text-sm text-gray-500 mb-6">Фрезер 2400×1200 мм, лазер 1200×600 мм. Цена без материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
+        <p className="text-sm text-gray-500 mb-4 md:mb-6">Фрезер 2400×1200 мм, лазер 1200×600 мм. Цена без материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Операция</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 ['milling', '🪚 Резка (пог.м)'],
                 ['engrave', '🖋️ Гравировка (кв.см)']
@@ -214,10 +214,10 @@ export default function CncLaserCalculator({ client }) {
           {!manualMode && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Количество ({opType === 'milling' ? 'пог.м' : 'кв.см'})</label>
-              <input type="number" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              <input type="number" min="0" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           )}
-          <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+          <div className="p-3 md:p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
             <label className="flex items-center cursor-pointer">
               <input type="checkbox" checked={manualMode} onChange={(e) => { setManualMode(e.target.checked); setManualPrice(''); resetCalc() }} className="mr-3 w-5 h-5" />
               <span className="flex-1 text-sm font-medium text-indigo-800">✍️ Указать стоимость услуги вручную</span>
@@ -225,7 +225,7 @@ export default function CncLaserCalculator({ client }) {
             {manualMode && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Стоимость услуги (тг)</label>
-                <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 25000" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 25000" className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
                 <p className="text-xs text-gray-500 mt-1">Цена назначается вручную, независимо от расчёта по погонным метрам резки.</p>
               </div>
             )}
@@ -238,7 +238,7 @@ export default function CncLaserCalculator({ client }) {
             </label>
           )}
 
-          <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
+          <label className="flex items-center p-3 md:p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); resetCalc() }} className="mr-3 w-5 h-5" />
             <span className="flex-1 font-medium text-red-700">🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)</span>
           </label>
@@ -248,16 +248,16 @@ export default function CncLaserCalculator({ client }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
           <h3 className="text-xl font-bold mb-4">Расчет</h3>
           {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-6 text-center">
+            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex justify-between"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right">{calculation.opTypeLabel}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right">{calculation.materialLabel}</span></div>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right break-words">{calculation.opTypeLabel}</span></div>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right break-words">{calculation.materialLabel}</span></div>
               {calculation.thicknessLabel && <div className="flex justify-between"><span className="text-gray-600">Толщина:</span><span className="font-semibold">{calculation.thicknessLabel}</span></div>}
               {!calculation.manualMode && <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} {calculation.unit}</span></div>}
               {calculation.manualMode
@@ -276,9 +276,9 @@ export default function CncLaserCalculator({ client }) {
 
           {!calculation.note && (
             <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-4 border-2 border-indigo-200">
+              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
                 <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {[
                     ['draft', '📝 Черновик'], ['in_progress', '⚙️ В процессе'], ['approved', '✅ Утверждено']
                   ].map(([status, label]) => (

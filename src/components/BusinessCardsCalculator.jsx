@@ -419,13 +419,13 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <h2 className="text-2xl font-bold mb-4 md:mb-6 text-gray-800">
           {cardTypes.find(ct => ct.id === selectedCardType)?.icon} Расчет: {cardTypes.find(ct => ct.id === selectedCardType)?.name}
         </h2>
 
         {/* СЕКЦИЯ 1: Выбор материала с поиском */}
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
           <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
             📄 Материал (Тип бумаги)
           </label>
@@ -437,7 +437,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
               placeholder="🔍 Поиск материала..."
               value={searchMaterial}
               onChange={(e) => setSearchMaterial(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
 
@@ -482,7 +482,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </div>
 
         {/* СЕКЦИЯ 2: Выбор цветности */}
-        <div ref={colorTypeRef} className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <div ref={colorTypeRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-200">
           <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
             🎨 Цветность
           </label>
@@ -517,7 +517,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
               )}
             </>
           ) : (
-            <div className="bg-white border-2 border-purple-200 rounded-lg p-6 text-center">
+            <div className="bg-white border-2 border-purple-200 rounded-lg p-4 md:p-6 text-center">
               <p className="text-gray-500 text-sm">
                 👆 Сначала выберите материал выше, чтобы увидеть доступные варианты цветности
               </p>
@@ -526,7 +526,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </div>
 
         {/* СЕКЦИЯ 3: Количество */}
-        <div ref={quantityRef} className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div ref={quantityRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               🔢 Количество (шт)
             </label>
@@ -535,7 +535,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
               min="1"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold mb-3"
+              className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold mb-3"
             />
             <div className="flex gap-2 flex-wrap">
               {[50, 100, 200, 300, 500, 1000].map(qty => (
@@ -556,7 +556,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
         {/* СЕКЦИЯ 4: Дополнительные операции (новая система) */}
         {availableOperations.length > 0 && (
-          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⭐ Дополнительные операции
             </label>
@@ -687,7 +687,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         {/* СЕКЦИЯ 4.5: Перезаказ - Временно скрыто */}
         {/* 
         {reorderOptions.length > 0 && (
-          <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-indigo-50 rounded-lg border border-indigo-200">
             <div className="mb-3">
               <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
                 🔄 Перезаказ
@@ -733,25 +733,23 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         */}
 
         {/* СЕКЦИЯ 4.6: Дополнительные услуги с ценой (множественные) */}
-        <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
-            <div className="mb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
-                    💬 Дополнительные услуги (с ценой)
-                  </label>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Добавьте нестандартные услуги, которых нет в списке выше (упаковка, доставка и т.д.)
-                  </p>
-                </div>
-                <button
-                  onClick={addCustomNote}
-                  className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition font-medium text-sm"
-                >
-                  <span className="text-lg">+</span> Добавить услугу
-                </button>
-              </div>
-            </div>
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-pink-50 rounded-lg border border-pink-200">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 gap-3">
+                            <div className="flex-1">
+                              <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
+                                💬 Дополнительные услуги (с ценой)
+                              </label>
+                              <p className="text-xs text-gray-600 mt-1">
+                                Добавьте нестандартные услуги, которых нет в списке выше (упаковка, доставка и т.д.)
+                              </p>
+                            </div>
+                            <button
+                              onClick={addCustomNote}
+                              className="flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition font-medium text-sm w-full md:w-auto"
+                            >
+                              <span className="text-lg">+</span> Добавить услугу
+                            </button>
+                          </div>
 
             <div className="space-y-3">
               {customNotes.map((note) => (
@@ -766,7 +764,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
                         className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
                       />
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input
                           type="number"
                           placeholder="Цена"
@@ -817,7 +815,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </div>
 
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
-        <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-orange-50 rounded-lg border border-orange-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               ⚙️ Дополнительные опции
             </label>
@@ -870,26 +868,26 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
       {/* Результат расчета */}
       {calculation && (
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-lg p-6 border-2 border-blue-200">
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-lg p-4 md:p-6 border-2 border-blue-200">
           <h3 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
             <span className="text-3xl mr-2">📊</span>
             Итоговый расчет
           </h3>
           
           <div className="space-y-3 bg-white rounded-lg p-4">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600 font-medium">Материал:</span>
-              <span className="font-bold text-gray-800">
-                {calculation.productName}
-              </span>
-            </div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b gap-1">
+                          <span className="text-gray-600 font-medium">Материал:</span>
+                          <span className="font-bold text-gray-800 break-words">
+                            {calculation.productName}
+                          </span>
+                        </div>
 
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600 font-medium">Цветность:</span>
-              <span className="font-bold text-purple-600 text-lg">
-                {calculation.colorType}
-              </span>
-            </div>
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b gap-1">
+                          <span className="text-gray-600 font-medium">Цветность:</span>
+                          <span className="font-bold text-purple-600 text-lg break-words">
+                            {calculation.colorType}
+                          </span>
+                        </div>
 
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600 font-medium">Количество:</span>
@@ -977,7 +975,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
               📋 Статус заказа
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <button
                 onClick={() => setOrderStatus('draft')}
                 className={`p-3 rounded-lg border-2 transition font-semibold text-center ${

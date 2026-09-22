@@ -120,9 +120,9 @@ export default function AdvertisingStandsCalculator({ client }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold mb-2">Рекламные стенды</h2>
-        <p className="text-sm text-gray-500 mb-6">Цена без установки, с учётом материала. При площади меньше 1 м² добавляется кайма. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
+        <p className="text-sm text-gray-500 mb-4 md:mb-6">Цена без установки, с учётом материала. При площади меньше 1 м² добавляется кайма. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
           <div>
@@ -153,14 +153,14 @@ export default function AdvertisingStandsCalculator({ client }) {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Ширина (м)</label>
-                  <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
+                  <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Высота (м)</label>
-                  <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
+                  <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
                 </div>
               </div>
             </>
@@ -169,7 +169,7 @@ export default function AdvertisingStandsCalculator({ client }) {
           {selectedItem?.type === 'fixed' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Количество (шт)</label>
-              <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+              <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           )}
 
@@ -178,7 +178,7 @@ export default function AdvertisingStandsCalculator({ client }) {
               <label className="block text-sm font-medium text-gray-700 mb-3">Доп. опции</label>
               <div className="space-y-3">
                 {pocketOp && (
-                  <div className="p-3 border-2 border-green-300 rounded-lg grid grid-cols-3 gap-3 items-end">
+                  <div className="p-3 border-2 border-green-300 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                     <div>
                       <label className="text-xs text-gray-600 block mb-1">Кармашки (формат)</label>
                       <select value={opts.pocket || ''} onChange={(e) => setOpts({ ...opts, pocket: e.target.value })}
@@ -200,7 +200,7 @@ export default function AdvertisingStandsCalculator({ client }) {
                         <span className="text-sm font-medium">{op.name}</span>
                         <p className="text-xs text-gray-500 mt-1">{op.price} тг/{op.unit} — {op.description}</p>
                       </div>
-                      <input type="number" min="0" step="0.01" value={opts[op.id] || ''} onChange={(e) => setOpts({ ...opts, [op.id]: e.target.value })} className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder={`0 ${op.unit}`} />
+                      <input type="number" min="0" step="0.01" value={opts[op.id] || ''} onChange={(e) => setOpts({ ...opts, [op.id]: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder={`0 ${op.unit}`} />
                     </div>
                   </div>
                 ))}
@@ -208,7 +208,7 @@ export default function AdvertisingStandsCalculator({ client }) {
             </div>
           )}
 
-          <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
+          <label className="flex items-center p-3 md:p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
             <span className="flex-1 font-medium text-red-700">🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)</span>
           </label>
@@ -218,10 +218,10 @@ export default function AdvertisingStandsCalculator({ client }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
           <h3 className="text-xl font-bold mb-4">Расчет</h3>
           <div className="space-y-3">
-            <div className="flex justify-between"><span className="text-gray-600">Позиция:</span><span className="font-semibold text-right">{calculation.itemName}</span></div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Позиция:</span><span className="font-semibold text-right break-words">{calculation.itemName}</span></div>
             <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Основа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
             {(calculation.extras || []).map(ex => (
               <div key={ex.name} className="flex justify-between"><span className="text-gray-600">{ex.name}:</span><span>{Number(ex.price).toLocaleString('ru-RU')} тг</span></div>
@@ -232,9 +232,9 @@ export default function AdvertisingStandsCalculator({ client }) {
             <div className="flex justify-between pt-3 border-t-2 border-gray-300"><span className="text-lg font-bold">Итого:</span><span className="text-2xl font-bold text-blue-600">{calculation.total.toLocaleString('ru-RU')} тг</span></div>
           </div>
 
-          <div className="mt-6 bg-gray-50 rounded-lg p-4 border-2 border-indigo-200">
+          <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[
                 ['draft', '📝 Черновик'], ['in_progress', '⚙️ В процессе'], ['approved', '✅ Утверждено']
               ].map(([status, label]) => (

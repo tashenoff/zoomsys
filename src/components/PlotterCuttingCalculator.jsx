@@ -89,9 +89,9 @@ export default function PlotterCuttingCalculator({ client }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold mb-2">Плоттерная резка</h2>
-        <p className="text-sm text-gray-500 mb-6">Ширина резки 1300 мм. Цена без материала; монтажная плёнка учитывается. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
+        <p className="text-sm text-gray-500 mb-4 md:mb-6">Ширина резки 1300 мм. Цена без материала; монтажная плёнка учитывается. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
           <div>
@@ -121,18 +121,18 @@ export default function PlotterCuttingCalculator({ client }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Площадь (м²)</label>
-            <input type="number" min="0" step="0.01" value={area} onChange={(e) => setArea(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <input type="number" min="0" step="0.01" value={area} onChange={(e) => setArea(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
 
           {isRangePrice && (
-            <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+            <div className="p-3 md:p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-2">✍️ Указать стоимость услуги (тг/м²)</label>
               <p className="text-xs text-gray-500 mb-2">Цена по прайсу: {selectedOperation.priceText || selectedOperation.price} тг/м². Введите конкретную сумму — итог посчитается от неё.</p>
-              <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 2500" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
+              <input type="number" min="0" step="0.01" value={manualPrice} onChange={(e) => setManualPrice(e.target.value)} placeholder="Например 2500" className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" />
             </div>
           )}
 
-          <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
+          <label className="flex items-center p-3 md:p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
             <span className="flex-1 font-medium text-red-700">🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)</span>
           </label>
@@ -142,17 +142,17 @@ export default function PlotterCuttingCalculator({ client }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
           <h3 className="text-xl font-bold mb-4">Расчет</h3>
           {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-6 text-center">
+            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
               <p className="text-gray-700">Материал: {calculation.material}, операция: {calculation.operation}, площадь: {calculation.areaM2} м²</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex justify-between"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right">{calculation.material}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right">{calculation.operation}</span></div>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right break-words">{calculation.material}</span></div>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right break-words">{calculation.operation}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь:</span><span className="font-semibold">{calculation.areaM2} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Цена за м²:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
@@ -165,9 +165,9 @@ export default function PlotterCuttingCalculator({ client }) {
 
           {!calculation.note && (
             <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-4 border-2 border-indigo-200">
+              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
                 <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {[
                     ['draft', '📝 Черновик'], ['in_progress', '⚙️ В процессе'], ['approved', '✅ Утверждено']
                   ].map(([status, label]) => (

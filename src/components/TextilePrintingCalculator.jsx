@@ -179,9 +179,9 @@ export default function TextilePrintingCalculator({ client }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold mb-2">Печать на текстиле</h2>
-        <p className="text-sm text-gray-500 mb-6">Рабочее поле 1600 мм. Цена с учётом материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
+        <p className="text-sm text-gray-500 mb-4 md:mb-6">Рабочее поле 1600 мм. Цена с учётом материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
           <div>
@@ -205,14 +205,14 @@ export default function TextilePrintingCalculator({ client }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Ширина (м)</label>
-              <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
+              <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Длина (м)</label>
-              <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.5" />
+              <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.5" />
             </div>
           </div>
 
@@ -234,7 +234,7 @@ export default function TextilePrintingCalculator({ client }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Количество (шт)</label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
 
           {availableOperations.length > 0 && (
@@ -272,7 +272,7 @@ export default function TextilePrintingCalculator({ client }) {
             </div>
           )}
 
-          <label className="flex items-center p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
+          <label className="flex items-center p-3 md:p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
             <input type="checkbox" checked={isUrgent} onChange={(e) => { setIsUrgent(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
             <span className="flex-1 font-medium text-red-700">🔥 Срочный заказ (+{urgentSurcharge}%, минимум 5 000 тг)</span>
           </label>
@@ -282,21 +282,21 @@ export default function TextilePrintingCalculator({ client }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
           <h3 className="text-xl font-bold mb-4">Расчет</h3>
           {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-6 text-center">
+            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
               <p className="text-gray-700">Материал: {calculation.materialName}, диапазон: {calculation.priceTier}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex justify-between"><span className="text-gray-600">Материал:</span><span className="font-semibold text-right">{calculation.materialName}</span></div>
+              <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Материал:</span><span className="font-semibold text-right break-words flex-1 min-w-0">{calculation.materialName}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Размер:</span><span className="font-semibold">{calculation.width} × {calculation.height} м</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь 1 шт:</span><span className="font-semibold">{calculation.itemArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Фактическая площадь:</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} шт</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Диапазон цены:</span><span className="font-semibold">{calculation.priceTier}</span></div>
+              <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Диапазон цены:</span><span className="font-semibold break-words flex-1 min-w-0 text-right">{calculation.priceTier}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Цена за м²:</span><span className="font-semibold">{calculation.pricePerSqM.toLocaleString('ru-RU')} тг</span></div>
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Печать:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {(calculation.extras || []).map((ex) => (
@@ -314,9 +314,9 @@ export default function TextilePrintingCalculator({ client }) {
 
           {!calculation.note && (
             <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-4 border-2 border-indigo-200">
+              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
                 <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {[
                     ['draft', '📝 Черновик'],
                     ['in_progress', '⚙️ В процессе'],

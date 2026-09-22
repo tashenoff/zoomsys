@@ -227,9 +227,9 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         <h2 className="text-2xl font-bold mb-2">Калькулятор</h2>
-        <p className="text-sm text-gray-500 mb-6">Цены указаны без НДС</p>
+        <p className="text-sm text-gray-500 mb-4 md:mb-6">Цены указаны без НДС</p>
         {items.length === 0 ? (
           <p className="text-gray-500">Позиции прайса не найдены</p>
         ) : (
@@ -327,7 +327,7 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
             {selected && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Количество</label>
-                <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-40 px-4 py-2 border border-gray-300 rounded-lg" />
+                <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg" />
               </div>
             )}
 
@@ -338,11 +338,11 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
         )}
       </div>
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
           <h3 className="text-xl font-bold mb-4">Результат</h3>
           <div className="space-y-2 text-gray-700">
             <div>{calculation.productName}</div>
-            <div className="flex justify-between"><span>{optionLabel}</span><span>{calculation.option}</span></div>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span>{optionLabel}</span><span className="break-words">{calculation.option}</span></div>
             <div className="flex justify-between"><span>Кол-во</span><span>{calculation.quantity}</span></div>
             {(calculation.extras || []).map((ex) => (
               <div key={ex.name} className="flex justify-between"><span>{ex.name}</span><span>+{ex.price.toLocaleString('ru-RU')} тг</span></div>
@@ -352,7 +352,7 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
               <span className="text-blue-600">{calculation.total.toLocaleString('ru-RU')} тг</span>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
             {['draft', 'in_progress', 'approved'].map((s) => (
               <button key={s} type="button" onClick={() => setOrderStatus(s)} className={`p-3 rounded-lg border-2 ${orderStatus === s ? 'bg-blue-500 text-white border-blue-600' : 'border-gray-300'}`}>
                 {s === 'draft' ? 'Черновик' : s === 'in_progress' ? 'В работе' : 'Согласован'}

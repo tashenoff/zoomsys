@@ -190,11 +190,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Приветствие */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
-        <h1 className="text-3xl font-bold mb-2">👋 Добро пожаловать в Ra Zoom!</h1>
-        <p className="text-blue-100">Система расчета полиграфической продукции</p>
-      </div>
+      {/* Приветствие — временно закомментировано */}
+            {/* <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
+              <h1 className="text-3xl font-bold mb-2">👋 Добро пожаловать в Ra Zoom!</h1>
+              <p className="text-blue-100">Система расчета полиграфической продукции</p>
+            </div> */}
 
       {/* Основная статистика */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

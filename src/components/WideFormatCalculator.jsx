@@ -178,7 +178,9 @@ export default function WideFormatCalculator({ client }) {
     }
 
     const itemArea = w * h
-    const factualArea = itemArea * qty
+    const margin = selectedMaterial.wasteMargin != null ? Number(selectedMaterial.wasteMargin) : 0.2
+    const printAreaItem = (w + margin) * (h + margin)
+    const factualArea = printAreaItem * qty
     const billableArea = Math.max(factualArea, 1)
     const tier = getTierPrice(selectedMaterial.prices, billableArea, selectedMaterial.pricePerSqm)
 
@@ -250,11 +252,9 @@ export default function WideFormatCalculator({ client }) {
     let wasteTotal = 0
     const roll = Number(selectedMaterial.rollWidth) || 0
     const wastePrice = Number(selectedMaterial.wastePrice) || 0
-    const wasteMargin = selectedMaterial.wasteMargin != null ? Number(selectedMaterial.wasteMargin) : 0.2
-
     if (includeWaste && roll > 0 && wastePrice > 0) {
-      const printAcross = Math.min(w, h) + wasteMargin
-      const printAlong = Math.max(w, h) + wasteMargin
+      const printAcross = Math.min(w, h) + margin
+      const printAlong = Math.max(w, h) + margin
       if (printAcross > roll) {
         wasteInfo = { joined: true, roll, printAcross, printAlong }
       } else {
@@ -515,7 +515,7 @@ export default function WideFormatCalculator({ client }) {
                             <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Материал:</span><span className="font-semibold text-right break-words flex-1 min-w-0">{calculation.materialName}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Размер:</span><span className="font-semibold">{calculation.width} × {calculation.height} м</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь 1 шт:</span><span className="font-semibold">{calculation.itemArea} м²</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Фактическая площадь:</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Площадь печати （с припуском）：</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Расчетная площадь:</span><span className="font-semibold">{calculation.billableArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} шт</span></div>
               <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Диапазон цены:</span><span className="font-semibold break-words flex-1 min-w-0 text-right">{calculation.priceTier}</span></div>

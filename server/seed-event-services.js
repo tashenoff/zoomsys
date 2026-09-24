@@ -29,9 +29,12 @@ async function ensureColumns() {
 
     async function upsert(item, sortOrder) {
       const existing = await pool.query(`SELECT id FROM event_services_pricing WHERE name=$1 ORDER BY id LIMIT 1`, [item.name])
-      const numeric = typeof item.price === 'number'
-      const params = [item.name, item.category || 'rent', item.unit || 'шт', numeric ? item.price : null,
-        !numeric ? item.price : (item.priceText || null),
+      // Цена: число ИЛИ чисто-цифровая строка → число; иначе текст (диапазон/по запросу).
+      const numeric = typeof item.price === 'number' || (typeof item.price === 'string' && /^\s*\d+\s*$/.test(item.price))
+      const priceNum = numeric ? Number(item.price) : null
+      const priceText = numeric ? (item.priceText || null) : (typeof item.price === 'string' ? item.price : (item.priceText || null))
+      const params = [item.name, item.category || 'rent', item.unit || 'шт', priceNum,
+        priceText,
         item.printOptions ? JSON.stringify(item.printOptions) : null,
         item.minHours || null, item.description || null, item.notes || null, item.subtype || null, sortOrder]
       if (existing.rows[0]) {

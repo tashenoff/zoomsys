@@ -3809,7 +3809,7 @@
       "category": "specialists",
       "name": "Работа монтажника",
       "unit": "час",
-      "price": "5000",
+      "price": 5000,
       "subtype": "work"
     },
     {
@@ -3817,7 +3817,7 @@
       "category": "specialists",
       "name": "Работа электрика",
       "unit": "час",
-      "price": "7000",
+      "price": 7000,
       "subtype": "work"
     },
     {
@@ -3825,7 +3825,7 @@
       "category": "specialists",
       "name": "Транспортные услуги, не габаритный груз",
       "unit": "час",
-      "price": "5000",
+      "price": 5000,
       "subtype": "transport"
     },
     {
@@ -3833,7 +3833,7 @@
       "category": "specialists",
       "name": "Транспортные услуги, габаритный груз",
       "unit": "час",
-      "price": "10000",
+      "price": 10000,
       "subtype": "transport"
     },
     {
@@ -3841,7 +3841,7 @@
       "category": "specialists",
       "name": "АГП до 22 м",
       "unit": "час",
-      "price": "40000",
+      "price": 40000,
       "minHours": 2,
       "subtype": "agp"
     },
@@ -3850,7 +3850,7 @@
       "category": "specialists",
       "name": "АГП от 23 м до 30 м",
       "unit": "час",
-      "price": "50000",
+      "price": 50000,
       "minHours": 3,
       "subtype": "agp"
     },

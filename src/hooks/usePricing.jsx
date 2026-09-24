@@ -55,8 +55,9 @@ export function PricingProvider({ children }) {
           description: item.description,
           notes: item.notes,
           rollWidth: item.roll_width != null ? parseFloat(item.roll_width) : null,
-          wastePrice: item.waste_price != null ? parseFloat(item.waste_price) : null,
-          wasteMargin: item.waste_margin != null ? parseFloat(item.waste_margin) : 0.2
+                    wastePrice: item.waste_price != null ? parseFloat(item.waste_price) : null,
+                    wasteMargin: item.waste_margin != null ? parseFloat(item.waste_margin) : 0.2,
+                    glueAllowed: !!item.glue_allowed
         })),
         textile: (data.textile || []).map(item => ({
           id: String(item.id),

@@ -80,21 +80,21 @@ module.exports = (pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/wide-format', async (req, res) => {
-    const { name, price_per_sqm, category, unit, prices, description, notes, sort_order, roll_width, waste_price, waste_margin } = req.body
-    try { res.json((await pool.query(
-      `INSERT INTO wide_format_pricing (name,price_per_sqm,category,unit,prices,description,notes,roll_width,waste_price,waste_margin,sort_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
-      [name, price_per_sqm, category, unit || 'м²', prices ? JSON.stringify(prices) : null, description, notes, roll_width ?? null, waste_price ?? null, waste_margin ?? 0.2, sort_order||0])).rows[0]) }
-    catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
-  })
-  router.put('/wide-format/:id', async (req, res) => {
-    const { name, price_per_sqm, category, unit, prices, description, notes, is_active, sort_order, roll_width, waste_price, waste_margin } = req.body
-    try { res.json((await pool.query(
-      `UPDATE wide_format_pricing SET name=$1,price_per_sqm=$2,category=$3,unit=$4,prices=$5,description=$6,notes=$7,is_active=$8,sort_order=$9,roll_width=$10,waste_price=$11,waste_margin=$12,updated_at=NOW()
-       WHERE id=$13 RETURNING *`,
-      [name, price_per_sqm, category, unit || 'м²', prices ? JSON.stringify(prices) : null, description, notes, is_active!==false, sort_order||0, roll_width ?? null, waste_price ?? null, waste_margin ?? 0.2, req.params.id])).rows[0]) }
-    catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
-  })
+      const { name, price_per_sqm, category, unit, prices, description, notes, sort_order, roll_width, waste_price, waste_margin, glue_allowed } = req.body
+      try { res.json((await pool.query(
+        `INSERT INTO wide_format_pricing (name,price_per_sqm,category,unit,prices,description,notes,roll_width,waste_price,waste_margin,glue_allowed,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+        [name, price_per_sqm, category, unit || 'м²', prices ? JSON.stringify(prices) : null, description, notes, roll_width ?? null, waste_price ?? null, waste_margin ?? 0.2, glue_allowed === true, sort_order||0])).rows[0]) }
+      catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
+    })
+    router.put('/wide-format/:id', async (req, res) => {
+      const { name, price_per_sqm, category, unit, prices, description, notes, is_active, sort_order, roll_width, waste_price, waste_margin, glue_allowed } = req.body
+      try { res.json((await pool.query(
+        `UPDATE wide_format_pricing SET name=$1,price_per_sqm=$2,category=$3,unit=$4,prices=$5,description=$6,notes=$7,is_active=$8,sort_order=$9,roll_width=$10,waste_price=$11,waste_margin=$12,glue_allowed=$13,updated_at=NOW()
+         WHERE id=$14 RETURNING *`,
+        [name, price_per_sqm, category, unit || 'м²', prices ? JSON.stringify(prices) : null, description, notes, is_active!==false, sort_order||0, roll_width ?? null, waste_price ?? null, waste_margin ?? 0.2, glue_allowed === true, req.params.id])).rows[0]) }
+      catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
+    })
   router.delete('/wide-format/:id', async (req, res) => {
     try { await pool.query('UPDATE wide_format_pricing SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }
     catch(e) { res.status(500).json({error:'Ошибка'}) }

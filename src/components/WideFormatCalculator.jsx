@@ -253,14 +253,20 @@ export default function WideFormatCalculator({ client }) {
     })
 
     let wasteInfo = null
-    let wasteTotal = 0
-    const roll = Number(selectedMaterial.rollWidth) || 0
-    const wastePrice = Number(selectedMaterial.wastePrice) || 0
-    if (includeWaste && roll > 0 && wastePrice > 0) {
-      const candAcross = [Math.min(w, h) + margin, Math.max(w, h) + margin].filter(c => c <= roll)
-            const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
-            const printAlong = printAreaItem / printAcross
-      if (printAcross > roll) {
+        let wasteTotal = 0
+        const roll = Number(selectedMaterial.rollWidth) || 0
+        const wastePrice = Number(selectedMaterial.wastePrice) || 0
+        // Склейка/проклейка включаются, если у материала в прайсе установлен атрибут glueAllowed.
+            // Fallback для старых данных без флага: по названию (баннерные материалы).
+            const bname = String(selectedMaterial?.name || '').toLowerCase()
+            const bannerLike = selectedMaterial?.glueAllowed != null
+              ? !!selectedMaterial.glueAllowed
+              : ['баннер', 'фронтлит', 'бэклит', 'сетка'].some(sb => bname.includes(sb))
+        if (includeWaste && roll > 0 && wastePrice > 0) {
+          const candAcross = [Math.min(w, h) + margin, Math.max(w, h) + margin].filter(c => c <= roll)
+                const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
+                const printAlong = printAreaItem / printAcross
+          if (printAcross > roll && bannerLike) {
               // Баннер шире рулона по обеим сторонам → печать кусками со склейкой.
               // По правилу: длинную сторону кладём вдоль рулона, короткую делим поперёк на куски ≤ рулона,
               // шов склейки идёт вдоль длинной стороны (длина шва = длинная сторона).
@@ -332,9 +338,10 @@ export default function WideFormatCalculator({ client }) {
                                                                                       extrasTotal += glueingPrice // сумма входит в итог, строка показана в синем блоке
                                                                                     }
             } else {
-        const itemAcross = Math.min(w, h)
-        const remainSqm = (roll - printAcross) * printAlong * qty
-        const above = remainSqm >= 0.5
+                    const itemAcross = Math.min(w, h)
+                    // Не баннер или не сработала склейка: если изделие всё равно шире рулона, остатка нет (или защита от минуса).
+                    const remainSqm = Math.max(0, (roll - printAcross) * printAlong * qty)
+                    const above = remainSqm >= 0.5
         wasteInfo = {
           joined: false, roll, printAcross, printAlong, itemAcross, margin, wastePrice,
           remainSqm,

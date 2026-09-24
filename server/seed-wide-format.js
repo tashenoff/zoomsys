@@ -36,9 +36,10 @@ async function ensureColumns() {
     ADD COLUMN IF NOT EXISTS description TEXT,
     ADD COLUMN IF NOT EXISTS notes TEXT,
     ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
-    ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
-    ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2
-  `)
+        ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
+        ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2,
+        ADD COLUMN IF NOT EXISTS glue_allowed BOOLEAN DEFAULT FALSE
+      `)
 
   await pool.query(`
       ALTER TABLE additional_operations
@@ -61,37 +62,38 @@ async function upsertWideFormatItem(item, sortOrder) {
   )
 
   const params = [
-    item.name,
-    item.pricePerSqm,
-    item.category || null,
-    item.unit || 'м²',
-    item.prices ? JSON.stringify(item.prices) : null,
-    item.description || null,
-    item.notes || null,
-    item.rollWidth ?? null,
-    item.wastePrice ?? null,
-    item.wasteMargin ?? 0.2,
-    sortOrder
-  ]
+      item.name,
+      item.pricePerSqm,
+      item.category || null,
+      item.unit || 'м²',
+      item.prices ? JSON.stringify(item.prices) : null,
+      item.description || null,
+      item.notes || null,
+      item.rollWidth ?? null,
+      item.wastePrice ?? null,
+      item.wasteMargin ?? 0.2,
+      item.glueAllowed ? true : false,
+      sortOrder
+    ]
 
-  if (existing.rows[0]) {
+    if (existing.rows[0]) {
+      await pool.query(
+        `UPDATE wide_format_pricing
+         SET name=$1, price_per_sqm=$2, category=$3, unit=$4, prices=$5,
+             description=$6, notes=$7, roll_width=$8, waste_price=$9, waste_margin=$10,
+             glue_allowed=$11, sort_order=$12, is_active=true, updated_at=NOW()
+         WHERE id=$13`,
+        [...params, existing.rows[0].id]
+      )
+      return 'updated'
+    }
+
     await pool.query(
-      `UPDATE wide_format_pricing
-       SET name=$1, price_per_sqm=$2, category=$3, unit=$4, prices=$5,
-           description=$6, notes=$7, roll_width=$8, waste_price=$9, waste_margin=$10,
-           sort_order=$11, is_active=true, updated_at=NOW()
-       WHERE id=$12`,
-      [...params, existing.rows[0].id]
+      `INSERT INTO wide_format_pricing
+      (name, price_per_sqm, category, unit, prices, description, notes, roll_width, waste_price, waste_margin, glue_allowed, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      params
     )
-    return 'updated'
-  }
-
-  await pool.query(
-    `INSERT INTO wide_format_pricing
-     (name, price_per_sqm, category, unit, prices, description, notes, roll_width, waste_price, waste_margin, sort_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-    params
-  )
   return 'inserted'
 }
 

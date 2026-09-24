@@ -2069,7 +2069,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P, 720 dpi, рабочее поле 3200 мм",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-phaeton-reflective-banner",
@@ -2085,7 +2086,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-phaeton-mesh",
@@ -2100,7 +2102,8 @@
       },
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 3.2,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-phaeton-vinyl-china",
@@ -2116,7 +2119,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-phaeton-transparent-vinyl",
@@ -2132,7 +2136,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-phaeton-perforated-vinyl",
@@ -2148,7 +2153,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-phaeton-backed-banner",
@@ -2164,7 +2170,8 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-banner-440",
@@ -2180,7 +2187,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4, 1400×720 dpi, рабочее поле 3200 мм",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-grey-backed-banner",
@@ -2196,7 +2204,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-reflective-banner",
@@ -2212,7 +2221,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 3.2,
       "wastePrice": 1500,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-vinyl-4pass",
@@ -2228,7 +2238,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-mimaki-vinyl-8pass",
@@ -2244,7 +2255,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-mimaki-transparent-vinyl",
@@ -2260,7 +2272,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-mimaki-black-backed-vinyl",
@@ -2276,7 +2289,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-mimaki-frontlit",
@@ -2291,7 +2305,8 @@
       },
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 0.9,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-backlit",
@@ -2306,7 +2321,8 @@
       },
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.2,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-perforated-vinyl",
@@ -2322,7 +2338,8 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-mimaki-mesh",
@@ -2337,7 +2354,8 @@
       },
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 3.2,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-mimaki-canvas",
@@ -2352,7 +2370,8 @@
       },
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-vinyl-4pass",
@@ -2368,7 +2387,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер, 1440×1440 dpi, рабочее поле 1600 мм",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-vinyl-8pass",
@@ -2384,7 +2404,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-static-vinyl",
@@ -2400,7 +2421,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.2,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-black-backed-vinyl",
@@ -2416,7 +2438,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-transparent-vinyl",
@@ -2432,7 +2455,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-frontlit",
@@ -2447,7 +2471,8 @@
       },
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 0.9,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-roland-backlit",
@@ -2462,7 +2487,8 @@
       },
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.2,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": true
     },
     {
       "id": "wf-roland-photo-paper",
@@ -2477,7 +2503,8 @@
       },
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.2,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-wallpaper",
@@ -2490,7 +2517,8 @@
         "upTo100": 2000,
         "over100": "договорная"
       },
-      "description": "В стоимость входит только печать. Обои предоставляет заказчик."
+      "description": "В стоимость входит только печать. Обои предоставляет заказчик.",
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-canvas",
@@ -2505,7 +2533,8 @@
       },
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     },
     {
       "id": "wf-roland-reflective-vinyl",
@@ -2521,7 +2550,8 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
       "wastePrice": 1000,
-      "wasteMargin": 0.2
+      "wasteMargin": 0.2,
+      "glueAllowed": false
     }
   ],
   "stateSymbols": [

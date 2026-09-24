@@ -27,6 +27,14 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   { id: 'roland', name: 'Roland VS-640 + плоттер', icon: '✂️' }
                 ]
 
+                // Типы печати на текстиле (совпадают с TEXTILE_CATEGORIES в TextilePrintingCalculator.jsx)
+                const TEXTILE_CATEGORIES = [
+                  { id: 'sublimation', name: 'Сублимация', icon: '🖨️' },
+                  { id: 'direct', name: 'Прямая печать', icon: '🖨️' },
+                  { id: 'mesh', name: 'Сетки', icon: '🧵' },
+                  { id: 'service', name: 'Услуги', icon: '🧰' }
+                ]
+
   // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
   const NAV_ITEMS = useMemo(() => {
     const items = []
@@ -436,22 +444,43 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               </button>
             )
           }
-          // Печать на текстиле
-          if (!category.subcategories && category.slug === 'textile') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🧵 {category.name}
-              </button>
-            )
-          }
+          // Печать на текстиле — раскрывающийся список типов печати
+                    if (!category.subcategories && category.slug === 'textile') {
+                      const isTextileExpanded = expandedCategory === 'textile'
+                      const activeTextileCategory = selectedCategory?.slug === 'textile' ? selectedCategory.textileCategory : null
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <button
+                            onClick={() => setExpandedCategory(isTextileExpanded ? null : 'textile')}
+                            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                              selectedCategory?.slug === 'textile'
+                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                : 'text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <span>🧵 {category.name}</span>
+                            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isTextileExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isTextileExpanded && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {TEXTILE_CATEGORIES.map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => onSelectCategory({ ...category, textileCategory: cat.id })}
+                                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                    activeTextileCategory === cat.id
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {cat.icon} {cat.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
           return null
         })}
 

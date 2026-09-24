@@ -61,11 +61,21 @@ function getUnitLabel(unit) {
   return u.replace(/^тг\//, '')
 }
 
-export default function TextilePrintingCalculator({ client }) {
+export default function TextilePrintingCalculator({ client, initialCategory }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
-  const textile = pricingData.textile || []
+  const allTextile = pricingData.textile || []
+  // Группы (тип печати) — сопоставление подкатегориям сайдбара
+  const TEXTILE_CATEGORIES = {
+    sublimation: 'Сублимация',
+    direct: 'Прямая печать',
+    mesh: 'Сетки',
+    service: 'Услуги'
+  }
+  const textile = initialCategory
+    ? allTextile.filter(item => (item.category || '') === initialCategory)
+    : allTextile
   const additionalOperations = pricingData.additionalOperations || {}
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
@@ -180,7 +190,7 @@ export default function TextilePrintingCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Печать на текстиле</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialCategory ? (TEXTILE_CATEGORIES[initialCategory] || initialCategory) : 'Печать на текстиле'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Рабочее поле 1600 мм. Цена с учётом материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">

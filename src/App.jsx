@@ -189,8 +189,8 @@ function AppContent() {
                   )}
 
                   {selectedCategory.slug === 'textile' && (
-                    <TextilePrintingCalculator client={selectedClient} />
-                  )}
+                                      <TextilePrintingCalculator client={selectedClient} initialCategory={selectedCategory.textileCategory} />
+                                    )}
 
                   {selectedCategory.slug === 'flags-products' && (
                     <FlagsProductsCalculator client={selectedClient} />

@@ -1,39 +1,28 @@
-# Dockerfile для ZoomSys (фронт + API в одном контейнере)
-# 
-# Сборка: docker build -t zoomsys .
-# Запуск: docker compose up -d
+# Dockerfile для ZoomSys API (без фронтенда)
+# Фронтенд развёрнут отдельно на Vercel: https://zoomsys-three.vercel.app
+# Здесь только Node/Express бэкенд + PostgreSQL.
 
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Копируем package файлы фронтенда
-COPY package*.json ./
-
-# Устанавливаем зависимости фронтенда
+# Зависимости сервера
+COPY server/package*.json ./
 RUN npm ci
 
-# Копируем ВСЕ исходники
-COPY . .
-
-# Устанавливаем зависимости сервера
-RUN cd server && npm ci
-
-# Собираем фронтенд БЕЗ VITE_API_URL (чтобы использовался /api)
-RUN unset VITE_API_URL && npm run build
+# Исходники сервера
+COPY server ./
 
 # ============ Production образ ============
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Копируем собранный фронт
-COPY --from=builder /app/dist ./dist
+# Только server + его node_modules
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app ./
 
-# Копируем сервер (исходники + node_modules)
-COPY --from=builder /app/server ./server
-
-WORKDIR /app/server
+WORKDIR /app
 
 EXPOSE 3001
 

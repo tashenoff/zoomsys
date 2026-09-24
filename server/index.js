@@ -38,16 +38,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// В production раздаём статические файлы фронтенда
-if (process.env.NODE_ENV === 'production') {
-  // Статические файлы из dist
-  app.use(express.static(path.join(__dirname, '..', 'dist')))
-  
-  // Все остальные запросы отправляем на index.html (для React Router)
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'))
-  })
-}
+// Фронтенд развёрнут на Vercel (https://zoomsys-three.vercel.app).
+// Сервер отдаёт ТОЛЬКО API. Отдача статики dist убрана — здесь нет фронта.
 
 // Запуск сервера
 app.listen(PORT, () => {

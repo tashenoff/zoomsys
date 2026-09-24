@@ -246,10 +246,11 @@ export default function PricingManagement() {
             <WideFormatTable
               items={localPricing.wideFormat}
               onEdit={(item) => {
-                setEditingItem({ ...item, category: 'wideFormat' })
-                setIsModalOpen(true)
-              }}
-              onDelete={(id) => handleDelete('wideFormat', id)}
+                              // Не перезаписываем реальную категорию материала (phaeton/mimaki/roland) на id вкладки.
+                              setEditingItem({ ...item })
+                              setIsModalOpen(true)
+                            }}
+                            onDelete={(id) => handleDelete('wideFormat', id)}
             />
           )}
 

@@ -70,6 +70,19 @@ function getUnitLabel(unit) {
   return String(unit).replace(/^тг\//, '')
 }
 
+function wideFormatOpKey(name) {
+  const n = String(name || '').toLowerCase()
+  if (n.includes('проклейка баннера')) return 'bannerGluing'
+  if (n.includes('склейка баннера')) return 'bannerJoining'
+  if (n.includes('обрезка по контуру')) return 'contourCutting'
+  if (n.includes('обрезка готовой продукции')) return 'wideFormatCutting'
+  if (n.includes('прошивка баннерной сетки')) return 'meshStitching'
+  if (n.includes('ламинация винила')) return 'vinylLamination'
+  if (n.includes('люверс')) return 'eyeletsInstallation'
+  if (n.includes('арматура')) return 'rebarPerimeter'
+  return null
+}
+
 function matchesWideFormatOperation(op, material, group) {
   const opName = String(op?.name || '').toLowerCase()
 
@@ -81,7 +94,8 @@ function matchesWideFormatOperation(op, material, group) {
   // Доступность остальных доп.операций определяется атрибутом `operations` материала в прайсе.
   const ops = Array.isArray(material?.operations) ? material.operations.map(String) : null
   if (ops) {
-    return ops.includes(String(op?.id))
+    const opKey = wideFormatOpKey(op?.name) || String(op?.id)
+    return ops.includes(opKey)
   }
 
   // Fallback для старых данных без атрибута — старая логика по названию.

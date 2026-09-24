@@ -23,6 +23,17 @@ const ALL_TYPES = [
   { id: 'president-portrait', name: 'Портрет президента' }
 ]
 
+const WIDE_FORMAT_OPERATIONS = [
+  { id: 'bannerJoining', name: 'Склейка баннера со стыковкой (авто)' },
+  { id: 'bannerGluing', name: 'Проклейка баннера по периметру (авто)' },
+  { id: 'rebarPerimeter', name: 'Арматура (по периметру)' },
+  { id: 'eyeletsInstallation', name: 'Установка люверсов' },
+  { id: 'wideFormatCutting', name: 'Обрезка готовой продукции' },
+  { id: 'meshStitching', name: 'Прошивка баннерной сетки' },
+  { id: 'vinylLamination', name: 'Ламинация винила' },
+  { id: 'contourCutting', name: 'Обрезка по контуру напечатанных элементов' }
+]
+
 export default function PricingManagement() {
   const { pricing, loading, error, isOffline, refreshPricing } = usePricing()
   const [activeTab, setActiveTab] = useState('businessCards')
@@ -392,8 +403,8 @@ export default function PricingManagement() {
               } else if (category === 'printing') {
                 apiData = { category: updatedItem.category, name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {} }
               } else if (category === 'wideFormat') {
-                apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes, roll_width: updatedItem.rollWidth ?? null, waste_price: updatedItem.wastePrice ?? null, waste_margin: updatedItem.wasteMargin ?? 0.2 }
-              } else if (category === 'stateSymbols') {
+                              apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes, roll_width: updatedItem.rollWidth ?? null, waste_price: updatedItem.wastePrice ?? null, waste_margin: updatedItem.wasteMargin ?? 0.2, glue_allowed: updatedItem.glueAllowed === true, operations: Array.isArray(updatedItem.operations) ? updatedItem.operations.map(String) : updatedItem.operations }
+                            } else if (category === 'stateSymbols') {
                 const productCategory = ['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(updatedItem.category)
                   ? updatedItem.category
                   : (editingItem?.category && editingItem.category !== 'stateSymbols' ? editingItem.category : 'coat-of-arms')
@@ -1741,9 +1752,28 @@ function EditModal({ item, category, onClose, onSave }) {
                     </div>
                   </div>
                   <p className="text-xs text-gray-400 mt-2">Остаток = (ширина рулона − ширина раскроя × длина). Если поля пустые — остаток для материала не считается.</p>
-                </div>
-              </>
-            )}
+                                  </div>
+                                  <div className="border-t border-gray-200 pt-4">
+                                    <h3 className="font-semibold text-gray-800 mb-3">Доступные доп.операции</h3>
+                                    <p className="text-xs text-gray-400 mb-2">Отметь галочкой операции, которые доступны для этого материала в калькуляторе. Склейка и проклейка добавляются автоматически (если включены).</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                      {WIDE_FORMAT_OPERATIONS.map(op => {
+                                        const checked = Array.isArray(formData.operations) && formData.operations.map(String).includes(op.id)
+                                        return (
+                                          <label key={op.id} className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                            <input type="checkbox" checked={checked} onChange={(e) => {
+                                              const cur = Array.isArray(formData.operations) ? formData.operations.map(String) : []
+                                              const next = e.target.checked ? [...cur, op.id] : cur.filter(id => id !== op.id)
+                                              setFormData({ ...formData, operations: next })
+                                            }} className="w-4 h-4" />
+                                            <span className="text-sm">{op.name}</span>
+                                          </label>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
 
 
 

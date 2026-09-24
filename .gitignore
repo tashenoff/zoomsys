@@ -9,7 +9,7 @@ server/node_modules/
 server/.env
 
 # Build output (optional - remove if you want dist in git for deployment)
-# dist/
+dist/
 /graphify-out/
 
 # Logs

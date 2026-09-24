@@ -123,9 +123,10 @@ export function PricingProvider({ children }) {
           priceText: item.price_text,
           printOptions: typeof item.print_options === 'string' ? JSON.parse(item.print_options) : item.print_options,
           minHours: item.min_hours ? parseFloat(item.min_hours) : null,
-          description: item.description,
-          notes: item.notes
-        })),
+                    subtype: item.subtype,
+                    description: item.description,
+                    notes: item.notes
+                  })),
         designServices: (data.designServices || []).map(item => ({
           id: String(item.id),
           name: item.name,

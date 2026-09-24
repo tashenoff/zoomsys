@@ -185,8 +185,8 @@ function AppContent() {
                   )}
 
                   {selectedCategory.slug === 'event-services' && (
-                    <EventServicesCalculator client={selectedClient} />
-                  )}
+                                      <EventServicesCalculator client={selectedClient} initialCategory={selectedCategory.eventCategory} />
+                                    )}
 
                   {selectedCategory.slug === 'textile' && (
                                       <TextilePrintingCalculator client={selectedClient} initialCategory={selectedCategory.textileCategory} />
@@ -217,8 +217,8 @@ function AppContent() {
                                                                         )}
 
                                                                         {selectedCategory.slug === 'specialists' && (
-                                                                          <SpecialistsCalculator client={selectedClient} />
-                                                                        )}
+                                                                                                                                                  <SpecialistsCalculator client={selectedClient} initialGroup={selectedCategory.specialistsGroup} />
+                                                                                                                                                )}
                 </>
               )}
 

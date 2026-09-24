@@ -3,12 +3,22 @@ import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 
-export default function SpecialistsCalculator({ client }) {
+const SPECIALIST_LABELS = {
+  mount: 'Монтаж и выезд',
+  work: 'Работа специалистов',
+  transport: 'Транспорт',
+  agp: 'АГП'
+}
+
+export default function SpecialistsCalculator({ client, initialGroup }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   const allItems = pricingData.eventServices || []
-  const items = allItems.filter(i => i.category === 'specialists')
+  const specialistsItems = allItems.filter(i => i.category === 'specialists')
+  const items = initialGroup
+    ? specialistsItems.filter(i => (i.subtype || '') === initialGroup)
+    : specialistsItems
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const [selectedId, setSelectedId] = useState('')
@@ -77,7 +87,7 @@ export default function SpecialistsCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Работа специалистов и техники</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialGroup ? (SPECIALIST_LABELS[initialGroup] || initialGroup) : 'Работа специалистов и техники'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Монтаж, выезд, работа монтажников/электриков, транспорт, АГП. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">

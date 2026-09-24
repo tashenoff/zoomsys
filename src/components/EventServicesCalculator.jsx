@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -19,14 +19,14 @@ function priceText(item) {
   return item.priceText || (item.price != null ? `${Number(item.price).toLocaleString('ru-RU')} тг` : '—')
 }
 
-export default function EventServicesCalculator({ client }) {
+export default function EventServicesCalculator({ client, initialCategory }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   const items = pricingData.eventServices || []
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
-  const [category, setCategory] = useState('mobile')
+  const [category, setCategory] = useState(initialCategory || 'mobile')
   const [selectedId, setSelectedId] = useState('')
   const [printOption, setPrintOption] = useState('none')
   const [quantity, setQuantity] = useState(1)
@@ -37,8 +37,21 @@ export default function EventServicesCalculator({ client }) {
   const [savingOrder, setSavingOrder] = useState(false)
   const [manualPrice, setManualPrice] = useState('')
 
+  // При выборе раздела в сайдбаре — сбрасываем позицию/расчёт.
+  useEffect(() => {
+    if (initialCategory) {
+      setCategory(initialCategory)
+      setSelectedId('')
+      setManualPrice('')
+      setCalculation(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategory])
+
   const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))].filter(c => c !== 'specialists'), [items])
-  const effectiveCategory = categories.includes(category) ? category : (categories[0] || 'mobile')
+  const effectiveCategory = (
+    initialCategory && categories.includes(initialCategory) ? initialCategory : ''
+  ) || (categories.includes(category) ? category : (categories[0] || 'mobile'))
   const catItems = useMemo(() => items.filter(i => i.category === effectiveCategory), [items, effectiveCategory])
   const selected = useMemo(() => catItems.find(i => String(i.id) === String(selectedId)) || catItems[0] || null, [catItems, selectedId])
 
@@ -108,10 +121,11 @@ export default function EventServicesCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Мероприятия</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialCategory ? (CATEGORY_LABELS[effectiveCategory] || effectiveCategory).replace(/^[^\s]+ /, '') : 'Мероприятия'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Мобильные конструкции, аренда, работа специалистов. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
+          {!initialCategory && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Раздел</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -123,6 +137,7 @@ export default function EventServicesCalculator({ client }) {
               ))}
             </div>
           </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Позиция</label>

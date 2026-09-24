@@ -52,10 +52,24 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                         ]
 
                         // Типы операций фрезерного станка (внутренние ключи opType в CncLaserCalculator.jsx)
-                        const CNC_TYPES = [
-                          { id: 'milling', name: 'Резка', icon: '🪚' },
-                          { id: 'engrave', name: 'Гравировка', icon: '🖋️' }
-                        ]
+                                                const CNC_TYPES = [
+                                                  { id: 'milling', name: 'Резка', icon: '🪚' },
+                                                  { id: 'engrave', name: 'Гравировка', icon: '🖋️' }
+                                                ]
+
+                                                // Подгруппы работы специалистов (по subtype в eventServices, поле category=specialists)
+                                                                                                const SPECIALIST_GROUPS = [
+                                                                                                  { id: 'mount', name: 'Монтаж и выезд', icon: '🪜' },
+                                                                                                  { id: 'work', name: 'Работа специалистов', icon: '🔧' },
+                                                                                                  { id: 'transport', name: 'Транспорт', icon: '🚚' },
+                                                                                                  { id: 'agp', name: 'АГП', icon: '🏗️' }
+                                                                                                ]
+
+                                                                                                // Разделы мероприятий (по category в eventServices; specialists — отдельный пункт)
+                                                                                                const EVENT_GROUPS = [
+                                                                                                  { id: 'mobile', name: 'Мобильные конструкции', icon: '🖼️' },
+                                                                                                  { id: 'rent', name: 'Аренда для мероприятий', icon: '🎤' }
+                                                                                                ]
 
   // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
   const NAV_ITEMS = useMemo(() => {
@@ -312,17 +326,69 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
           return null
         })}
 
-        {/* Работа специалистов и техники */}
-        <button
-          onClick={() => onSelectCategory({ id: 'specialists', name: 'Работа специалистов и техники', slug: 'specialists', description: 'Монтаж, техника, транспорт, АГП' })}
-          className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-            selectedCategory?.slug === 'specialists'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          🔧 Работа специалистов и техники
-        </button>
+        {/* Мероприятия — раскрывающийся список разделов */}
+        <div className="mb-2">
+          <button
+            onClick={() => setExpandedCategory(expandedCategory === 'event-services' ? null : 'event-services')}
+            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+              selectedCategory?.slug === 'event-services'
+                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <span>🎪 Мероприятия</span>
+            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${expandedCategory === 'event-services' ? 'rotate-180' : ''}`} />
+          </button>
+          {expandedCategory === 'event-services' && (
+            <div className="ml-4 mt-1 space-y-1">
+              {EVENT_GROUPS.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => onSelectCategory({ id: 'event-services', name: 'Мероприятия', slug: 'event-services', eventCategory: g.id })}
+                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                    selectedCategory?.slug === 'event-services' && selectedCategory.eventCategory === g.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {g.icon} {g.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Работа специалистов и техники — раскрывающийся список */}
+                <div className="mb-2">
+                  <button
+                    onClick={() => setExpandedCategory(expandedCategory === 'specialists' ? null : 'specialists')}
+                    className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                      selectedCategory?.slug === 'specialists'
+                        ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                        : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span>🔧 Работа специалистов и техники</span>
+                    <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${expandedCategory === 'specialists' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {expandedCategory === 'specialists' && (
+                    <div className="ml-4 mt-1 space-y-1">
+                      {SPECIALIST_GROUPS.map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() => onSelectCategory({ id: 'specialists', name: 'Работа специалистов и техники', slug: 'specialists', specialistsGroup: g.id, description: 'Монтаж, техника, транспорт, АГП' })}
+                          className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                            selectedCategory?.slug === 'specialists' && selectedCategory.specialistsGroup === g.id
+                              ? 'bg-blue-600 text-white'
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {g.icon} {g.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
         {/* СПЕЦИАЛИЗИРОВАННАЯ ПЕЧАТЬ (разделы без заголовка) */}
         {categories.map((category) => {

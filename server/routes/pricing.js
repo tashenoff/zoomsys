@@ -264,23 +264,23 @@ module.exports = (pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/event-services', async (req, res) => {
-    const { name, category, unit, price, price_text, print_options, min_hours, description, notes, sort_order } = req.body
-    try { res.json((await pool.query(
-      `INSERT INTO event_services_pricing (name,category,unit,price,price_text,print_options,min_hours,description,notes,sort_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [name, category || 'rent', unit || 'шт', price, price_text,
-       print_options ? JSON.stringify(print_options) : null, min_hours, description, notes, sort_order||0])).rows[0]) }
-    catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
-  })
-  router.put('/event-services/:id', async (req, res) => {
-    const { name, category, unit, price, price_text, print_options, min_hours, description, notes, is_active, sort_order } = req.body
-    try { res.json((await pool.query(
-      `UPDATE event_services_pricing SET name=$1,category=$2,unit=$3,price=$4,price_text=$5,print_options=$6,min_hours=$7,description=$8,notes=$9,is_active=$10,sort_order=$11,updated_at=NOW()
-       WHERE id=$12 RETURNING *`,
-      [name, category || 'rent', unit || 'шт', price, price_text,
-       print_options ? JSON.stringify(print_options) : null, min_hours, description, notes, is_active!==false, sort_order||0, req.params.id])).rows[0]) }
-    catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
-  })
+      const { name, category, unit, price, price_text, print_options, min_hours, description, notes, subtype, sort_order } = req.body
+      try { res.json((await pool.query(
+        `INSERT INTO event_services_pricing (name,category,unit,price,price_text,print_options,min_hours,description,notes,subtype,sort_order)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+        [name, category || 'rent', unit || 'шт', price, price_text,
+         print_options ? JSON.stringify(print_options) : null, min_hours, description, notes, subtype || null, sort_order||0])).rows[0]) }
+      catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
+    })
+    router.put('/event-services/:id', async (req, res) => {
+      const { name, category, unit, price, price_text, print_options, min_hours, description, notes, subtype, is_active, sort_order } = req.body
+      try { res.json((await pool.query(
+        `UPDATE event_services_pricing SET name=$1,category=$2,unit=$3,price=$4,price_text=$5,print_options=$6,min_hours=$7,description=$8,notes=$9,subtype=$10,is_active=$11,sort_order=$12,updated_at=NOW()
+         WHERE id=$13 RETURNING *`,
+        [name, category || 'rent', unit || 'шт', price, price_text,
+         print_options ? JSON.stringify(print_options) : null, min_hours, description, notes, subtype || null, is_active!==false, sort_order||0, req.params.id])).rows[0]) }
+      catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
+    })
   router.delete('/event-services/:id', async (req, res) => {
     try { await pool.query('UPDATE event_services_pricing SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }
     catch(e) { res.status(500).json({error:'Ошибка'}) }

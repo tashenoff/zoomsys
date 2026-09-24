@@ -3793,42 +3793,48 @@
       "category": "specialists",
       "name": "Монтаж цветной печати",
       "unit": "м²",
-      "price": 3500
+      "price": 3500,
+      "subtype": "mount"
     },
     {
       "id": "es-work2",
       "category": "specialists",
       "name": "Выезд на замеры менеджера и монтажника",
       "unit": "выезд",
-      "price": "от 10000"
+      "price": "от 10000",
+      "subtype": "mount"
     },
     {
       "id": "es-work3",
       "category": "specialists",
       "name": "Работа монтажника",
       "unit": "час",
-      "price": "5000"
+      "price": "5000",
+      "subtype": "work"
     },
     {
       "id": "es-work4",
       "category": "specialists",
       "name": "Работа электрика",
       "unit": "час",
-      "price": "7000"
+      "price": "7000",
+      "subtype": "work"
     },
     {
       "id": "es-work5",
       "category": "specialists",
       "name": "Транспортные услуги, не габаритный груз",
       "unit": "час",
-      "price": "5000"
+      "price": "5000",
+      "subtype": "transport"
     },
     {
       "id": "es-work6",
       "category": "specialists",
       "name": "Транспортные услуги, габаритный груз",
       "unit": "час",
-      "price": "10000"
+      "price": "10000",
+      "subtype": "transport"
     },
     {
       "id": "es-work7",
@@ -3836,7 +3842,8 @@
       "name": "АГП до 22 м",
       "unit": "час",
       "price": "40000",
-      "minHours": 2
+      "minHours": 2,
+      "subtype": "agp"
     },
     {
       "id": "es-work8",
@@ -3844,14 +3851,16 @@
       "name": "АГП от 23 м до 30 м",
       "unit": "час",
       "price": "50000",
-      "minHours": 3
+      "minHours": 3,
+      "subtype": "agp"
     },
     {
       "id": "es-work9",
       "category": "specialists",
       "name": "АГП до 48 м",
       "unit": "час",
-      "price": "по запросу"
+      "price": "по запросу",
+      "subtype": "agp"
     }
   ],
   "garmentPrinting": [

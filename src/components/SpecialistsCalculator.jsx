@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -22,52 +22,78 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const [selectedId, setSelectedId] = useState('')
-  const [hours, setHours] = useState(1)
-  const [width, setWidth] = useState('')
-  const [height, setHeight] = useState('')
-  const [isUrgent, setIsUrgent] = useState(false)
-  const [calculation, setCalculation] = useState(null)
-  const [orderStatus, setOrderStatus] = useState('draft')
-  const [savingOrder, setSavingOrder] = useState(false)
+    const [hours, setHours] = useState(1)
+    const [bannerCount, setBannerCount] = useState(1)
+    const [banners, setBanners] = useState(() => [{ width: '', height: '' }])
+    const [isUrgent, setIsUrgent] = useState(false)
+    const [calculation, setCalculation] = useState(null)
+    const [orderStatus, setOrderStatus] = useState('draft')
+    const [savingOrder, setSavingOrder] = useState(false)
 
-  const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
-  const isArea = !!selected && selected.unit === 'м²'
+    const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
+    const isArea = !!selected && selected.unit === 'м²'
 
-  const priceLabel = (item) => {
-    if (item.priceText) return item.priceText
-    if (item.price != null) return `${Number(item.price).toLocaleString('ru-RU')} тг/${item.unit || 'час'}`
-    return 'по запросу'
-  }
+    // При смене количества баннеров — расширяем/сужаем список строк с размерами.
+    useEffect(() => {
+      if (!isArea) return
+      const n = Math.max(1, parseInt(bannerCount, 10) || 1)
+      setBanners((cur) => {
+        const arr = Array.from({ length: n }, (_, i) => cur[i] ? { ...cur[i] } : { width: '', height: '' })
+        return arr
+      })
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isArea, bannerCount])
 
-  const handleCalculate = (e) => {
-    e.preventDefault()
-    if (!selected) { alert('Выберите услугу'); return }
-    if (selected.priceText || selected.price == null) {
-      setCalculation({ note: `Цена: ${selected.priceText || 'по запросу'}. Итог зависит от объёма — уточните у менеджера.`, label: selected.name })
-      return
+    const priceLabel = (item) => {
+      if (item.priceText) return item.priceText
+      if (item.price != null) return `${Number(item.price).toLocaleString('ru-RU')} тг/${item.unit || 'час'}`
+      return 'по запросу'
     }
 
-    const unitPrice = Number(selected.price)
-    let qtyLabel
-    let baseTotal
-    if (isArea) {
-      const w = parseFloat(width) || 0
-      const hh = parseFloat(height) || 0
-      if (w <= 0 || hh <= 0) { alert('Введите ширину и высоту в метрах'); return }
-      const area = w * hh
-      qtyLabel = `${area.toLocaleString('ru-RU')} м²`
-      baseTotal = unitPrice * area
-    } else {
-      const h = parseFloat(hours) || 0
-      if (h <= 0) { alert('Введите часы'); return }
-      qtyLabel = `${h} ч${selected.minHours ? ` (мин. ${selected.minHours} ч)` : ''}`
-      baseTotal = unitPrice * h
-      if (selected.minHours) baseTotal = Math.max(baseTotal, unitPrice * selected.minHours)
-    }
-    const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
-    const total = baseTotal + urgentAmount
+    const handleCalculate = (e) => {
+      e.preventDefault()
+      if (!selected) { alert('Выберите услугу'); return }
+      if (selected.priceText || selected.price == null) {
+        setCalculation({ note: `Цена: ${selected.priceText || 'по запросу'}. Итог зависит от объёма — уточните у менеджера.`, label: selected.name })
+        return
+      }
 
-    setCalculation({
+      const unitPrice = Number(selected.price)
+      let qtyLabel
+      let baseTotal
+      if (isArea) {
+        // Несколько баннеров, у каждого свои размеры Ш×В (м) — суммарная площадь.
+        const count = Math.max(1, parseInt(bannerCount, 10) || 1)
+        let totalArea = 0
+        const rows = []
+        for (let i = 0; i < count; i++) {
+          const b = banners[i] || { width: '', height: '' }
+          const w = parseFloat(b.width) || 0
+          const h = parseFloat(b.height) || 0
+          if (w <= 0 || h <= 0) { alert(`Укажите ширину и высоту для баннера №${i + 1}`); return }
+          const area = w * h
+          totalArea += area
+          rows.push({ idx: i + 1, w, h, area })
+        }
+        qtyLabel = `${rows.length} банер(ов), ${totalArea.toLocaleString('ru-RU')} м²`
+        baseTotal = unitPrice * totalArea
+        const urgentAmountA = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
+        setCalculation({
+          label: selected.name, unit: 'м²', bannerRows: rows, totalArea, qtyLabel,
+          unitPrice, baseTotal, isUrgent, urgentSurcharge, urgentAmount: urgentAmountA, total: baseTotal + urgentAmountA, note: null
+        })
+        return
+      } else {
+        const h = parseFloat(hours) || 0
+        if (h <= 0) { alert('Введите часы'); return }
+        qtyLabel = `${h} ч${selected.minHours ? ` (мин. ${selected.minHours} ч)` : ''}`
+        baseTotal = unitPrice * h
+        if (selected.minHours) baseTotal = Math.max(baseTotal, unitPrice * selected.minHours)
+      }
+      const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
+      const total = baseTotal + urgentAmount
+
+      setCalculation({
       label: selected.name, unit: selected.unit || 'час', qtyLabel, unitPrice,
       baseTotal, isUrgent, urgentSurcharge, urgentAmount, total, note: null
     })
@@ -107,17 +133,40 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{isArea ? 'Площадь (ширина × высота, м)' : 'Часы'}</label>
-            {isArea ? (
-              <div className="flex gap-4">
-                <input type="number" min="0" step="0.1" placeholder="Ширина, м" value={width} onChange={(e) => setWidth(e.target.value)} className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                <input type="number" min="0" step="0.1" placeholder="Высота, м" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+          {isArea && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Количество баннеров</label>
+                <input type="number" min="1" value={bannerCount} onChange={(e) => setBannerCount(parseInt(e.target.value, 10) || 1)} className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
               </div>
-            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Размеры баннеров (м)</label>
+                <div className="space-y-3">
+                  {banners.map((b, idx) => (
+                    <div key={idx} className="flex items-center gap-3 border border-gray-200 rounded-lg p-3">
+                      <span className="text-xs text-gray-500 w-6">№{idx + 1}</span>
+                      <input type="number" min="0" step="0.1" placeholder="Ширина, м" value={b.width}
+                        onChange={(e) => setBanners(cur => cur.map((x, i) => i === idx ? { ...x, width: e.target.value } : x))}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                      <span className="text-gray-400">×</span>
+                      <input type="number" min="0" step="0.1" placeholder="Высота, м" value={b.height}
+                        onChange={(e) => setBanners(cur => cur.map((x, i) => i === idx ? { ...x, height: e.target.value } : x))}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                      {bannerCount > 1 && (
+                        <button type="button" onClick={() => setBannerCount(Math.max(1, bannerCount - 1))} className="w-8 h-8 rounded-full border border-red-300 text-red-500 hover:bg-red-50">✕</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          {!isArea && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Часы</label>
               <input type="number" min="0" step="0.5" value={hours} onChange={(e) => setHours(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            )}
-          </div>
+            </div>
+          )}
           {!isArea && selected?.minHours && (
             <p className="text-xs text-gray-500">Минимальное время: {selected.minHours} ч — именно эта сумма будет базовая.</p>
           )}
@@ -143,6 +192,18 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Услуга:</span><span className="font-semibold text-right break-words">{calculation.label}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Объём:</span><span className="font-semibold">{calculation.qtyLabel}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Цена:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг/{calculation.unit}</span></div>
+              {calculation.bannerRows && calculation.bannerRows.length > 0 && (
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <div className="text-xs text-gray-500 mb-1">Баннеры:</div>
+                  {calculation.bannerRows.map(r => (
+                    <div key={r.idx} className="flex justify-between text-sm">
+                      <span className="text-gray-600">№{r.idx}:</span>
+                      <span>{r.w} × {r.h} м = {Number(r.area).toLocaleString('ru-RU')} м²</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between border-t pt-1 mt-1"><span className="text-gray-600">Итого площадь:</span><span className="font-semibold">{Number(calculation.totalArea).toLocaleString('ru-RU')} м²</span></div>
+                </div>
+              )}
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {calculation.isUrgent && (
                 <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>

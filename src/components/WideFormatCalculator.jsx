@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -115,7 +115,7 @@ function matchesWideFormatOperation(op, material, group) {
   return true
 }
 
-export default function WideFormatCalculator({ client }) {
+export default function WideFormatCalculator({ client, initialGroup }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -129,7 +129,7 @@ export default function WideFormatCalculator({ client }) {
     return groups.length ? groups : ['other']
   }, [wideFormatPricing])
 
-  const [selectedGroup, setSelectedGroup] = useState(availableGroups[0] || 'phaeton')
+  const [selectedGroup, setSelectedGroup] = useState(initialGroup || availableGroups[0] || 'phaeton')
   const [selectedMaterialId, setSelectedMaterialId] = useState('')
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
@@ -142,6 +142,19 @@ export default function WideFormatCalculator({ client }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+
+  // При выборе другой категории оборудования в сайдбаре — сбрасываем группу и материал.
+  useEffect(() => {
+    if (initialGroup) {
+      setSelectedGroup(initialGroup)
+      setSelectedMaterialId('')
+      setSelectedServices([])
+      setServiceQuantities({})
+      setSelectedServiceOptions({})
+      setCalculation(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialGroup])
 
   const effectiveGroup = availableGroups.includes(selectedGroup) ? selectedGroup : (availableGroups[0] || 'other')
 
@@ -275,7 +288,7 @@ export default function WideFormatCalculator({ client }) {
             const bannerLike = selectedMaterial?.glueAllowed != null
               ? !!selectedMaterial.glueAllowed
               : ['баннер', 'фронтлит', 'бэклит', 'сетка'].some(sb => bname.includes(sb))
-        if (includeWaste && roll > 0 && wastePrice > 0) {
+        if (includeWaste && roll > 0) {
           const candAcross = [Math.min(w, h) + margin, Math.max(w, h) + margin].filter(c => c <= roll)
                 const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
                 const printAlong = printAreaItem / printAcross
@@ -294,7 +307,7 @@ export default function WideFormatCalculator({ client }) {
                         // Материал: каждый кусок занимает полную ширину рулона на длину longSide.
                         const materialSqm = pieces * roll * longSide * qty
                         const remainSqm = Math.max(0, materialSqm - printAreaItem * qty)
-                        const above = remainSqm >= 0.5
+                                                const above = remainSqm >= 0.5 && wastePrice > 0
                         // Тариф склейки — из операции «Склейка баннера со стыковкой» (bannerJoining), пог.м.
                         // Считается только для баннеров.
                                       let glueUnitPrice = 0
@@ -356,19 +369,19 @@ export default function WideFormatCalculator({ client }) {
                                                                                 extrasTotal += glueingPrice // сумма входит в итог, строка показана в синем блоке
                                                                               }
                                         } else {
-                                                const itemAcross = Math.min(w, h)
-                                                // Изделие помещается в рулон: остаток по ширине (обрезь) тарифицируется при >0,5 м².
-                                                const remainSqm = Math.max(0, (roll - printAcross) * printAlong * qty)
-                                                const above = remainSqm >= 0.5
-        wasteInfo = {
-          joined: false, roll, printAcross, printAlong, itemAcross, margin, wastePrice,
-          remainSqm,
-          wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
-          belowThreshold: !above
-        }
-        if (above) wasteTotal = wasteInfo.wasteTotal
-      }
-    }
+                                                                                        const itemAcross = Math.min(w, h)
+                                                                                        // Изделие помещается в рулон: остаток по ширине (обрезь) тарифицируется только если >0,5 м² И задана цена остатка.
+                                                                                        const remainSqm = Math.max(0, (roll - printAcross) * printAlong * qty)
+                                                                                        const above = remainSqm >= 0.5 && wastePrice > 0
+                                                wasteInfo = {
+                                                  joined: false, roll, printAcross, printAlong, itemAcross, margin, wastePrice,
+                                                  remainSqm,
+                                                  wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
+                                                  belowThreshold: !above
+                                                }
+                                                if (above) wasteTotal = wasteInfo.wasteTotal
+                                              }
+                                            }
 
     const subtotal = baseTotal + extrasTotal + wasteTotal
     const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
@@ -435,33 +448,35 @@ export default function WideFormatCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Широкоформатная / интерьерная печать</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialGroup ? (WIDE_FORMAT_GROUPS[effectiveGroup] || effectiveGroup) : 'Широкоформатная / интерьерная печать'}</h2>
         <p className="text-sm text-gray-500 mb-6">Минимальная расчетная площадь — 1 м². Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Тип печати / оборудование</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {availableGroups.map(group => (
-                <button
-                  key={group}
-                  type="button"
-                  onClick={() => { setSelectedGroup(group); setSelectedMaterialId(''); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setCalculation(null) }}
-                  className={`p-4 rounded-lg border-2 transition text-left ${
-                    effectiveGroup === group ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'
-                  }`}
-                >
-                  <div className="font-semibold">{WIDE_FORMAT_GROUPS[group] || group}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+                  {!initialGroup && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Тип печати / оборудование</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {availableGroups.map(group => (
+                        <button
+                          key={group}
+                          type="button"
+                          onClick={() => { setSelectedGroup(group); setSelectedMaterialId(''); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setCalculation(null) }}
+                          className={`p-4 rounded-lg border-2 transition text-left ${
+                            effectiveGroup === group ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          <div className="font-semibold">{WIDE_FORMAT_GROUPS[group] || group}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Материал</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {materialsForGroup.map((material) => (
-                <button
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Материал</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {materialsForGroup.map((material) => (
+                        <button
                   key={material.id}
                   type="button"
                   onClick={() => { setSelectedMaterialId(String(material.id)); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setCalculation(null) }}
@@ -583,7 +598,7 @@ export default function WideFormatCalculator({ client }) {
             </div>
           )}
 
-          {selectedMaterial && selectedMaterial.rollWidth && selectedMaterial.wastePrice && (
+          {selectedMaterial && selectedMaterial.rollWidth && (
             <label className="flex items-center p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
               <input type="checkbox" checked={includeWaste} onChange={(e) => { setIncludeWaste(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
               <span className="flex-1 font-medium text-indigo-700">📐 Учитывать остаток при раскрое (рулон {String(selectedMaterial.rollWidth).replace('.', ',')} м)</span>
@@ -671,9 +686,9 @@ export default function WideFormatCalculator({ client }) {
                                                                                                                           <div className="text-xs text-gray-500">Тариф {calculation.wasteInfo.glueingUnitPrice.toLocaleString('ru-RU')} тг/пог.м{calculation.wasteInfo.glueingTier ? ` (${calculation.wasteInfo.glueingTier})` : ''}</div>
                                                                                                                         )}
                                         <div className="mt-1 border-t">
-                                          {calculation.wasteInfo.belowThreshold ? (
-                                            <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — менее 0,5 м², не тарифицируется.</div>
-                                          ) : (
+                                                                                  {calculation.wasteInfo.belowThreshold ? (
+                                                                                    <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м²{calculation.wasteInfo.wastePrice > 0 ? ' — менее 0,5 м², не тарифицируется.' : ' — не тарифицируется (не задана цена остатка).'}</div>
+                                                                                  ) : (
                                                                                       <>
                                                                                       <div className="text-gray-600 font-medium">Остаток (обрезь)</div>
                                                                                       <div className="flex items-baseline justify-between gap-2 mt-0.5"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² × {calculation.wasteInfo.wastePrice} тг</span><span className="font-semibold sm:text-right">{calculation.wasteInfo.wasteTotal.toLocaleString('ru-RU')} тг</span></div>
@@ -699,8 +714,8 @@ export default function WideFormatCalculator({ client }) {
                         <span>остаток {(calculation.wasteInfo.roll - calculation.wasteInfo.printAcross).toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span>
                       </div>
                       {calculation.wasteInfo.belowThreshold ? (
-                        <div className="text-sm text-gray-500 mt-2">Остаток {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — менее 0,5 м², не тарифицируется.</div>
-                      ) : (
+                                              <div className="text-sm text-gray-500 mt-2">Остаток {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м²{calculation.wasteInfo.wastePrice > 0 ? ' — менее 0,5 м², не тарифицируется.' : ' — не тарифицируется (не задана цена остатка).'}</div>
+                                            ) : (
                         <div className="flex justify-between mt-2"><span className="text-gray-600">Остаток (обрезь): {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² × {calculation.wasteInfo.wastePrice} тг</span><span className="font-semibold">{calculation.wasteInfo.wasteTotal.toLocaleString('ru-RU')} тг</span></div>
                       )}
                     </>

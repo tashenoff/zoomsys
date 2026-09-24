@@ -177,8 +177,8 @@ function AppContent() {
                                     )}
 
                   {selectedCategory.slug === 'wide-format' && (
-                    <WideFormatCalculator client={selectedClient} />
-                  )}
+                                      <WideFormatCalculator client={selectedClient} initialGroup={selectedCategory.wideGroup} />
+                                    )}
 
                   {['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(selectedCategory.slug) && (
                     <StateSymbolsCalculator client={selectedClient} categorySlug={selectedCategory.slug} />

@@ -12,13 +12,20 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
     // Разделы страницы УФ печати (совпадают с categoryMap в UVPrintingCalculator.jsx)
     const UV_SECTIONS = [
-      { id: 'pens', name: 'Ручки', icon: '🖊️' },
-      { id: 'cards', name: 'Флеш-карты, пластиковые карты', icon: '💳' },
-      { id: 'promotional', name: 'Промо-продукция', icon: '🎁' },
-      { id: 'notebooks', name: 'Блокноты (логотип)', icon: '📔' },
-      { id: 'notebooks-image', name: 'Блокноты (изображение)', icon: '📓' },
-      { id: 'materials', name: 'На материалах', icon: '🎨' }
-    ]
+          { id: 'pens', name: 'Ручки', icon: '🖊️' },
+          { id: 'cards', name: 'Флеш-карты, пластиковые карты', icon: '💳' },
+          { id: 'promotional', name: 'Промо-продукция', icon: '🎁' },
+          { id: 'notebooks', name: 'Блокноты (логотип)', icon: '📔' },
+          { id: 'notebooks-image', name: 'Блокноты (изображение)', icon: '📓' },
+          { id: 'materials', name: 'На материалах', icon: '🎨' }
+        ]
+
+        // Группы оборудования широкоформатной печати (совпадают с WIDE_FORMAT_GROUPS в WideFormatCalculator.jsx)
+                const WIDE_GROUPS = [
+                  { id: 'phaeton', name: 'Phaeton UD-3208P', icon: '🖨️' },
+                  { id: 'mimaki', name: 'MIMAKI SWJ-320 S4', icon: '🖨️' },
+                  { id: 'roland', name: 'Roland VS-640 + плоттер', icon: '✂️' }
+                ]
 
   // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
   const NAV_ITEMS = useMemo(() => {
@@ -328,22 +335,43 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                         )
                       })
                     }
-          // Широкоформатная печать
-          if (!category.subcategories && category.slug === 'wide-format') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🖼️ {category.name}
-              </button>
-            )
-          }
+          // Широкоформатная печать — раскрывающийся список оборудования (как УФ печать)
+                    if (!category.subcategories && category.slug === 'wide-format') {
+                      const isWideExpanded = expandedCategory === 'wide-format'
+                      const activeWideGroup = selectedCategory?.slug === 'wide-format' ? selectedCategory.wideGroup : null
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <button
+                            onClick={() => setExpandedCategory(isWideExpanded ? null : 'wide-format')}
+                            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                              selectedCategory?.slug === 'wide-format'
+                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                : 'text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <span>🖼️ {category.name}</span>
+                            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isWideExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isWideExpanded && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {WIDE_GROUPS.map((group) => (
+                                <button
+                                  key={group.id}
+                                  onClick={() => onSelectCategory({ ...category, wideGroup: group.id })}
+                                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                    activeWideGroup === group.id
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {group.icon} {group.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
           // Плоттерная резка
           if (!category.subcategories && category.slug === 'plotter-cutting') {
             return (

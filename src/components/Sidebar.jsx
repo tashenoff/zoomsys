@@ -28,12 +28,34 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                 ]
 
                 // Типы печати на текстиле (совпадают с TEXTILE_CATEGORIES в TextilePrintingCalculator.jsx)
-                const TEXTILE_CATEGORIES = [
-                  { id: 'sublimation', name: 'Сублимация', icon: '🖨️' },
-                  { id: 'direct', name: 'Прямая печать', icon: '🖨️' },
-                  { id: 'mesh', name: 'Сетки', icon: '🧵' },
-                  { id: 'service', name: 'Услуги', icon: '🧰' }
-                ]
+                        const TEXTILE_CATEGORIES = [
+                          { id: 'sublimation', name: 'Сублимация', icon: '🖨️' },
+                          { id: 'direct', name: 'Прямая печать', icon: '🖨️' },
+                          { id: 'mesh', name: 'Сетки', icon: '🧵' },
+                          { id: 'service', name: 'Услуги', icon: '🧰' }
+                        ]
+
+                        // Категории готовой флажной продукции (совпадают с CATEGORY_LABELS в FlagsProductsCalculator.jsx)
+                        const FLAG_CATEGORIES = [
+                          { id: 'flags-size', name: 'Флаги и знамена (по размеру)', icon: '🚩' },
+                          { id: 'desk-flags', name: 'Настольные флаги', icon: '🚩' },
+                          { id: 'auto-flags', name: 'Автомобильные флаги', icon: '🚗' },
+                          { id: 'ribbons', name: 'Наградные ленты', icon: '🎗️' },
+                          { id: 'scarves', name: 'Шарфы', icon: '🧣' },
+                          { id: 'other', name: 'Вымпелы, шевроны и другое', icon: '🧨' }
+                        ]
+
+                        // Материалы плоттерной резки (по значению material в plotterCutting)
+                        const PLOTTER_MATERIALS = [
+                          { id: 'Цветная самоклеящаяся плёнка', name: 'Цветная плёнка', icon: '🎨' },
+                          { id: 'Металлизированная самоклеящаяся плёнка', name: 'Металлизированная плёнка', icon: '✨' }
+                        ]
+
+                        // Типы операций фрезерного станка (внутренние ключи opType в CncLaserCalculator.jsx)
+                        const CNC_TYPES = [
+                          { id: 'milling', name: 'Резка', icon: '🪚' },
+                          { id: 'engrave', name: 'Гравировка', icon: '🖋️' }
+                        ]
 
   // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
   const NAV_ITEMS = useMemo(() => {
@@ -380,38 +402,80 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                         </div>
                       )
                     }
-          // Плоттерная резка
-          if (!category.subcategories && category.slug === 'plotter-cutting') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                ✂️ {category.name}
-              </button>
-            )
-          }
-          // Фрезерный и лазерный станок
-          if (!category.subcategories && category.slug === 'cnc-laser') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🪚 {category.name}
-              </button>
-            )
-          }
+          // Плоттерная резка — раскрывающийся список материалов
+                    if (!category.subcategories && category.slug === 'plotter-cutting') {
+                      const isPlotterExpanded = expandedCategory === 'plotter-cutting'
+                      const activePlotterMat = selectedCategory?.slug === 'plotter-cutting' ? selectedCategory.plotterMaterial : null
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <button
+                            onClick={() => setExpandedCategory(isPlotterExpanded ? null : 'plotter-cutting')}
+                            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                              selectedCategory?.slug === 'plotter-cutting'
+                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                : 'text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <span>✂️ {category.name}</span>
+                            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isPlotterExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isPlotterExpanded && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {PLOTTER_MATERIALS.map((mat) => (
+                                <button
+                                  key={mat.id}
+                                  onClick={() => onSelectCategory({ ...category, plotterMaterial: mat.id })}
+                                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                    activePlotterMat === mat.id
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {mat.icon} {mat.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+                    // Фрезерный и лазерный станок — раскрывающийся список типов операции
+                    if (!category.subcategories && category.slug === 'cnc-laser') {
+                      const isCncExpanded = expandedCategory === 'cnc-laser'
+                      const activeCncType = selectedCategory?.slug === 'cnc-laser' ? selectedCategory.cncType : null
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <button
+                            onClick={() => setExpandedCategory(isCncExpanded ? null : 'cnc-laser')}
+                            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                              selectedCategory?.slug === 'cnc-laser'
+                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                : 'text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <span>🪚 {category.name}</span>
+                            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isCncExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isCncExpanded && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {CNC_TYPES.map((t) => (
+                                <button
+                                  key={t.id}
+                                  onClick={() => onSelectCategory({ ...category, cncType: t.id })}
+                                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                    activeCncType === t.id
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {t.icon} {t.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
           // Рекламные стенды
           if (!category.subcategories && category.slug === 'advertising-stands') {
             return (
@@ -428,22 +492,43 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
               </button>
             )
           }
-          // Готовая флаговая продукция
-          if (!category.subcategories && category.slug === 'flags-products') {
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                  selectedCategory?.id === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                🚩 {category.name}
-              </button>
-            )
-          }
+          // Готовая флаговая продукция — раскрывающийся список категорий
+                    if (!category.subcategories && category.slug === 'flags-products') {
+                      const isFlagsExpanded = expandedCategory === 'flags-products'
+                      const activeFlagsCat = selectedCategory?.slug === 'flags-products' ? selectedCategory.flagsCategory : null
+                      return (
+                        <div key={category.id} className="mb-2">
+                          <button
+                            onClick={() => setExpandedCategory(isFlagsExpanded ? null : 'flags-products')}
+                            className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium flex items-center justify-between ${
+                              selectedCategory?.slug === 'flags-products'
+                                ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                                : 'text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <span>🚩 {category.name}</span>
+                            <ChevronDownIcon className={`w-5 h-5 flex-shrink-0 transition-transform ${isFlagsExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isFlagsExpanded && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {FLAG_CATEGORIES.map((cat) => (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => onSelectCategory({ ...category, flagsCategory: cat.id })}
+                                  className={`w-full text-left px-4 py-2 rounded-lg transition text-xs ${
+                                    activeFlagsCat === cat.id
+                                      ? 'bg-blue-600 text-white'
+                                      : 'text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {cat.icon} {cat.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
           // Печать на текстиле — раскрывающийся список типов печати
                     if (!category.subcategories && category.slug === 'textile') {
                       const isTextileExpanded = expandedCategory === 'textile'

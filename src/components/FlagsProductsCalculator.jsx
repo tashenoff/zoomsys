@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -23,7 +23,7 @@ function formatPrice(value) {
   return String(value).toLocaleString('ru-RU').replace(/\s/g, ' ')
 }
 
-export default function FlagsProductsCalculator({ client }) {
+export default function FlagsProductsCalculator({ client, initialCategory }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -40,7 +40,20 @@ export default function FlagsProductsCalculator({ client }) {
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
 
-  const effectiveCategory = categories.includes(selectedCategory) ? selectedCategory : (categories[0] || '')
+  // При выборе категории в сайдбаре — сбрасываем позицию/размер и считаем с новой категории.
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory)
+      setSelectedItemId('')
+      setSelectedSize('')
+      setCalculation(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategory])
+
+  const effectiveCategory = (
+    initialCategory && categories.includes(initialCategory) ? initialCategory : ''
+  ) || (categories.includes(selectedCategory) ? selectedCategory : (categories[0] || ''))
   const catItems = useMemo(() => items.filter(i => (i.category || 'other') === effectiveCategory), [items, effectiveCategory])
   const selectedItem = useMemo(
     () => catItems.find(i => String(i.id) === String(selectedItemId)) || catItems[0] || null,
@@ -122,10 +135,11 @@ export default function FlagsProductsCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Готовая флаговая продукция</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialCategory ? (CATEGORY_LABELS[effectiveCategory] || effectiveCategory) : 'Готовая флаговая продукция'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Цена с учётом материала, за штуку. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
+          {!initialCategory && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Категория</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -138,6 +152,7 @@ export default function FlagsProductsCalculator({ client }) {
               ))}
             </div>
           </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Позиция</label>

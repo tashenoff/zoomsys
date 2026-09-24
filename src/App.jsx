@@ -193,20 +193,20 @@ function AppContent() {
                                     )}
 
                   {selectedCategory.slug === 'flags-products' && (
-                    <FlagsProductsCalculator client={selectedClient} />
-                  )}
+                                      <FlagsProductsCalculator client={selectedClient} initialCategory={selectedCategory.flagsCategory} />
+                                    )}
 
                   {selectedCategory.slug === 'advertising-stands' && (
                     <AdvertisingStandsCalculator client={selectedClient} />
                   )}
 
                   {selectedCategory.slug === 'cnc-laser' && (
-                    <CncLaserCalculator client={selectedClient} />
-                  )}
+                                      <CncLaserCalculator client={selectedClient} initialType={selectedCategory.cncType} />
+                                    )}
 
                   {selectedCategory.slug === 'plotter-cutting' && (
-                                      <PlotterCuttingCalculator client={selectedClient} />
-                                    )}
+                                                        <PlotterCuttingCalculator client={selectedClient} initialMaterial={selectedCategory.plotterMaterial} />
+                                                      )}
 
                                     {selectedCategory.slug === 'garment-printing' && (
                                       <GarmentPrintingCalculator client={selectedClient} />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -12,7 +12,7 @@ const THICKNESS_OPTIONS = [
   { id: 't16_20', label: '16–20 мм' }
 ]
 
-export default function CncLaserCalculator({ client }) {
+export default function CncLaserCalculator({ client, initialType }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -21,7 +21,7 @@ export default function CncLaserCalculator({ client }) {
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   // типы операций: резка (milling) / гравировка (engrave)
-  const [opType, setOpType] = useState('milling') // 'milling' | 'engrave'
+  const [opType, setOpType] = useState(initialType || 'milling') // 'milling' | 'engrave'
   const [materialId, setMaterialId] = useState('')
   const [thickness, setThickness] = useState('t01_15')
   const [quantity, setQuantity] = useState(1) // пог.м или кв.см
@@ -32,6 +32,18 @@ export default function CncLaserCalculator({ client }) {
   const [savingOrder, setSavingOrder] = useState(false)
   const [manualMode, setManualMode] = useState(false)
   const [manualPrice, setManualPrice] = useState('')
+
+  // При выборе типа операции в сайдбаре — сбрасываем материал/расчёт.
+  useEffect(() => {
+    if (initialType) {
+      setOpType(initialType)
+      setMaterialId('')
+      setManualMode(false)
+      setManualPrice('')
+      setCalculation(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialType])
 
   const millingItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-cut'), [cncItems])
   const engraveItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-engrave'), [cncItems])
@@ -155,10 +167,11 @@ export default function CncLaserCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Фрезерный и лазерный станок</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialType ? (opType === 'milling' ? 'Фрезерная резка' : 'Лазерная гравировка') : 'Фрезерный и лазерный станок'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Фрезер 2400×1200 мм, лазер 1200×600 мм. Цена без материала. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
+          {!initialType && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Операция</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -173,6 +186,7 @@ export default function CncLaserCalculator({ client }) {
               ))}
             </div>
           </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">{opType === 'milling' ? 'Материал' : 'Материал для гравировки'}</label>

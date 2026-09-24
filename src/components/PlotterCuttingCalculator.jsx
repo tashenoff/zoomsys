@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 
-export default function PlotterCuttingCalculator({ client }) {
+export default function PlotterCuttingCalculator({ client, initialMaterial }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -19,8 +19,19 @@ export default function PlotterCuttingCalculator({ client }) {
   const [savingOrder, setSavingOrder] = useState(false)
   const [manualPrice, setManualPrice] = useState('')
 
+  // При выборе материала в сайдбаре — сбрасываем операцию/расчёт.
+  useEffect(() => {
+    if (initialMaterial) {
+      setMaterialId(initialMaterial)
+      setOperationId('')
+      setManualPrice('')
+      setCalculation(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMaterial])
+
   const materials = useMemo(() => [...new Set(items.map(i => i.material).filter(Boolean))], [items])
-  const effectiveMaterial = materials.find(m => m === materialId) || materials[0] || ''
+  const effectiveMaterial = (initialMaterial && materials.includes(initialMaterial) ? initialMaterial : '') || (materials.find(m => m === materialId) || materials[0] || '')
   const operations = useMemo(() =>
     items.filter(i => i.material === effectiveMaterial),
     [items, effectiveMaterial]
@@ -90,10 +101,11 @@ export default function PlotterCuttingCalculator({ client }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-        <h2 className="text-2xl font-bold mb-2">Плоттерная резка</h2>
+        <h2 className="text-2xl font-bold mb-2">{initialMaterial ? effectiveMaterial : 'Плоттерная резка'}</h2>
         <p className="text-sm text-gray-500 mb-4 md:mb-6">Ширина резки 1300 мм. Цена без материала; монтажная плёнка учитывается. Срочность: +{urgentSurcharge}%, но не менее 5 000 тг.</p>
 
         <form onSubmit={handleCalculate} className="space-y-6">
+          {!initialMaterial && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Материал</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -105,6 +117,7 @@ export default function PlotterCuttingCalculator({ client }) {
               ))}
             </div>
           </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Операция</label>

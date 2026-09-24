@@ -2070,7 +2070,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-reflective-banner",
@@ -2087,7 +2094,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-mesh",
@@ -2103,7 +2117,12 @@
       "description": "Широкоформатная печать Phaeton UD-3208P",
       "rollWidth": 3.2,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": false,
+      "operations": [
+        "meshStitching",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-vinyl-china",
@@ -2120,7 +2139,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-transparent-vinyl",
@@ -2137,7 +2160,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-perforated-vinyl",
@@ -2154,7 +2181,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-phaeton-backed-banner",
@@ -2171,7 +2202,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-banner-440",
@@ -2188,7 +2226,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-grey-backed-banner",
@@ -2205,7 +2250,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-reflective-banner",
@@ -2222,7 +2274,14 @@
       "rollWidth": 3.2,
       "wastePrice": 1500,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-vinyl-4pass",
@@ -2239,7 +2298,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-vinyl-8pass",
@@ -2256,7 +2319,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-transparent-vinyl",
@@ -2273,7 +2340,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-black-backed-vinyl",
@@ -2290,7 +2361,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-frontlit",
@@ -2306,7 +2381,14 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 0.9,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-backlit",
@@ -2322,7 +2404,14 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.2,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-perforated-vinyl",
@@ -2339,7 +2428,11 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-mesh",
@@ -2355,7 +2448,12 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 3.2,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": false,
+      "operations": [
+        "meshStitching",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-mimaki-canvas",
@@ -2371,7 +2469,10 @@
       "description": "Интерьерная печать MIMAKI SWJ-320 S4",
       "rollWidth": 1.5,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-roland-vinyl-4pass",
@@ -2388,7 +2489,12 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-vinyl-8pass",
@@ -2405,7 +2511,12 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-static-vinyl",
@@ -2422,7 +2533,12 @@
       "rollWidth": 1.2,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-black-backed-vinyl",
@@ -2439,7 +2555,12 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-transparent-vinyl",
@@ -2456,7 +2577,12 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-frontlit",
@@ -2472,7 +2598,14 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 0.9,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-roland-backlit",
@@ -2488,7 +2621,14 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.2,
       "wasteMargin": 0.2,
-      "glueAllowed": true
+      "glueAllowed": true,
+      "operations": [
+        "bannerJoining",
+        "bannerGluing",
+        "rebarPerimeter",
+        "eyeletsInstallation",
+        "wideFormatCutting"
+      ]
     },
     {
       "id": "wf-roland-photo-paper",
@@ -2504,7 +2644,11 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.2,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-wallpaper",
@@ -2518,7 +2662,11 @@
         "over100": "договорная"
       },
       "description": "В стоимость входит только печать. Обои предоставляет заказчик.",
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-canvas",
@@ -2534,7 +2682,11 @@
       "description": "Интерьерная печать Roland VS-640 + плоттер",
       "rollWidth": 1.5,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     },
     {
       "id": "wf-roland-reflective-vinyl",
@@ -2551,7 +2703,12 @@
       "rollWidth": 1.5,
       "wastePrice": 1000,
       "wasteMargin": 0.2,
-      "glueAllowed": false
+      "glueAllowed": false,
+      "operations": [
+        "vinylLamination",
+        "wideFormatCutting",
+        "contourCutting"
+      ]
     }
   ],
   "stateSymbols": [

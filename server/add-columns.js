@@ -19,8 +19,9 @@ async function addColumns() {
       ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
             ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
             ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2,
-            ADD COLUMN IF NOT EXISTS glue_allowed BOOLEAN DEFAULT FALSE
-          `)
+                        ADD COLUMN IF NOT EXISTS glue_allowed BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS operations JSONB
+                      `)
           console.log('✅ Колонки в wide_format_pricing добавлены!')
 
     await pool.query(`

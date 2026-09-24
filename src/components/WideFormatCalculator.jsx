@@ -75,9 +75,13 @@ function matchesWideFormatOperation(op, material, group) {
   const materialName = String(material?.name || '').toLowerCase()
 
   // Баннерные операции не показываем на интерьерных винилах/бумаге/холсте.
-  if (opName.includes('проклейка баннера') || opName.includes('склейка баннера') || opName.includes('арматура')) {
-    return materialName.includes('баннер') || materialName.includes('фронтлит') || materialName.includes('бэклит')
-  }
+    // Склейка и проклейка считаются АВТО (при ширине > рулона) — их не показываем как ручные галочки.
+    if (opName.includes('проклейка баннера') || opName.includes('склейка баннера')) {
+      return false
+    }
+    if (opName.includes('арматура')) {
+      return materialName.includes('баннер') || materialName.includes('фронтлит') || materialName.includes('бэклит')
+    }
 
   // Прошивка относится только к баннерной сетке.
   if (opName.includes('прошивка баннерной сетки')) {
@@ -257,8 +261,77 @@ export default function WideFormatCalculator({ client }) {
             const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
             const printAlong = printAreaItem / printAcross
       if (printAcross > roll) {
-        wasteInfo = { joined: true, roll, printAcross, printAlong }
-      } else {
+              // Баннер шире рулона по обеим сторонам → печать кусками со склейкой.
+              // По правилу: длинную сторону кладём вдоль рулона, короткую делим поперёк на куски ≤ рулона,
+              // шов склейки идёт вдоль длинной стороны (длина шва = длинная сторона).
+              const longSide = Math.max(w, h) + margin
+                      const splitSide = Math.min(w, h) + margin
+                      const joinedAcross = Math.min(w, h) + margin
+                      const pieces = Math.max(2, Math.ceil(splitSide / roll))
+              const seams = pieces - 1
+              const glueMetersPerItem = seams * longSide
+              const glueMeters = glueMetersPerItem * qty
+              // Материал: каждый кусок занимает полную ширину рулона на длину longSide.
+              const materialSqm = pieces * roll * longSide * qty
+              const remainSqm = Math.max(0, materialSqm - printAreaItem * qty)
+              const above = remainSqm >= 0.5
+              // Тариф склейки — из операции «Склейка баннера со стыковкой» (bannerJoining), пог.м.
+                            let glueUnitPrice = 0
+                            let glueTier = null
+                            const glueOp = (pricingData.additionalOperations && pricingData.additionalOperations.bannerJoining)
+                              || (pricingData.additionalOperations && Object.values(pricingData.additionalOperations)
+                                  .find(o => String(o.name || '').toLowerCase().includes('склейка баннера')))
+                              || availableOperations.find(
+                                o => String(o.id).toLowerCase() === 'bannerjoining'
+                                  || String(o.name || '').toLowerCase().includes('склейка')
+                              )
+              if (glueOp) {
+                const g = getTierPrice(glueOp.prices, glueMeters, glueOp.price)
+                glueUnitPrice = Number(g.price) || 0
+                glueTier = g.tier
+              }
+              const gluePrice = glueUnitPrice * glueMeters
+              wasteInfo = {
+                              joined: true, roll, longSide, splitSide, joinedAcross, margin,
+                              printAcross: joinedAcross, printAlong: longSide,
+                              pieces, seams,
+                              glueMeters, glueMetersPerItem, glueUnitPrice, glueTier, gluePrice,
+                              remainSqm, wastePrice, above,
+                              wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
+                              belowThreshold: !above
+                            }
+              if (above) wasteTotal = wasteInfo.wasteTotal
+              if (gluePrice > 0) {
+                                            extrasTotal += gluePrice // сумма входит в итог, строка показана в синем блоке (не дублируем в списке)
+                                          }
+                            // Проклейка баннера — по ПЕРИМЕТРУ края (2×(Ш+В) с припуском), а не по швам
+                                          // (швы уже склеены операцией «склейка со стыковкой»).
+                                          let glueingUnitPrice = 0
+                                          let glueingTier = null
+                                          const glueingOp = (pricingData.additionalOperations && pricingData.additionalOperations.bannerGluing)
+                                                          || (pricingData.additionalOperations && Object.values(pricingData.additionalOperations)
+                                                              .find(o => String(o.name || '').toLowerCase().includes('проклейка баннера')))
+                                                          || availableOperations.find(
+                                                            o => String(o.id).toLowerCase() === 'bannergluing'
+                                                              || String(o.name || '').toLowerCase().includes('проклейка баннера')
+                                                          )
+                                          const glueingMetersPerItem = 2 * (longSide + splitSide)
+                                          const glueingMeters = glueingMetersPerItem * qty
+                                          if (glueingOp) {
+                                            const gg = getTierPrice(glueingOp.prices, glueingMeters, glueingOp.price)
+                                            glueingUnitPrice = Number(gg.price) || 0
+                                            glueingTier = gg.tier
+                                          }
+                                          const glueingPrice = glueingUnitPrice * glueingMeters
+                                          wasteInfo.glueingUnitPrice = glueingUnitPrice
+                                          wasteInfo.glueingTier = glueingTier
+                                          wasteInfo.glueingPrice = glueingPrice
+                                          wasteInfo.glueingMeters = glueingMeters
+                                          wasteInfo.glueingMetersPerItem = glueingMetersPerItem
+                                          if (glueingPrice > 0) {
+                                                                                      extrasTotal += glueingPrice // сумма входит в итог, строка показана в синем блоке
+                                                                                    }
+            } else {
         const itemAcross = Math.min(w, h)
         const remainSqm = (roll - printAcross) * printAlong * qty
         const above = remainSqm >= 0.5
@@ -534,10 +607,53 @@ export default function WideFormatCalculator({ client }) {
                 <div className="pt-2 mt-1 border-t">
                   <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Раскладка (рулон {calculation.wasteInfo.roll.toLocaleString('ru-RU')} м):</span><span className="text-right break-words flex-1 min-w-0 font-semibold">{calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span></div>
                   {calculation.wasteInfo.joined ? (
-                    <div className="bg-yellow-100 border-2 border-yellow-400 rounded p-3 text-yellow-800 text-sm mt-2">
-                      Изделие по раскрою ({calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м) шире рулона ({calculation.wasteInfo.roll.toLocaleString('ru-RU')} м) — требуется склейка кусков. Остаток посчитайте вручную.
-                    </div>
-                  ) : (
+                                      <>
+                                                                            <div className="bg-white border-2 border-indigo-200 rounded p-3 text-sm mt-2">
+                                                                              <div className="font-semibold text-gray-700 mb-1">📐 Раскладка на рулоне</div>
+                                                                              <div className="flex h-6 rounded overflow-hidden border mt-1">
+                                                                                <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.splitSide - calculation.wasteInfo.margin) / (calculation.wasteInfo.pieces * calculation.wasteInfo.roll) * 100}%` }}></div>
+                                                                                <div className="bg-yellow-300" style={{ width: `${calculation.wasteInfo.margin / (calculation.wasteInfo.pieces * calculation.wasteInfo.roll) * 100}%` }}></div>
+                                                                                <div className="bg-gray-300 flex-1"></div>
+                                                                              </div>
+                                                                              <div className="flex flex-wrap text-xs text-gray-500 mt-1 gap-x-4 gap-y-1">
+                                                                                <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>изделие</span>
+                                                                                <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-yellow-300 rounded"></span>припуск (входит в площадь печати)</span>
+                                                                                <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь), всего раскладка {calculation.wasteInfo.pieces}×{calculation.wasteInfo.roll.toLocaleString('ru-RU')} м</span>
+                                                                              </div>
+                                                                            </div>
+                                                                            <div className="bg-indigo-50 border-2 border-indigo-300 rounded p-3 text-sm mt-2">
+                                                                              <div className="font-semibold text-indigo-700 mb-1">🧩 Баннер шире рулона — печать {calculation.wasteInfo.pieces} кусками со склейкой</div>
+                                                                              <div className="text-gray-700 mb-1">
+                                                                                Печать с припуском: {calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} × {calculation.wasteInfo.splitSide.toFixed(2).replace('.', ',')} м.
+                                                                                Длинная сторона ({calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} м) — вдоль рулона ({calculation.wasteInfo.roll.toLocaleString('ru-RU')} м), короткую делим поперёк на {calculation.wasteInfo.pieces} куск{calculation.wasteInfo.pieces === 2 ? 'а' : 'ов'}.
+                                                                              </div>
+                                                                                <div className="text-gray-600 font-medium">Склейка со стыковкой</div>
+                                                                                <div className="flex items-baseline justify-between gap-2"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.seams} шов × {calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} м = <b>{calculation.wasteInfo.glueMeters.toFixed(2).replace('.', ',')} пог.м</b></span><span className="font-semibold sm:text-right">{calculation.wasteInfo.gluePrice.toLocaleString('ru-RU')} тг</span></div>
+                                                                                {calculation.wasteInfo.glueUnitPrice > 0 && (
+                                                                                  <div className="text-xs text-gray-500">Тариф {calculation.wasteInfo.glueUnitPrice.toLocaleString('ru-RU')} тг/пог.м{calculation.wasteInfo.glueTier ? ` (${calculation.wasteInfo.glueTier})` : ''}</div>
+                                                                                )}
+                                                                                {calculation.wasteInfo.glueingPrice > 0 && (
+                                                                                                                                                                                                          <>
+                                                                                                                                                                                                          <div className="text-gray-600 font-medium">Проклейка баннера по периметру</div>
+                                                                                                                                                                                                          <div className="flex items-baseline justify-between gap-2"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.glueingMetersPerItem.toFixed(2).replace('.', ',')} пог.м/шт × {calculation.quantity} = <b>{calculation.wasteInfo.glueingMeters.toFixed(2).replace('.', ',')} пог.м</b></span><span className="font-semibold sm:text-right">{calculation.wasteInfo.glueingPrice.toLocaleString('ru-RU')} тг</span></div>
+                                                                                                                                                                                                          </>
+                                                                                                                                                                                                        )}
+                                                                                                                        {calculation.wasteInfo.glueingUnitPrice > 0 && (
+                                                                                                                          <div className="text-xs text-gray-500">Тариф {calculation.wasteInfo.glueingUnitPrice.toLocaleString('ru-RU')} тг/пог.м{calculation.wasteInfo.glueingTier ? ` (${calculation.wasteInfo.glueingTier})` : ''}</div>
+                                                                                                                        )}
+                                        <div className="mt-1 border-t">
+                                          {calculation.wasteInfo.belowThreshold ? (
+                                            <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — менее 0,5 м², не тарифицируется.</div>
+                                          ) : (
+                                                                                      <>
+                                                                                      <div className="text-gray-600 font-medium">Остаток (обрезь)</div>
+                                                                                      <div className="flex items-baseline justify-between gap-2 mt-0.5"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² × {calculation.wasteInfo.wastePrice} тг</span><span className="font-semibold sm:text-right">{calculation.wasteInfo.wasteTotal.toLocaleString('ru-RU')} тг</span></div>
+                                                                                      </>
+                                                                                    )}
+                                        </div>
+                                                                              </div>
+                                                                            </>
+                                                                            ) : (
                     <>
                       <div className="flex h-6 rounded overflow-hidden border mt-3">
                         <div className="bg-green-400" style={{ width: `${(calculation.wasteInfo.itemAcross / calculation.wasteInfo.roll) * 100}%` }}></div>

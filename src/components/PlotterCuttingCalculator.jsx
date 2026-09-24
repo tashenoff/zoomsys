@@ -168,7 +168,7 @@ export default function PlotterCuttingCalculator({ client, initialMaterial }) {
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Операция:</span><span className="font-semibold text-right break-words">{calculation.operation}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Площадь:</span><span className="font-semibold">{calculation.areaM2} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Цена за м²:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>
-              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
+              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Сумма за {calculation.operation.toLowerCase()}:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {calculation.isUrgent && (
                 <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>
               )}

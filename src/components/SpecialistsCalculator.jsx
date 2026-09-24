@@ -204,7 +204,7 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
                   <div className="flex justify-between border-t pt-1 mt-1"><span className="text-gray-600">Итого площадь:</span><span className="font-semibold">{Number(calculation.totalArea).toLocaleString('ru-RU')} м²</span></div>
                 </div>
               )}
-              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
+              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа специалиста:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {calculation.isUrgent && (
                 <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>
               )}

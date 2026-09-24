@@ -277,7 +277,7 @@ export default function CncLaserCalculator({ client, initialType }) {
               {calculation.manualMode
                 ? <div className="flex justify-between"><span className="text-gray-600">Ручная стоимость услуги:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>
                 : <div className="flex justify-between"><span className="text-gray-600">Цена за ед:</span><span className="font-semibold">{calculation.unitPrice.toLocaleString('ru-RU')} тг</span></div>}
-              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Работа:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
+              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Сумма за {calculation.materialLabel.toLowerCase()}:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
               {(calculation.extras || []).map(ex => (
                 <div key={ex.name} className="flex justify-between"><span className="text-gray-600">{ex.name}:</span><span>{Number(ex.price).toLocaleString('ru-RU')} тг</span></div>
               ))}

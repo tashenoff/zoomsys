@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
@@ -27,6 +28,8 @@ export default function PrintingCalculator({ client: externalClient }) {
   
   const [quantity, setQuantity] = useState(100)
   const [selectedServices, setSelectedServices] = useState([])
+  const [selectedAddServices, setSelectedAddServices] = useState([])
+  const [addServicesOpen, setAddServicesOpen] = useState(false)
   const [isUrgent, setIsUrgent] = useState(false)
   const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState('')
@@ -70,19 +73,7 @@ export default function PrintingCalculator({ client: externalClient }) {
         })
       : []
 
-    // Из доп. услуг (с applicableTo)
-    const fromServices = Array.isArray(additionalServices)
-      ? additionalServices.filter(svc => {
-          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
-          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
-          const key = String(svc.id || svc.name)
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-      : []
-
-    return [...fromOperations, ...fromServices]
+    return [...fromOperations]
   }, [selectedCategory, additionalOperations, additionalServices])
 
   // Функции для работы с кастомными услугами
@@ -287,6 +278,19 @@ export default function PrintingCalculator({ client: externalClient }) {
       }
     })
 
+    // Доп. услуги из модалки (фиксированная цена; priceText — «по запросу», без числа в итог)
+    selectedAddServices.forEach(serviceId => {
+      const svc = additionalServices.find(s => String(s.id) === String(serviceId))
+      if (!svc) return
+      if (svc.price != null) {
+        const svcPrice = Number(svc.price) || 0
+        servicesTotal += svcPrice
+        servicesDetails.push({ name: svc.name, price: svcPrice })
+      } else if (svc.priceText) {
+        servicesDetails.push({ name: `${svc.name} (${svc.priceText})`, price: 0, byRequest: true })
+      }
+    })
+
     // Добавляем кастомные услуги
     customNotes.forEach(note => {
       if (note.title && note.price) {
@@ -363,6 +367,7 @@ export default function PrintingCalculator({ client: externalClient }) {
       setSelectedColorType(null)
       setQuantity(100)
       setSelectedServices([])
+      setSelectedAddServices([])
       setIsUrgent(false)
       setDiscount(0)
       setNotes('')
@@ -610,6 +615,36 @@ export default function PrintingCalculator({ client: externalClient }) {
             </div>
           </div>
         )}
+
+        {/* СЕКЦИЯ 4.5b: Доп услуги (модалка) */}
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
+          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">⭐ Доп услуги</label>
+          {selectedAddServices.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {selectedAddServices.map(id => {
+                const svc = additionalServices.find(s => String(s.id) === String(id))
+                if (!svc) return null
+                return (
+                  <span key={id} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 border border-green-300 rounded-full text-sm text-gray-700">
+                    {svc.name}
+                    <button type="button" title="Убрать услугу" onClick={() => { setSelectedAddServices(selectedAddServices.filter(i => i !== id)); setCalculation(null) }} className="text-gray-400 hover:text-red-500 font-bold ml-1">×</button>
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          <button type="button" onClick={() => setAddServicesOpen(true)} className="mt-1 px-4 py-2 border border-green-300 bg-white text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
+            {selectedAddServices.length > 0 ? `✏️ Изменить доп. услуги (${selectedAddServices.length})` : '➕ Добавить услугу'}
+          </button>
+
+          <AdditionalServicesModal
+            open={addServicesOpen}
+            category={selectedCategory}
+            selected={selectedAddServices}
+            onChange={(ids) => { setSelectedAddServices(ids); setCalculation(null) }}
+            onClose={() => setAddServicesOpen(false)}
+          />
+        </div>
 
         {/* СЕКЦИЯ 4.6: Перезаказ */}
         {/* Временно скрыто

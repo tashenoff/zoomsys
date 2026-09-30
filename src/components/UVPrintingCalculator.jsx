@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
@@ -13,6 +14,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
   
   const pricing = pricingData.uvPrinting || []
   const additionalOperations = pricingData.additionalOperations || {}
+  const additionalServices = pricingData.additionalServices || []
 
   const uvOperations = useMemo(() => {
     if (!additionalOperations || typeof additionalOperations !== 'object') return []
@@ -39,6 +41,8 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
   const [notes, setNotes] = useState('')
   const [selectedUvOps, setSelectedUvOps] = useState([])
   const [selectedUvOptions, setSelectedUvOptions] = useState({})
+  const [selectedAddServices, setSelectedAddServices] = useState([])
+  const [addServicesOpen, setAddServicesOpen] = useState(false)
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
 
@@ -289,6 +293,19 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
       extras.push({ name: op.name, price: add })
     })
 
+    // Доп услуги (фиксированная цена; priceText — «по запросу», без числа в итог)
+    selectedAddServices.forEach(id => {
+      const svc = additionalServices.find(s => String(s.id) === String(id))
+      if (!svc) return
+      if (svc.price != null) {
+        const svcPrice = Number(svc.price) || 0
+        extrasTotal += svcPrice
+        extras.push({ name: svc.name, price: svcPrice })
+      } else if (svc.priceText) {
+        extras.push({ name: svc.name, price: 0, priceText: svc.priceText })
+      }
+    })
+
     const printTotal = baseTotal * coefficient
     const subtotal = printTotal + extrasTotal
     const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
@@ -360,6 +377,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
       setDiscount(0)
       setNotes('')
       setSelectedUvOps([])
+      setSelectedAddServices([])
       setSelectedUvOptions({})
       setCalculation(null)
       setOrderStatus('draft')
@@ -431,6 +449,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
             setDiscount(0)
             setNotes('')
             setSelectedUvOps([])
+            setSelectedAddServices([])
             setSelectedUvOptions({})
             setCalculation(null)
             setOrderStatus('draft')
@@ -755,6 +774,36 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
           </div>
         )}
 
+        {/* СЕКЦИЯ 4.5b: Доп услуги (модалка) */}
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
+          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">⭐ Доп услуги</label>
+          {selectedAddServices.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {selectedAddServices.map(id => {
+                const svc = additionalServices.find(s => String(s.id) === String(id))
+                if (!svc) return null
+                return (
+                  <span key={id} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 border border-green-300 rounded-full text-sm text-gray-700">
+                    {svc.name}
+                    <button type="button" title="Убрать услугу" onClick={() => { setSelectedAddServices(selectedAddServices.filter(i => i !== id)); setCalculation(null) }} className="text-gray-400 hover:text-red-500 font-bold ml-1">×</button>
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          <button type="button" onClick={() => setAddServicesOpen(true)} className="mt-1 px-4 py-2 border border-green-300 bg-white text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
+            {selectedAddServices.length > 0 ? `✏️ Изменить доп. услуги (${selectedAddServices.length})` : '➕ Добавить услугу'}
+          </button>
+
+          <AdditionalServicesModal
+            open={addServicesOpen}
+            category="uv-printing"
+            selected={selectedAddServices}
+            onChange={(ids) => { setSelectedAddServices(ids); setCalculation(null) }}
+            onClose={() => setAddServicesOpen(false)}
+          />
+        </div>
+
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}
         {canCalculate && (
           <div className="mb-4 md:mb-6 p-3 md:p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -879,10 +928,10 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
                   </div>
                 )}
 
-                {(calculation.extras || []).filter(ex => ex.price > 0 || ex.coefficient).map((ex) => (
+                {(calculation.extras || []).filter(ex => ex.price > 0 || ex.priceText || ex.coefficient).map((ex) => (
                   <div key={ex.name} className="flex flex-col gap-1 pl-4 py-2">
                     <span className="font-semibold text-green-600">
-                      {ex.price ? `${ex.price.toFixed(2)} тг` : 'к печати'}
+                      {ex.price ? `${ex.price.toFixed(2)} тг` : (ex.priceText || 'к печати')}
                     </span>
                     <span className="text-gray-600 break-words">{ex.name}:</span>
                   </div>

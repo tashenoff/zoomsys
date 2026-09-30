@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 
@@ -32,6 +33,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   
   const [quantity, setQuantity] = useState(100)
   const [selectedServices, setSelectedServices] = useState([])
+  const [selectedAddServices, setSelectedAddServices] = useState([])
+  const [addServicesOpen, setAddServicesOpen] = useState(false)
   const [selectedServiceOptions, setSelectedServiceOptions] = useState({}) // Для выбора опций в select-операциях
   const [serviceQuantities, setServiceQuantities] = useState({}) // Для операций с количеством
   const [isUrgent, setIsUrgent] = useState(false)
@@ -42,7 +45,6 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   
   // Новые состояния для перезаказа и примечания с ценой
   const [selectedReorder, setSelectedReorder] = useState('no')
-  const [customNotes, setCustomNotes] = useState([]) // Массив кастомных услуг
 
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
@@ -77,19 +79,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         })
       : []
 
-    // Из доп. услуг (с applicableTo)
-    const fromServices = Array.isArray(additionalServices)
-      ? additionalServices.filter(svc => {
-          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
-          if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
-          const key = String(svc.id || svc.name)
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-      : []
-
-    return [...fromOperations, ...fromServices]
+    return [...fromOperations]
   }, [selectedCardType, additionalOperations, additionalServices])
 
   // Получаем уникальные материалы
@@ -151,26 +141,11 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     }
   }, [selectedMaterial, selectedColorType, pricing])
 
-  // Функции для работы с кастомными услугами
-  const addCustomNote = () => {
-    setCustomNotes([...customNotes, { id: Date.now(), title: '', price: '', type: 'fixed' }])
-  }
-
-  const updateCustomNote = (id, field, value) => {
-    setCustomNotes(customNotes.map(note => 
-      note.id === id ? { ...note, [field]: value } : note
-    ))
-  }
-
-  const removeCustomNote = (id) => {
-    setCustomNotes(customNotes.filter(note => note.id !== id))
-  }
-
   useEffect(() => {
     if (selectedProduct && quantity) {
       calculatePrice()
     }
-  }, [selectedProduct, quantity, selectedServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, customNotes])
+  }, [selectedProduct, quantity, selectedServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder])
 
   const getPriceForQuantity = (product, qty) => {
     if (qty < 50) return product.prices.upTo49
@@ -282,18 +257,16 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             }
     })
 
-    // Добавляем кастомные услуги с ценой
-    customNotes.forEach(note => {
-      if (note.title && note.price) {
-        const customPrice = note.type === 'per-unit' 
-          ? parseFloat(note.price) * quantity 
-          : parseFloat(note.price)
-        servicesTotal += customPrice
-        servicesDetails.push({
-          name: note.title,
-          price: customPrice,
-          isCustom: true
-        })
+    // Доп. услуги из модалки (фиксированная цена; priceText — «по запросу», без числа в итог)
+    selectedAddServices.forEach(serviceId => {
+      const svc = additionalServices.find(s => String(s.id) === String(serviceId))
+      if (!svc) return
+      if (svc.price != null) {
+        const svcPrice = Number(svc.price) || 0
+        servicesTotal += svcPrice
+        servicesDetails.push({ name: svc.name, price: svcPrice })
+      } else if (svc.priceText) {
+        servicesDetails.push({ name: `${svc.name} (${svc.priceText})`, price: 0, byRequest: true })
       }
     })
 
@@ -323,7 +296,6 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       discountAmount,
       notes,
       reorder: selectedReorder !== 'no' ? reorderOptions.find(opt => opt.id === selectedReorder)?.name : null,
-      customNotes: customNotes.filter(n => n.title && n.price),
       total
     })
   }
@@ -356,13 +328,13 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       setSelectedProduct(null)
       setQuantity(100)
       setSelectedServices([])
+      setSelectedAddServices([])
       setIsUrgent(false)
       setDiscount(0)
       setNotes('')
       setCalculation(null)
       setOrderStatus('draft')
       setSelectedReorder('no')
-      setCustomNotes([])
     } catch (err) {
       alert('Ошибка сохранения заказа: ' + err.message)
     } finally {
@@ -407,6 +379,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             setSelectedProduct(null)
             setQuantity(100)
             setSelectedServices([])
+            setSelectedAddServices([])
             setIsUrgent(false)
             setDiscount(0)
             setNotes('')
@@ -732,86 +705,34 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         )}
         */}
 
-        {/* СЕКЦИЯ 4.6: Дополнительные услуги с ценой (множественные) */}
-        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-pink-50 rounded-lg border border-pink-200">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-3 gap-3">
-                            <div className="flex-1">
-                              <label className="block text-sm font-bold text-gray-800 uppercase tracking-wide">
-                                💬 Дополнительные услуги (с ценой)
-                              </label>
-                              <p className="text-xs text-gray-600 mt-1">
-                                Добавьте нестандартные услуги, которых нет в списке выше (упаковка, доставка и т.д.)
-                              </p>
-                            </div>
-                            <button
-                              onClick={addCustomNote}
-                              className="flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition font-medium text-sm w-full md:w-auto"
-                            >
-                              <span className="text-lg">+</span> Добавить услугу
-                            </button>
-                          </div>
+        {/* СЕКЦИЯ 4.7: Доп услуги (модалка) */}
+        <div className="mb-4 md:mb-6 p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
+          <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">⭐ Доп услуги</label>
+          {selectedAddServices.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {selectedAddServices.map(id => {
+                const svc = additionalServices.find(s => String(s.id) === String(id))
+                if (!svc) return null
+                return (
+                  <span key={id} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 border border-green-300 rounded-full text-sm text-gray-700">
+                    {svc.name}
+                    <button type="button" title="Убрать услугу" onClick={() => { setSelectedAddServices(selectedAddServices.filter(i => i !== id)); setCalculation(null) }} className="text-gray-400 hover:text-red-500 font-bold ml-1">×</button>
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          <button type="button" onClick={() => setAddServicesOpen(true)} className="mt-1 px-4 py-2 border border-green-300 bg-white text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium">
+            {selectedAddServices.length > 0 ? `✏️ Изменить доп. услуги (${selectedAddServices.length})` : '➕ Добавить услугу'}
+          </button>
 
-            <div className="space-y-3">
-              {customNotes.map((note) => (
-                <div key={note.id} className="bg-white border-2 border-pink-300 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Название услуги (например: Индивидуальная упаковка)"
-                        value={note.title}
-                        onChange={(e) => updateCustomNote(note.id, 'title', e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <input
-                          type="number"
-                          placeholder="Цена"
-                          value={note.price}
-                          onChange={(e) => updateCustomNote(note.id, 'price', e.target.value)}
-                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-                        />
-                        
-                        <select
-                          value={note.type}
-                          onChange={(e) => updateCustomNote(note.id, 'type', e.target.value)}
-                          className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-                        >
-                          <option value="fixed">Фикс. сумма</option>
-                          <option value="per-unit">За шт</option>
-                        </select>
-                      </div>
-
-                      {note.title && note.price && (
-                        <div className="p-2 bg-pink-100 border border-pink-300 rounded-lg">
-                          <span className="text-xs font-semibold text-pink-800">
-                            ✓ {note.title}: {note.price} {note.type === 'fixed' ? 'тг' : 'тг/шт'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => removeCustomNote(note.id)}
-                      className="mt-1 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
-                      title="Удалить"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {customNotes.length === 0 && (
-                <div className="text-center py-6 text-gray-500">
-                  <p className="mb-2">Нет дополнительных услуг</p>
-                  <p className="text-sm">Нажмите "Добавить услугу" чтобы добавить</p>
-                </div>
-            )}
-          </div>
+          <AdditionalServicesModal
+            open={addServicesOpen}
+            category="business-cards"
+            selected={selectedAddServices}
+            onChange={(ids) => { setSelectedAddServices(ids); setCalculation(null) }}
+            onClose={() => setAddServicesOpen(false)}
+          />
         </div>
 
         {/* СЕКЦИЯ 5: Срочность, скидка и примечания */}

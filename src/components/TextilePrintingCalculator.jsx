@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import ResultSummary from './ResultSummary'
+import CalcResultRow from './CalcResultRow'
 
 function normalizePrices(prices) {
   if (!prices) return null
@@ -292,58 +294,34 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-          <h3 className="text-xl font-bold mb-4">Расчет</h3>
-          {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
+        <ResultSummary
+          noteBody={calculation.note ? (
+            <>
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
               <p className="text-gray-700">Материал: {calculation.materialName}, диапазон: {calculation.priceTier}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Материал:</span><span className="font-semibold text-right break-words flex-1 min-w-0">{calculation.materialName}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Размер:</span><span className="font-semibold">{calculation.width} × {calculation.height} м</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Площадь 1 шт:</span><span className="font-semibold">{calculation.itemArea} м²</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Фактическая площадь:</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} шт</span></div>
-              <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Диапазон цены:</span><span className="font-semibold break-words flex-1 min-w-0 text-right">{calculation.priceTier}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Цена за м²:</span><span className="font-semibold">{calculation.pricePerSqM.toLocaleString('ru-RU')} тг</span></div>
-              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Печать:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
-              {(calculation.extras || []).map((ex) => (
-                <div key={ex.name} className="flex justify-between"><span className="text-gray-600">{ex.name}:</span><span>{Number(ex.price).toLocaleString('ru-RU')} тг</span></div>
-              ))}
-              {calculation.isUrgent && (
-                <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>
-              )}
-              <div className="flex justify-between pt-3 border-t-2 border-gray-300">
-                <span className="text-lg font-bold">Итого:</span>
-                <span className="text-2xl font-bold text-blue-600">{calculation.total.toLocaleString('ru-RU')} тг</span>
-              </div>
-            </div>
-          )}
-
-          {!calculation.note && (
-            <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
-                <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[
-                    ['draft', '📝 Черновик'],
-                    ['in_progress', '⚙️ В процессе'],
-                    ['approved', '✅ Утверждено']
-                  ].map(([status, label]) => (
-                    <button key={status} type="button" onClick={() => setOrderStatus(status)} className={`p-3 rounded-lg border-2 transition font-semibold text-center ${orderStatus === status ? 'bg-blue-500 text-white border-blue-600 shadow-lg' : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'}`}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={handleSaveOrder} disabled={!client || savingOrder} className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold">
-                {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
-              </button>
             </>
+          ) : null}
+          total={{ label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
+          saveVariant="solid"
+          saving={savingOrder}
+          onSave={handleSaveOrder}
+          saveDisabled={!client}
+        >
+          <CalcResultRow label="Материал:" value={calculation.materialName} wrap />
+          <CalcResultRow label="Размер:" value={`${calculation.width} × ${calculation.height} м`} />
+          <CalcResultRow label="Площадь 1 шт:" value={`${calculation.itemArea} м²`} />
+          <CalcResultRow label="Фактическая площадь:" value={`${calculation.factualArea} м²`} />
+          <CalcResultRow label="Количество:" value={`${calculation.quantity} шт`} />
+          <CalcResultRow label="Диапазон цены:" value={calculation.priceTier} wrap />
+          <CalcResultRow label="Цена за м²:" value={`${calculation.pricePerSqM.toLocaleString('ru-RU')} тг`} />
+          <CalcResultRow label="Печать:" value={`${calculation.baseTotal.toLocaleString('ru-RU')} тг`} subtotal />
+          {(calculation.extras || []).map((ex) => (
+            <CalcResultRow key={ex.name} label={`${ex.name}:`} value={`${Number(ex.price).toLocaleString('ru-RU')} тг`} bold={false} />
+          ))}
+          {calculation.isUrgent && (
+            <CalcResultRow label="Срочность:" value={`+${calculation.urgentAmount.toLocaleString('ru-RU')} тг`} highlight="red" />
           )}
-        </div>
+        </ResultSummary>
       )}
     </div>
   )

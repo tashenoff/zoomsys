@@ -352,13 +352,6 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
               <span className="text-blue-600">{calculation.total.toLocaleString('ru-RU')} тг</span>
             </div>
           </div>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-            {['draft', 'in_progress', 'approved'].map((s) => (
-              <button key={s} type="button" onClick={() => setOrderStatus(s)} className={`p-3 rounded-lg border-2 ${orderStatus === s ? 'bg-blue-500 text-white border-blue-600' : 'border-gray-300'}`}>
-                {s === 'draft' ? 'Черновик' : s === 'in_progress' ? 'В работе' : 'Согласован'}
-              </button>
-            ))}
-          </div>
           <button type="button" onClick={handleSaveOrder} disabled={savingOrder} className="mt-4 w-full px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50">
             {savingOrder ? 'Сохранение...' : 'Сохранить заказ'}
           </button>

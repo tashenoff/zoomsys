@@ -357,9 +357,9 @@ export default function PricingManagement() {
             <AdditionalServicesTable
               items={localPricing.additionalServices}
               onEdit={(item) => {
-                setEditingItem({ ...item, category: 'additionalServices' })
-                setIsModalOpen(true)
-              }}
+                              setEditingItem({ ...item, category: 'additionalServices', serviceCategory: item.category && item.category !== 'additionalServices' ? item.category : (item.serviceCategory || '') })
+                              setIsModalOpen(true)
+                            }}
               onDelete={(id) => handleDelete('additionalServices', id)}
             />
           )}
@@ -416,7 +416,7 @@ export default function PricingManagement() {
                   price: updatedItem.price === '' || updatedItem.price == null ? null : updatedItem.price
                 }
               } else if (category === 'additionalServices') {
-                              apiData = { name: updatedItem.name, price: typeof updatedItem.price === 'number' ? updatedItem.price : null, price_text: typeof updatedItem.price === 'string' ? updatedItem.price : (updatedItem.priceText || null), unit: updatedItem.unit, description: updatedItem.description, applicable_to: updatedItem.applicableTo }
+                              apiData = { name: updatedItem.name, price: typeof updatedItem.price === 'number' ? updatedItem.price : null, price_text: typeof updatedItem.price === 'string' ? updatedItem.price : (updatedItem.priceText || null), unit: updatedItem.unit, description: updatedItem.description, applicable_to: updatedItem.applicableTo, category: updatedItem.serviceCategory || null }
                             } else if (category === 'additionalOperations') {
                 apiData = { 
                   name: updatedItem.name,
@@ -1254,7 +1254,8 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Название</th>
-            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Цена</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Категория</th>
+                        <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Цена</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Единица</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Применимо к</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
@@ -1264,7 +1265,8 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
           {items?.map((item, index) => (
             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
-                            <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
+                            <td className="px-4 py-3 text-sm text-gray-600">{item.serviceCategory || '—'}</td>
+                                          <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
                               {item.priceText ? item.priceText : (item.price != null ? `${Number(item.price).toLocaleString('ru-RU')} ₸` : 'по запросу')}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">{item.unit || 'тг'}</td>
@@ -1429,7 +1431,7 @@ function EditModal({ item, category, onClose, onSave }) {
       return { category: 'coat-of-arms', name: '', option: '', price: null }
     }
     if (category === 'additionalServices') {
-      return { name: '', price: 0, unit: '', description: '', applicableTo: ['all'] }
+      return { name: '', price: 0, unit: '', description: '', applicableTo: ['all'], serviceCategory: '' }
     }
     if (category === 'additionalOperations') {
       return { 
@@ -2109,7 +2111,17 @@ function EditModal({ item, category, onClose, onSave }) {
                         {category === 'additionalServices' && (
                           <>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Цена (число или «от ... / диапазон»)</label>
+                                                          <label className="block text-sm font-medium text-gray-700 mb-2">Категория услуги</label>
+                                                          <input
+                                                            type="text"
+                                                            value={formData.serviceCategory || ''}
+                                                            onChange={(e) => setFormData({ ...formData, serviceCategory: e.target.value })}
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="Дизайн, Монтаж, Доработка"
+                                                          />
+                                                        </div>
+                                                        <div>
+                                                          <label className="block text-sm font-medium text-gray-700 mb-2">Цена (число или «от ... / диапазон»)</label>
                               <input
                                 type="text"
                                 value={typeof formData.price === 'string' ? formData.price : (formData.price != null ? String(formData.price) : '')}

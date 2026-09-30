@@ -5,14 +5,14 @@ module.exports = (router, pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/services', async (req, res) => {
-    const { name, price, price_text, unit, description, applicable_to, sort_order } = req.body
-    try { res.json((await pool.query('INSERT INTO additional_services (name,price,price_text,unit,description,applicable_to,sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [name, price, price_text, unit, description, JSON.stringify(applicable_to || ['all']), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const { name, price, price_text, unit, description, applicable_to, category, sort_order } = req.body
+        try { res.json((await pool.query('INSERT INTO additional_services (name,price,price_text,unit,description,applicable_to,category,sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+          [name, price, price_text, unit, description, JSON.stringify(applicable_to || ['all']), category || null, sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/services/:id', async (req, res) => {
-    const { name, price, price_text, unit, description, applicable_to, is_active, sort_order } = req.body
-    try { res.json((await pool.query('UPDATE additional_services SET name=$1,price=$2,price_text=$3,unit=$4,description=$5,applicable_to=$6,is_active=$7,sort_order=$8,updated_at=NOW() WHERE id=$9 RETURNING *',
-      [name, price, price_text, unit, description, JSON.stringify(applicable_to || ['all']), is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const { name, price, price_text, unit, description, applicable_to, category, is_active, sort_order } = req.body
+        try { res.json((await pool.query('UPDATE additional_services SET name=$1,price=$2,price_text=$3,unit=$4,description=$5,applicable_to=$6,category=$7,is_active=$8,sort_order=$9,updated_at=NOW() WHERE id=$10 RETURNING *',
+          [name, price, price_text, unit, description, JSON.stringify(applicable_to || ['all']), category || null, is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.delete('/services/:id', async (req, res) => {
     try { await pool.query('UPDATE additional_services SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }

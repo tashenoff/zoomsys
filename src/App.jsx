@@ -16,6 +16,7 @@ import PlotterCuttingCalculator from './components/PlotterCuttingCalculator'
 import GarmentPrintingCalculator from './components/GarmentPrintingCalculator'
 import EmbroideryCalculator from './components/EmbroideryCalculator'
 import SpecialistsCalculator from './components/SpecialistsCalculator'
+import AdditionalServicesCalculator from './components/AdditionalServicesCalculator'
 import OrdersList from './components/OrdersList'
 import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
@@ -217,8 +218,12 @@ function AppContent() {
                                                                         )}
 
                                                                         {selectedCategory.slug === 'specialists' && (
-                                                                                                                                                  <SpecialistsCalculator client={selectedClient} initialGroup={selectedCategory.specialistsGroup} />
-                                                                                                                                                )}
+                                                                                                                                                                                                                          <SpecialistsCalculator client={selectedClient} initialGroup={selectedCategory.specialistsGroup} />
+                                                                                                                                                                                                                        )}
+
+                                                                                          {selectedCategory.slug === 'additional-services' && (
+                                                                                            <AdditionalServicesCalculator client={selectedClient} />
+                                                                                          )}
                 </>
               )}
 

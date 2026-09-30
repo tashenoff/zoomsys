@@ -140,6 +140,13 @@
       "slug": "embroidery",
       "description": "Вышивка на крое, готовых изделиях, шевроны",
       "icon": "🧵"
+    },
+    {
+      "id": "13",
+      "name": "Дополнительные услуги",
+      "slug": "additional-services",
+      "description": "Дизайн, монтаж и доработки — отдельно или как опция к изделию",
+      "icon": "🧩"
     }
   ],
   "businessCards": [
@@ -1229,6 +1236,7 @@
     {
       "id": "sv-biz",
       "name": "Разработка дизайна визитки",
+      "category": "Дизайн",
       "price": 3500,
       "unit": "тг",
       "applicableTo": [
@@ -1240,6 +1248,7 @@
     {
       "id": "sv-flyer",
       "name": "Разработка дизайна флаера (1 сторона)",
+      "category": "Дизайн",
       "price": "от 5000 до 6000",
       "applicableTo": [
         "flyers"
@@ -1248,6 +1257,7 @@
     {
       "id": "sv-leaflet",
       "name": "Разработка дизайна листовки/афиши",
+      "category": "Дизайн",
       "price": 5000,
       "applicableTo": [
         "flyers"
@@ -1256,6 +1266,7 @@
     {
       "id": "sv-book",
       "name": "Разработка буклета (концепт)",
+      "category": "Дизайн",
       "price": 15000,
       "applicableTo": [
         "booklets"
@@ -1264,6 +1275,7 @@
     {
       "id": "sv-cert",
       "name": "Разработка диплома/сертификата",
+      "category": "Дизайн",
       "price": "от 6000 до 8000",
       "applicableTo": [
         "certificates"
@@ -1272,6 +1284,7 @@
     {
       "id": "sv-uv",
       "name": "Разработка макета для УФ-печати",
+      "category": "Дизайн",
       "price": 3000,
       "applicableTo": [
         "uv-printing"
@@ -1280,6 +1293,7 @@
     {
       "id": "sv-wide",
       "name": "Разработка макета для широкоформатной печати",
+      "category": "Дизайн",
       "price": 5000,
       "applicableTo": [
         "wide-format"
@@ -1288,6 +1302,7 @@
     {
       "id": "sv-stand",
       "name": "Разработка дизайна стенда",
+      "category": "Дизайн",
       "price": "от 15000 до 20000",
       "applicableTo": [
         "advertising-stands",
@@ -1297,10 +1312,36 @@
     {
       "id": "sv-sign",
       "name": "Разработка дизайна вывески",
+      "category": "Дизайн",
       "price": "от 15000 до 25000",
       "applicableTo": [
         "signs"
       ]
+    }
+,
+    {
+      "id": "sv-design-all",
+      "name": "Разработка дизайн-макета",
+      "category": "Дизайн",
+      "price": 5000,
+      "unit": "тг",
+      "applicableTo": ["all"]
+    },
+    {
+      "id": "sv-mount",
+      "name": "Монтаж / демонтаж конструкции",
+      "category": "Монтаж",
+      "price": "по запросу",
+      "unit": "м²",
+      "applicableTo": ["all"]
+    },
+    {
+      "id": "sv-fringe",
+      "name": "Пришив бахромы",
+      "category": "Доработка",
+      "price": 350,
+      "unit": "пог.м",
+      "applicableTo": ["flags-products", "textile"]
     }
   ],
   "printing": [

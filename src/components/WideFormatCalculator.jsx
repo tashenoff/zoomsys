@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import AdditionalServicesModal from './AdditionalServicesModal'
 
 const WIDE_FORMAT_GROUPS = {
   phaeton: 'Широкоформатная печать Phaeton UD-3208P',
@@ -137,6 +138,8 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   const [selectedServices, setSelectedServices] = useState([])
   const [serviceQuantities, setServiceQuantities] = useState({})
   const [selectedServiceOptions, setSelectedServiceOptions] = useState({})
+  const [selectedAddServices, setSelectedAddServices] = useState([])
+  const [addServicesOpen, setAddServicesOpen] = useState(false)
   const [isUrgent, setIsUrgent] = useState(false)
   const [includeWaste, setIncludeWaste] = useState(true)
   const [calculation, setCalculation] = useState(null)
@@ -151,6 +154,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       setSelectedServices([])
       setServiceQuantities({})
       setSelectedServiceOptions({})
+      setSelectedAddServices([])
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,20 +184,23 @@ export default function WideFormatCalculator({ client, initialGroup }) {
         })
       : []
 
-    const fromServices = Array.isArray(additionalServices)
-      ? additionalServices.filter(svc => {
-          const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
-          if (!applicableTo.includes('wide-format')) return false
-          const key = String(svc.id || svc.name)
-          if (seen.has(key)) return false
-          seen.add(key)
-          return true
-        })
-      : []
 
-    return [...fromOperations, ...fromServices]
+    return [...fromOperations]
       .filter(op => matchesWideFormatOperation(op, selectedMaterial, effectiveGroup))
   }, [additionalOperations, additionalServices, selectedMaterial, effectiveGroup])
+
+  // Доп. услуги (не операции): отдельный список, привязанный к категории wide-format / all
+  const availableServices = useMemo(() => {
+    const seen = new Set()
+    return (Array.isArray(additionalServices) ? additionalServices : []).filter(svc => {
+      const applicableTo = Array.isArray(svc?.applicableTo) ? svc.applicableTo : []
+      if (!applicableTo.includes('wide-format') && !applicableTo.includes('all')) return false
+      const key = String(svc.id || svc.name)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [additionalServices])
 
   const handleCalculate = (e) => {
     e.preventDefault()
@@ -276,6 +283,19 @@ export default function WideFormatCalculator({ client, initialGroup }) {
 
       extrasTotal += add
       extras.push({ name: detailName, price: add, quantity: opQty, unit: op.unit, unitPrice, tier: opTier })
+    })
+
+    // Доп. услуги: фиксированная цена за услугу; priceText (по запросу/диапазон) — без числа в итог.
+    selectedAddServices.forEach(id => {
+      const svc = availableServices.find(s => String(s.id) === String(id))
+      if (!svc) return
+      if (svc.price != null) {
+        const price = Number(svc.price) || 0
+        extrasTotal += price
+        extras.push({ name: svc.name, price, quantity: 1, unit: svc.unit || 'усл.' })
+      } else if (svc.priceText) {
+        extras.push({ name: svc.name, price: 0, quantity: 1, unit: svc.unit || 'усл.', priceText: svc.priceText })
+      }
     })
 
     let wasteInfo = null
@@ -435,6 +455,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       setSelectedServices([])
       setServiceQuantities({})
       setSelectedServiceOptions({})
+      setSelectedAddServices([])
       setIsUrgent(false)
       setCalculation(null)
       setOrderStatus('draft')
@@ -460,7 +481,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                         <button
                           key={group}
                           type="button"
-                          onClick={() => { setSelectedGroup(group); setSelectedMaterialId(''); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setCalculation(null) }}
+                          onClick={() => { setSelectedGroup(group); setSelectedMaterialId(''); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setSelectedAddServices([]); setCalculation(null) }}
                           className={`p-4 rounded-lg border-2 transition text-left ${
                             effectiveGroup === group ? 'bg-blue-50 border-blue-500' : 'border-gray-300 hover:border-blue-300'
                           }`}
@@ -479,7 +500,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                         <button
                   key={material.id}
                   type="button"
-                  onClick={() => { setSelectedMaterialId(String(material.id)); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setCalculation(null) }}
+                  onClick={() => { setSelectedMaterialId(String(material.id)); setSelectedServices([]); setServiceQuantities({}); setSelectedServiceOptions({}); setSelectedAddServices([]); setCalculation(null) }}
                   className={`p-4 rounded-lg border-2 transition text-left ${
                     String(selectedMaterial?.id) === String(material.id)
                       ? 'bg-blue-50 border-blue-500'
@@ -598,6 +619,46 @@ export default function WideFormatCalculator({ client, initialGroup }) {
             </div>
           )}
 
+          {availableServices.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Доп услуги</label>
+              {selectedAddServices.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {selectedAddServices.map(id => {
+                    const svc = availableServices.find(s => String(s.id) === String(id))
+                    if (!svc) return null
+                    return (
+                      <span key={id} className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 border border-green-300 rounded-full text-sm text-gray-700">
+                        {svc.name}
+                        <button
+                          type="button"
+                          title="Убрать услугу"
+                          onClick={() => { setSelectedAddServices(selectedAddServices.filter(i => i !== id)); setCalculation(null) }}
+                          className="text-gray-400 hover:text-red-500 font-bold ml-1"
+                        >×</button>
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setAddServicesOpen(true)}
+                className="mt-1 px-4 py-2 border border-green-300 bg-white text-green-700 rounded-lg hover:bg-green-50 text-sm font-medium"
+              >
+                {selectedAddServices.length > 0 ? `➕ Изменить доп. услуги (${selectedAddServices.length})` : '➕ Добавить услугу'}
+              </button>
+            </div>
+          )}
+
+          <AdditionalServicesModal
+            open={addServicesOpen}
+            category="wide-format"
+            selected={selectedAddServices}
+            onChange={(ids) => { setSelectedAddServices(ids); setCalculation(null) }}
+            onClose={() => setAddServicesOpen(false)}
+          />
+
           {selectedMaterial && selectedMaterial.rollWidth && (
             <label className="flex items-center p-4 bg-indigo-50 border-2 border-indigo-200 rounded-lg cursor-pointer hover:bg-indigo-100 transition">
               <input type="checkbox" checked={includeWaste} onChange={(e) => { setIncludeWaste(e.target.checked); setCalculation(null) }} className="mr-3 w-5 h-5" />
@@ -639,7 +700,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
               {(calculation.extras || []).map((ex) => (
                 <div key={ex.name} className="flex justify-between">
                   <span className="text-gray-600">{ex.name}:</span>
-                  <span>{Number(ex.price).toLocaleString('ru-RU')} тг</span>
+                  <span>{ex.priceText || `${Number(ex.price).toLocaleString('ru-RU')} тг`}</span>
                 </div>
               ))}
 
@@ -739,21 +800,6 @@ export default function WideFormatCalculator({ client, initialGroup }) {
 
           {!calculation.note && (
             <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
-                <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[
-                    ['draft', '📝 Черновик'],
-                    ['in_progress', '⚙️ В процессе'],
-                    ['approved', '✅ Утверждено']
-                  ].map(([status, label]) => (
-                    <button key={status} type="button" onClick={() => setOrderStatus(status)} className={`p-3 rounded-lg border-2 transition font-semibold text-center ${orderStatus === status ? 'bg-blue-500 text-white border-blue-600 shadow-lg' : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'}`}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <button onClick={handleSaveOrder} disabled={!client || savingOrder} className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold">
                 {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
               </button>

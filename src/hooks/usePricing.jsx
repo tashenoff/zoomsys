@@ -166,8 +166,9 @@ export function PricingProvider({ children }) {
                   price: (item.price != null && !item.price_text) ? parseFloat(item.price) : null,
                                     priceText: item.price_text || (item.price != null && !item.price_text ? null : (item.price != null ? item.price : null)),
                   unit: item.unit,
-                  description: item.description,
-                  applicableTo: typeof item.applicable_to === 'string'
+                                    category: item.category || null,
+                                    description: item.description,
+                                    applicableTo: typeof item.applicable_to === 'string'
                     ? JSON.parse(item.applicable_to)
                     : (item.applicable_to || ['all'])
                 })),

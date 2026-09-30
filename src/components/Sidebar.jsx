@@ -78,7 +78,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
       'business-cards':'💼','printing':'📄','multipage':'📚','uv-printing':'🖨️',
       'coat-of-arms':'🛡️','flags-rk':'🚩','flagpoles':'🎏','signs':'🪧','stands':'📰','president-portrait':'🖼️',
       'wide-format':'🖼️','plotter-cutting':'✂️','cnc-laser':'🪚','advertising-stands':'🪧','flags-products':'🚩','textile':'🧵',
-      'garment-printing':'👕','embroidery':'🧵'
+      'garment-printing':'👕','embroidery':'🧵','additional-services':'🧩'
     }
     for (const cat of categories) {
       if (cat.subcategories) {
@@ -647,9 +647,21 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                           }`}
                         >
                           {cat.icon || '🧾'} {cat.name}
-                        </button>
-                      ))
-                    })()}
+                                                  </button>
+                                                ))
+                                              })()}
+
+                                    {categories.filter(c => c.slug === 'additional-services').map(cat => (
+                                      <button
+                                        key={cat.slug}
+                                        onClick={() => onSelectCategory(cat)}
+                                        className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
+                                          selectedCategory?.slug === cat.slug ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                      >
+                                        🧩 {cat.name}
+                                      </button>
+                                    ))}
                     </>
                     )}
                       </nav>

@@ -962,51 +962,12 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             </div>
           </div>
 
-          {/* СЕКЦИЯ 5: Выбор клиента и статуса перед сохранением */}
+          {/* СЕКЦИЯ 5: Выбор клиента перед сохранением */}
           <div className="mt-6">
             <ClientSelector
               selectedClient={client}
               onSelectClient={setClient}
             />
-          </div>
-
-          {/* Выбор статуса заказа */}
-          <div className="mt-4 bg-white rounded-lg p-4 border-2 border-indigo-200">
-            <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
-              📋 Статус заказа
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <button
-                onClick={() => setOrderStatus('draft')}
-                className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
-                  orderStatus === 'draft'
-                    ? 'bg-gray-500 text-white border-gray-600 shadow-lg'
-                    : 'bg-white border-gray-300 hover:border-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                📝 Черновик
-              </button>
-              <button
-                onClick={() => setOrderStatus('in_progress')}
-                className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
-                  orderStatus === 'in_progress'
-                    ? 'bg-blue-500 text-white border-blue-600 shadow-lg'
-                    : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'
-                }`}
-              >
-                ⚙️ В процессе
-              </button>
-              <button
-                onClick={() => setOrderStatus('approved')}
-                className={`p-3 rounded-lg border-2 transition font-semibold text-center ${
-                  orderStatus === 'approved'
-                    ? 'bg-green-500 text-white border-green-600 shadow-lg'
-                    : 'bg-white border-green-300 hover:border-green-500 hover:bg-green-50'
-                }`}
-              >
-                ✅ Утверждено
-              </button>
-            </div>
           </div>
 
           <button

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import ResultSummary from './ResultSummary'
+import CalcResultRow from './CalcResultRow'
 
 const CATEGORY_LABELS = {
   'flags-size': 'Флаги и знамена (по размеру)',
@@ -201,46 +203,29 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
       </div>
 
       {calculation && (
-        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-          <h3 className="text-xl font-bold mb-4">Расчет</h3>
-          {calculation.note ? (
-            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 md:p-6 text-center">
+        <ResultSummary
+          noteBody={calculation.note ? (
+            <>
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
               <p className="text-gray-700">Позиция: {calculation.productName}{calculation.size ? `, размер ${calculation.size}` : ''}</p>
               {calculation.unitPriceText && <p className="text-gray-700 mt-1">Цена {calculation.unitPriceText} тг</p>}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1"><span className="text-gray-600">Позиция:</span><span className="font-semibold text-right break-words">{calculation.productName}</span></div>
-              {calculation.size && <div className="flex justify-between"><span className="text-gray-600">Размер:</span><span className="font-semibold">{calculation.size} м</span></div>}
-              <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} шт</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Цена за шт:</span><span className="font-semibold">{formatPrice(calculation.unitPrice)} тг</span></div>
-              <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Печать:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
-              {calculation.isUrgent && (
-                <div className="flex justify-between py-2 px-3 bg-red-50 rounded"><span className="text-red-700 font-semibold">Срочность:</span><span className="font-bold text-red-600">+{calculation.urgentAmount.toLocaleString('ru-RU')} тг</span></div>
-              )}
-              <div className="flex justify-between pt-3 border-t-2 border-gray-300"><span className="text-lg font-bold">Итого:</span><span className="text-2xl font-bold text-blue-600">{calculation.total.toLocaleString('ru-RU')} тг</span></div>
-            </div>
-          )}
-
-          {!calculation.note && (
-            <>
-              <div className="mt-6 bg-gray-50 rounded-lg p-3 md:p-4 border-2 border-indigo-200">
-                <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">📋 Статус заказа</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[
-                    ['draft', '📝 Черновик'], ['in_progress', '⚙️ В процессе'], ['approved', '✅ Утверждено']
-                  ].map(([status, label]) => (
-                    <button key={status} type="button" onClick={() => setOrderStatus(status)} className={`p-3 rounded-lg border-2 transition font-semibold text-center ${orderStatus === status ? 'bg-blue-500 text-white border-blue-600 shadow-lg' : 'bg-white border-blue-300 hover:border-blue-500 hover:bg-blue-50'}`}>{label}</button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={handleSaveOrder} disabled={!client || savingOrder} className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold">
-                {savingOrder ? '⏳ Сохранение...' : '💾 Сохранить заказ'}
-              </button>
             </>
+          ) : null}
+          total={{ label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
+          saveVariant="solid"
+          saving={savingOrder}
+          onSave={handleSaveOrder}
+          saveDisabled={!client}
+        >
+          <CalcResultRow label="Позиция:" value={calculation.productName} reverseOnMobile />
+          {calculation.size && <CalcResultRow label="Размер:" value={`${calculation.size} м`} />}
+          <CalcResultRow label="Количество:" value={`${calculation.quantity} шт`} />
+          <CalcResultRow label="Цена за шт:" value={`${formatPrice(calculation.unitPrice)} тг`} />
+          <CalcResultRow label="Печать:" value={`${calculation.baseTotal.toLocaleString('ru-RU')} тг`} subtotal />
+          {calculation.isUrgent && (
+            <CalcResultRow label="Срочность:" value={`+${calculation.urgentAmount.toLocaleString('ru-RU')} тг`} highlight="red" />
           )}
-        </div>
+        </ResultSummary>
       )}
     </div>
   )

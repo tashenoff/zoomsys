@@ -128,10 +128,14 @@ async function migrate() {
 
 
     await pool.query(`CREATE TABLE IF NOT EXISTS additional_services (
-      id SERIAL PRIMARY KEY, name TEXT NOT NULL, price NUMERIC(10,2), unit TEXT, description TEXT,
+      id SERIAL PRIMARY KEY, name TEXT NOT NULL, price NUMERIC(10,2), price_text TEXT, unit TEXT, description TEXT,
+      category TEXT,
       applicable_to JSONB DEFAULT '["all"]',
       is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    await pool.query(`ALTER TABLE additional_services
+      ADD COLUMN IF NOT EXISTS price_text TEXT,
+      ADD COLUMN IF NOT EXISTS category TEXT`)
     console.log('✅ additional_services')
 
     await pool.query(`CREATE TABLE IF NOT EXISTS additional_operations (

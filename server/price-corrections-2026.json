@@ -1,0 +1,803 @@
+{
+  "source": "Прайс ZOOM 2026.pdf; страницы 3, 7. Ширина винила Roland 1,2 м: указание пользователя (пункт 29).",
+  "updates": [
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 18,
+        "50to99": 18,
+        "100to299": 17,
+        "300to499": 16,
+        "from500": 16
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 30,
+        "100to299": 28,
+        "300to499": 26,
+        "from500": 23
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 20,
+        "50to99": 20,
+        "100to299": 19,
+        "300to499": 18,
+        "from500": 18
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 32,
+        "100to299": 30,
+        "300to499": 28,
+        "from500": 26
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые (Xerox)",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 140,
+        "50to99": 140,
+        "100to299": 140,
+        "300to499": 140,
+        "from500": 140
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые (Xerox)",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 185,
+        "50to99": 185,
+        "100to299": 185,
+        "300to499": 185,
+        "from500": 185
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые (Принтер)",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 70,
+        "50to99": 70,
+        "100to299": 70,
+        "300to499": 70,
+        "from500": 70
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Черно-белые (Принтер)",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 90,
+        "50to99": 90,
+        "100to299": 90,
+        "300to499": 90,
+        "from500": 90
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (250-300гр.)",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 28,
+        "50to99": 27,
+        "100to299": 26,
+        "300to499": 25,
+        "from500": 25
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 35,
+        "100to299": 35,
+        "300to499": 33,
+        "from500": 31
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (250-300гр.)",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 35,
+        "50to99": 33,
+        "100to299": 31,
+        "300to499": 30,
+        "from500": 30
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 48,
+        "100to299": 47,
+        "300to499": 46,
+        "from500": 45
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (лен 280 гр)",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 30,
+        "50to99": 30,
+        "100to299": 28,
+        "300to499": 26,
+        "from500": 26
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (лен 280 гр)",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 34,
+        "50to99": 34,
+        "100to299": 32,
+        "300to499": 30,
+        "from500": 30
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (лен 280 гр)",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 38,
+        "50to99": 38,
+        "100to299": 36,
+        "300to499": 34,
+        "from500": 34
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 43,
+        "100to299": 43,
+        "300to499": 36,
+        "from500": 34
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Цветные (лен 280 гр)",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 46,
+        "50to99": 46,
+        "100to299": 43,
+        "300to499": 40,
+        "from500": 40
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 53,
+        "100to299": 53,
+        "300to499": 46,
+        "from500": 44
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 40,
+        "50to99": 40,
+        "100to299": 38,
+        "300to499": 36,
+        "from500": 36
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 45,
+        "50to99": 45,
+        "100to299": 43,
+        "300to499": 41,
+        "from500": 41
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 50,
+        "50to99": 50,
+        "100to299": 48,
+        "300to499": 46,
+        "from500": 46
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 58,
+        "100to299": 56,
+        "300to499": 54,
+        "from500": 52
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Сирио /слендергель (280гр/м)",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 60,
+        "50to99": 60,
+        "100to299": 57,
+        "300to499": 54,
+        "from500": 54
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 70,
+        "100to299": 68,
+        "300to499": 66,
+        "from500": 64
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 65,
+        "50to99": 65,
+        "100to299": 63,
+        "300to499": 61,
+        "from500": 61
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 72,
+        "50to99": 72,
+        "100to299": 69,
+        "300to499": 66,
+        "from500": 66
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 80,
+        "50to99": 80,
+        "100to299": 78,
+        "300to499": 76,
+        "from500": 76
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Дизайнерская бумага (300-350гр)",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 90,
+        "50to99": 90,
+        "100to299": 87,
+        "300to499": 84,
+        "from500": 84
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 130,
+        "50to99": 120,
+        "100to299": 100,
+        "300to499": 90,
+        "from500": 90
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 140,
+        "50to99": 130,
+        "100to299": 110,
+        "300to499": 100,
+        "from500": 100
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 150,
+        "50to99": 140,
+        "100to299": 120,
+        "300to499": 110,
+        "from500": 110
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 175,
+        "100to299": 170,
+        "300to499": 160,
+        "from500": 150
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 170,
+        "50to99": 160,
+        "100to299": 140,
+        "300to499": 130,
+        "from500": 130
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 300,
+        "100to299": 290,
+        "300to499": 280,
+        "from500": 270
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 160,
+        "50to99": 150,
+        "100to299": 140,
+        "300to499": 130,
+        "from500": 130
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 175,
+        "50to99": 165,
+        "100to299": 155,
+        "300to499": 145,
+        "from500": 145
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 180,
+        "50to99": 170,
+        "100to299": 160,
+        "300to499": 150,
+        "from500": 150
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 180,
+        "100to299": 170,
+        "300to499": 160,
+        "from500": 150
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью без лака",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 210,
+        "50to99": 200,
+        "100to299": 190,
+        "300to499": 180,
+        "from500": 180
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 410,
+        "100to299": 400,
+        "300to499": 390,
+        "from500": 380
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 210,
+        "50to99": 200,
+        "100to299": 190,
+        "300to499": 180,
+        "from500": 180
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 225,
+        "50to99": 215,
+        "100to299": 205,
+        "300to499": 195,
+        "from500": 195
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 230,
+        "50to99": 220,
+        "100to299": 210,
+        "300to499": 200,
+        "from500": 200
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 270,
+        "100to299": 250,
+        "300to499": 240,
+        "from500": 230
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Таккавер с УФ печатью и с лаком",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 260,
+        "50to99": 250,
+        "100to299": 240,
+        "300to499": 230,
+        "from500": 230
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 450,
+        "100to299": 430,
+        "300to499": 400,
+        "from500": 350
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "1+0",
+      "before": {
+        "upTo49": 110,
+        "50to99": 100,
+        "100to299": 95,
+        "300to499": 90,
+        "from500": 90
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "1+1",
+      "before": {
+        "upTo49": 150,
+        "50to99": 140,
+        "100to299": 130,
+        "300to499": 120,
+        "from500": 120
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": null,
+        "100to299": null,
+        "300to499": null,
+        "from500": null
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 130,
+        "50to99": 120,
+        "100to299": 115,
+        "300to499": 110,
+        "from500": 110
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 160,
+        "100to299": 150,
+        "300to499": 140,
+        "from500": 135
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Нанесение УФ печати без лака на дизайнерской бумаге",
+      "colorType": "4+4",
+      "before": {
+        "upTo49": 180,
+        "50to99": 170,
+        "100to299": 160,
+        "300to499": 150,
+        "from500": 150
+      },
+      "after": {
+        "upTo49": null,
+        "50to99": 310,
+        "100to299": 300,
+        "300to499": 280,
+        "from500": 270
+      }
+    },
+    {
+      "table": "business_cards_pricing",
+      "name": "Бейджи 11,5×7,8 см, закругленные углы",
+      "colorType": "4+0",
+      "before": {
+        "upTo49": 7,
+        "50to99": 7,
+        "100to299": 7,
+        "300to499": 7,
+        "from500": 7
+      },
+      "after": {}
+    },
+    {
+      "table": "additional_operations",
+      "name": "Прошивка флага",
+      "before": {
+        "upTo500": 750
+      },
+      "after": {
+        "upTo500": 750,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "additional_operations",
+      "name": "Обрезка флага",
+      "before": {
+        "upTo500": 750
+      },
+      "after": {
+        "upTo500": 750,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "additional_operations",
+      "name": "Шнуровка",
+      "before": {
+        "upTo500": 800
+      },
+      "after": {
+        "upTo500": 800,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "additional_operations",
+      "name": "Бахрома (в т.ч. прошивка)",
+      "before": {
+        "upTo500": 1000
+      },
+      "after": {
+        "upTo500": 1000,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "additional_operations",
+      "name": "Установка люверсов (текстиль)",
+      "before": {
+        "upTo500": 120
+      },
+      "after": {
+        "upTo500": 120,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "additional_operations",
+      "name": "Сутяжная лента",
+      "before": {
+        "upTo500": 500
+      },
+      "after": {
+        "upTo500": 500,
+        "over500": "договорная"
+      }
+    },
+    {
+      "table": "wide_format_pricing",
+      "name": "Винил 4 прохода (матовый, глянец)",
+      "category": "roland",
+      "before": 1.5,
+      "after": 1.2
+    },
+    {
+      "table": "wide_format_pricing",
+      "name": "Винил 8 проходов (матовый, глянец)",
+      "category": "roland",
+      "before": 1.5,
+      "after": 1.2
+    },
+    {
+      "table": "wide_format_pricing",
+      "name": "Винил с черной подложкой",
+      "category": "roland",
+      "before": 1.5,
+      "after": 1.2
+    },
+    {
+      "table": "wide_format_pricing",
+      "name": "Винил прозрачный (матовый, глянец)",
+      "category": "roland",
+      "before": 1.5,
+      "after": 1.2
+    },
+    {
+      "table": "wide_format_pricing",
+      "name": "Винил светоотражающий",
+      "category": "roland",
+      "before": 1.5,
+      "after": 1.2
+    }
+  ]
+}

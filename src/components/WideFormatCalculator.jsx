@@ -3,6 +3,9 @@ import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
+import { getEnabledWideFormatMaterials, isWideFormatGroupEnabled, getCanvasOperationKey, isCanvasMaterial } from '../lib/catalog.mjs'
+import { calculateWideFormatFinishing, getBannerOperation, getBannerOperationKey } from '../lib/wideFormatFinishing.mjs'
+import { calculateStickerLayout } from '../lib/stickerLayout.mjs'
 
 const WIDE_FORMAT_GROUPS = {
   phaeton: 'Широкоформатная печать Phaeton UD-3208P',
@@ -87,9 +90,18 @@ function wideFormatOpKey(name) {
 function matchesWideFormatOperation(op, material, group) {
   const opName = String(op?.name || '').toLowerCase()
 
-  // Склейка и проклейка считаются АВТО (при ширине > рулона) — их не показываем как ручные галочки.
-  if (opName.includes('проклейка баннера') || opName.includes('склейка баннера')) {
-    return false
+  const canvasKey = getCanvasOperationKey(op)
+  if (canvasKey) {
+    if (!isCanvasMaterial(material)) return false
+    const allowed = material?.operations
+    return !Array.isArray(allowed) || allowed.map(String).some(id => id === canvasKey || id === String(op.id))
+  }
+
+  // Склейка автоматическая; проклейка края выбирается отдельно, без ввода метров.
+  const bannerOperationKey = getBannerOperationKey(op)
+  if (bannerOperationKey) {
+    return bannerOperationKey === 'bannerGluing'
+      && !!getBannerOperation({ [op.id]: op }, material, bannerOperationKey)
   }
 
   // Доступность остальных доп.операций определяется атрибутом `operations` материала в прайсе.
@@ -120,7 +132,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
-  const wideFormatPricing = pricingData.wideFormat || []
+  const wideFormatPricing = getEnabledWideFormatMaterials(pricingData.wideFormat)
   const additionalOperations = pricingData.additionalOperations || {}
   const additionalServices = pricingData.additionalServices || []
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
@@ -145,6 +157,8 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+  const [stickerMode, setStickerMode] = useState(false)
+  const [stickerGap, setStickerGap] = useState('')
 
   // При выборе другой категории оборудования в сайдбаре — сбрасываем группу и материал.
   useEffect(() => {
@@ -177,6 +191,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       ? Object.values(additionalOperations).filter(op => {
           const applicableTo = Array.isArray(op?.applicableTo) ? op.applicableTo : []
           if (!applicableTo.includes('wide-format')) return false
+          if (op.is_active === false || op.isActive === false) return false
           const key = String(op.id || op.name)
           if (seen.has(key)) return false
           seen.add(key)
@@ -205,31 +220,53 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   const handleCalculate = (e) => {
     e.preventDefault()
 
-    const w = parseFloat(width)
-    const h = parseFloat(height)
-    const qty = parseInt(quantity, 10)
+    const w = Number(width)
+    const h = Number(height)
+    const qty = Number(quantity)
 
-    if (!w || !h || !qty || !selectedMaterial) {
+    if (!Number.isFinite(w) || w <= 0 || !Number.isFinite(h) || h <= 0 || !Number.isInteger(qty) || qty <= 0 || !selectedMaterial) {
       alert('Заполните все поля')
+      return
+    }
+
+    if (!isWideFormatGroupEnabled(selectedMaterial.category)) {
+      setCalculation(null)
+      alert('Эта группа печати отключена для новых расчётов')
+      return
+    }
+
+    const invalidCanvasOperation = availableOperations.find(op => getCanvasOperationKey(op)
+      && selectedServices.map(String).includes(String(op.id))
+      && (!Number.isFinite(Number(serviceQuantities[op.id])) || Number(serviceQuantities[op.id]) <= 0))
+    if (invalidCanvasOperation) {
+      setCalculation(null)
+      alert(`Укажите общий объём операции «${invalidCanvasOperation.name}» больше нуля`)
       return
     }
 
     const itemArea = w * h
     const margin = selectedMaterial.wasteMargin != null ? Number(selectedMaterial.wasteMargin) : 0.2
+    let stickerLayout = null
+    if (stickerMode && selectedMaterial.category === 'roland' && /винил/i.test(selectedMaterial.name)) {
+      if (stickerGap === '') { setCalculation(null); alert('Укажите зазор между наклейками в мм (0 — без зазора)'); return }
+      try { stickerLayout = calculateStickerLayout({ width: w, height: h, quantity: qty, rollWidth: Number(selectedMaterial.rollWidth), margin, gap: Number(stickerGap) / 1000 }) }
+      catch (error) { setCalculation(null); alert(error.message); return }
+    }
     const printAreaItem = (w + margin) * (h + margin)
-    const factualArea = printAreaItem * qty
+    const factualArea = stickerLayout ? stickerLayout.printArea : printAreaItem * qty
     const billableArea = Math.max(factualArea, 1)
     const tier = getTierPrice(selectedMaterial.prices, billableArea, selectedMaterial.pricePerSqm)
 
     if (tier.price === 'договорная') {
       setCalculation({
         equipment: WIDE_FORMAT_GROUPS[effectiveGroup] || effectiveGroup,
+      wideGroup: effectiveGroup,
         materialName: selectedMaterial.name,
         width: w,
         height: h,
-        itemArea: itemArea.toFixed(2),
-        factualArea: factualArea.toFixed(2),
-        billableArea: billableArea.toFixed(2),
+        itemArea: itemArea.toFixed(stickerMode ? 3 : 2),
+        factualArea: factualArea.toFixed(stickerLayout ? 3 : 2),
+        billableArea: billableArea.toFixed(stickerLayout ? 3 : 2),
         quantity: qty,
         priceTier: tier.tier,
         note: 'Цена договорная, свяжитесь с менеджером'
@@ -242,9 +279,9 @@ export default function WideFormatCalculator({ client, initialGroup }) {
     let extrasTotal = 0
     const extras = []
 
-    selectedServices.forEach(id => {
+    Array.from(new Set(selectedServices.map(String))).forEach(id => {
       const op = availableOperations.find(o => String(o.id) === String(id))
-      if (!op) return
+      if (!op || getBannerOperationKey(op)) return
 
       let add = 0
       let detailName = op.name
@@ -282,7 +319,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       }
 
       extrasTotal += add
-      extras.push({ name: detailName, price: add, quantity: opQty, unit: op.unit, unitPrice, tier: opTier })
+      extras.push({ id: String(op.id), name: detailName, price: add, quantity: opQty, unit: op.unit, unitPrice, tier: opTier })
     })
 
     // Доп. услуги: фиксированная цена за услугу; priceText (по запросу/диапазон) — без числа в итог.
@@ -298,110 +335,18 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       }
     })
 
-    let wasteInfo = null
-        let wasteTotal = 0
-        const roll = Number(selectedMaterial.rollWidth) || 0
-        const wastePrice = Number(selectedMaterial.wastePrice) || 0
-        // Склейка/проклейка включаются, если у материала в прайсе установлен атрибут glueAllowed.
-            // Fallback для старых данных без флага: по названию (баннерные материалы).
-            const bname = String(selectedMaterial?.name || '').toLowerCase()
-            const bannerLike = selectedMaterial?.glueAllowed != null
-              ? !!selectedMaterial.glueAllowed
-              : ['баннер', 'фронтлит', 'бэклит', 'сетка'].some(sb => bname.includes(sb))
-        if (includeWaste && roll > 0) {
-          const candAcross = [Math.min(w, h) + margin, Math.max(w, h) + margin].filter(c => c <= roll)
-                const printAcross = candAcross.length ? Math.max(...candAcross) : Math.min(w, h) + margin
-                const printAlong = printAreaItem / printAcross
-          if (printAcross > roll) {
-                        // Изделие шире рулона по обеим сторонам → печать кусками.
-                        // Длинную сторону кладём вдоль рулона, короткую делим поперёк на куски ≤ рулона.
-                        // Склейка/проклейка (платные операции) — ТОЛЬКО для баннерных материалов (bannerLike).
-                        // Прочим (винил-самоклейка, интерьерная MIMAKI/Roland) считаем только куски и остаток.
-                        const longSide = Math.max(w, h) + margin
-                                const splitSide = Math.min(w, h) + margin
-                                const joinedAcross = Math.min(w, h) + margin
-                                const pieces = Math.max(2, Math.ceil(splitSide / roll))
-                        const seams = pieces - 1
-                        const glueMetersPerItem = seams * longSide
-                        const glueMeters = glueMetersPerItem * qty
-                        // Материал: каждый кусок занимает полную ширину рулона на длину longSide.
-                        const materialSqm = pieces * roll * longSide * qty
-                        const remainSqm = Math.max(0, materialSqm - printAreaItem * qty)
-                                                const above = remainSqm >= 0.5 && wastePrice > 0
-                        // Тариф склейки — из операции «Склейка баннера со стыковкой» (bannerJoining), пог.м.
-                        // Считается только для баннеров.
-                                      let glueUnitPrice = 0
-                                      let glueTier = null
-                                      if (bannerLike) {
-                                      const glueOp = (pricingData.additionalOperations && pricingData.additionalOperations.bannerJoining)
-                                        || (pricingData.additionalOperations && Object.values(pricingData.additionalOperations)
-                                            .find(o => String(o.name || '').toLowerCase().includes('склейка баннера')))
-                                        || availableOperations.find(
-                                          o => String(o.id).toLowerCase() === 'bannerjoining'
-                                            || String(o.name || '').toLowerCase().includes('склейка')
-                                        )
-                        if (glueOp) {
-                          const g = getTierPrice(glueOp.prices, glueMeters, glueOp.price)
-                          glueUnitPrice = Number(g.price) || 0
-                          glueTier = g.tier
-                        }
-                                      }
-                        const gluePrice = glueUnitPrice * glueMeters
-                        wasteInfo = {
-                                        joined: true, roll, longSide, splitSide, joinedAcross, margin, bannerLike,
-                                        printAcross: joinedAcross, printAlong: longSide,
-                                        pieces, seams,
-                                        glueMeters, glueMetersPerItem, glueUnitPrice, glueTier, gluePrice,
-                                        remainSqm, wastePrice, above,
-                                        wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
-                                        belowThreshold: !above
-                                      }
-              if (above) wasteTotal = wasteInfo.wasteTotal
-              if (gluePrice > 0) {
-                                            extrasTotal += gluePrice // сумма входит в итог, строка показана в синем блоке (не дублируем в списке)
-                                          }
-                            // Проклейка баннера — по ПЕРИМЕТРУ края (2×(Ш+В) с припуском), только для баннеров.
-                                                                    let glueingUnitPrice = 0
-                                                                    let glueingTier = null
-                                                                    let glueingMetersPerItem = 2 * (longSide + splitSide)
-                                                                    let glueingMeters = glueingMetersPerItem * qty
-                                                                    if (bannerLike) {
-                                                                    const glueingOp = (pricingData.additionalOperations && pricingData.additionalOperations.bannerGluing)
-                                                                                    || (pricingData.additionalOperations && Object.values(pricingData.additionalOperations)
-                                                                                        .find(o => String(o.name || '').toLowerCase().includes('проклейка баннера')))
-                                                                                    || availableOperations.find(
-                                                                                      o => String(o.id).toLowerCase() === 'bannergluing'
-                                                                                        || String(o.name || '').toLowerCase().includes('проклейка баннера')
-                                                                                    )
-                                                                    if (glueingOp) {
-                                                                      const gg = getTierPrice(glueingOp.prices, glueingMeters, glueingOp.price)
-                                                                      glueingUnitPrice = Number(gg.price) || 0
-                                                                      glueingTier = gg.tier
-                                                                    }
-                                                                    }
-                                                                    const glueingPrice = glueingUnitPrice * glueingMeters
-                                                                    wasteInfo.glueingUnitPrice = glueingUnitPrice
-                                                                    wasteInfo.glueingTier = glueingTier
-                                                                    wasteInfo.glueingPrice = glueingPrice
-                                                                    wasteInfo.glueingMeters = glueingMeters
-                                                                    wasteInfo.glueingMetersPerItem = glueingMetersPerItem
-                                                                    if (glueingPrice > 0) {
-                                                                                extrasTotal += glueingPrice // сумма входит в итог, строка показана в синем блоке
-                                                                              }
-                                        } else {
-                                                                                        const itemAcross = Math.min(w, h)
-                                                                                        // Изделие помещается в рулон: остаток по ширине (обрезь) тарифицируется только если >0,5 м² И задана цена остатка.
-                                                                                        const remainSqm = Math.max(0, (roll - printAcross) * printAlong * qty)
-                                                                                        const above = remainSqm >= 0.5 && wastePrice > 0
-                                                wasteInfo = {
-                                                  joined: false, roll, printAcross, printAlong, itemAcross, margin, wastePrice,
-                                                  remainSqm,
-                                                  wasteTotal: above ? Math.round(remainSqm * wastePrice) : 0,
-                                                  belowThreshold: !above
-                                                }
-                                                if (above) wasteTotal = wasteInfo.wasteTotal
-                                              }
-                                            }
+    const finishing = calculateWideFormatFinishing({
+      material: selectedMaterial,
+      operations: additionalOperations,
+      width: stickerLayout ? stickerLayout.sheetWidth : w,
+      height: stickerLayout ? stickerLayout.sheetHeight : h,
+      quantity: stickerLayout ? 1 : qty,
+      selectedOperationIds: selectedServices,
+      includeWaste
+    }, getTierPrice)
+    const { wasteInfo, wasteTotal, bannerJoiningApplied, bannerGluingSelected } = finishing
+    extras.push(...finishing.extras)
+    extrasTotal += finishing.extrasTotal
 
     const subtotal = baseTotal + extrasTotal + wasteTotal
     const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
@@ -409,13 +354,15 @@ export default function WideFormatCalculator({ client, initialGroup }) {
 
     setCalculation({
       equipment: WIDE_FORMAT_GROUPS[effectiveGroup] || effectiveGroup,
+      wideGroup: effectiveGroup,
       materialName: selectedMaterial.name,
       width: w,
       height: h,
-      itemArea: itemArea.toFixed(2),
-      factualArea: factualArea.toFixed(2),
-      billableArea: billableArea.toFixed(2),
+      itemArea: itemArea.toFixed(stickerMode ? 3 : 2),
+      factualArea: factualArea.toFixed(stickerLayout ? 3 : 2),
+      billableArea: billableArea.toFixed(stickerLayout ? 3 : 2),
       quantity: qty,
+      stickerLayout,
       priceTier: tier.tier,
       pricePerSqM,
       baseTotal,
@@ -423,6 +370,9 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       extrasTotal,
       wasteInfo,
       wasteTotal,
+      includeWaste,
+      bannerJoiningApplied,
+      bannerGluingSelected,
       isUrgent,
       urgentSurcharge,
       urgentAmount,
@@ -515,14 +465,21 @@ export default function WideFormatCalculator({ client, initialGroup }) {
             </div>
           </div>
 
+          {selectedMaterial?.category === 'roland' && /винил/i.test(selectedMaterial?.name || '') && (
+            <div className="p-4 border border-blue-200 rounded-lg bg-blue-50 space-y-3">
+              <label className="flex gap-2 items-center"><input type="checkbox" checked={stickerMode} onChange={(e) => { setStickerMode(e.target.checked); setCalculation(null) }} />Раскладка наклеек на рулоне {selectedMaterial.rollWidth} м</label>
+              {stickerMode && <div><label htmlFor="sticker-gap" className="block text-sm mb-1">Зазор между наклейками (мм; 0 — без зазора)</label><input id="sticker-gap" type="number" min="0" step="0.1" required value={stickerGap} onChange={(e) => { setStickerGap(e.target.value); setCalculation(null) }} className="w-full px-3 py-2 border rounded-lg" /><p className="text-xs text-gray-600 mt-2">Ниже укажите размер одной наклейки в метрах и тираж. Припуск {selectedMaterial.wasteMargin ?? 0.2} м из прайса применяется к общей раскладке.</p></div>}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Ширина (м)</label>
-              <input type="number" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
+              <input type="number" step="0.01" value={width} onChange={(e) => { setWidth(e.target.value); setCalculation(null) }} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.0" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Высота (м)</label>
-              <input type="number" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="2.0" />
+              <input type="number" step="0.01" value={height} onChange={(e) => { setHeight(e.target.value); setCalculation(null) }} required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="2.0" />
             </div>
           </div>
 
@@ -537,7 +494,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                 { w: 3, h: 2, label: '3×2' },
                 { w: 3, h: 6, label: '3×6' },
               ].map((size) => (
-                <button key={size.label} type="button" onClick={() => { setWidth(size.w.toString()); setHeight(size.h.toString()) }} className="px-4 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                <button key={size.label} type="button" onClick={() => { setWidth(size.w.toString()); setHeight(size.h.toString()); setCalculation(null) }} className="px-4 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
                   {size.label} м
                 </button>
               ))}
@@ -546,7 +503,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Количество (шт)</label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <input type="number" value={quantity} onChange={(e) => { setQuantity(e.target.value); setCalculation(null) }} min="1" step="1" required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
 
           {availableOperations.length > 0 && (
@@ -560,6 +517,8 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                       <div className="flex items-start gap-3">
                         <input
                           type="checkbox"
+                          id={getBannerOperationKey(op) === 'bannerGluing' ? 'banner-gluing' : undefined}
+                          aria-label={getBannerOperationKey(op) === 'bannerGluing' ? 'Проклейка баннера по периметру' : op.name}
                           checked={isSelected}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -579,11 +538,11 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                         />
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium block">{op.name}</span>
+                            <span className="font-medium block">{getBannerOperationKey(op) === 'bannerGluing' ? 'Проклейка баннера по периметру' : op.name}</span>
                             {isSelected && <span className="text-green-600 text-xl">✓</span>}
                           </div>
                           {op.description && <p className="text-xs text-gray-600 mb-2">{op.description}</p>}
-                          <p className="text-sm text-gray-500">{formatPrices(op.prices, op.price)} тг/{getUnitLabel(op.unit)}</p>
+                          <p className="text-sm text-gray-500">{getCanvasOperationKey(op) && !op.prices ? `${op.price} тг/${getUnitLabel(op.unit)}` : `${formatPrices(op.prices, op.price)} тг/${getUnitLabel(op.unit)}`}</p>
 
                           {op.type === 'select' && isSelected && (
                             <div className="mt-3">
@@ -594,7 +553,11 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                             </div>
                           )}
 
-                          {op.type === 'quantity' && isSelected && (
+                          {getBannerOperationKey(op) === 'bannerGluing' && isSelected && (
+                            <p className="mt-2 text-sm text-gray-600">Длина по периметру с припуском рассчитывается автоматически по размеру и количеству изделий.</p>
+                          )}
+
+                          {op.type === 'quantity' && getBannerOperationKey(op) !== 'bannerGluing' && isSelected && (
                                                       <div className="mt-3">
                                                         {op.stepMode ? (
                                                           <>
@@ -604,8 +567,8 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                                                           </>
                                                         ) : (
                                                           <>
-                                                            <label className="text-xs text-gray-600 mb-1 block">Количество ({getUnitLabel(op.unit)}):</label>
-                                                            <input type="number" min="0" step="0.01" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" />
+                                                            <label className="text-xs text-gray-600 mb-1 block">{getCanvasOperationKey(op) ? 'Общий объём' : 'Количество'} ({getUnitLabel(op.unit)}):</label>
+                                                            <input type="number" min={getCanvasOperationKey(op) ? '0.01' : '0'} required={!!getCanvasOperationKey(op)} step="any" value={serviceQuantities[op.id] || ''} onChange={(e) => { setServiceQuantities({ ...serviceQuantities, [op.id]: e.target.value }); setCalculation(null) }} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" />
                                                           </>
                                                         )}
                                                       </div>
@@ -693,6 +656,12 @@ export default function WideFormatCalculator({ client, initialGroup }) {
               <div className="flex justify-between"><span className="text-gray-600">Площадь печати （с припуском）：</span><span className="font-semibold">{calculation.factualArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Расчетная площадь:</span><span className="font-semibold">{calculation.billableArea} м²</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Количество:</span><span className="font-semibold">{calculation.quantity} шт</span></div>
+              {calculation.stickerLayout && <div className="p-3 bg-blue-50 border rounded-lg text-sm space-y-1">
+                <p className="font-semibold">Раскладка на рулоне {calculation.stickerLayout.rollWidth} м: {calculation.stickerLayout.columns} в ряд × {calculation.stickerLayout.rows} рядов</p>
+                <p>{calculation.stickerLayout.rotated ? 'Наклейки повёрнуты на 90°.' : 'Без поворота.'} Зазор {calculation.stickerLayout.gap * 1000} мм; пустых мест {calculation.stickerLayout.blankCells}.</p>
+                <p>Поле с припуском: {calculation.stickerLayout.printWidth.toFixed(3)} × {calculation.stickerLayout.printHeight.toFixed(3)} м. Площадь самих наклеек: {calculation.stickerLayout.netArea.toFixed(3)} м².</p>
+                <p>Контурная резка добавляется отдельной операцией по указанному общему объёму.</p>
+              </div>}
               <div className="flex items-start justify-between gap-2"><span className="text-gray-600 shrink-0">Диапазон цены:</span><span className="font-semibold break-words flex-1 min-w-0 text-right">{calculation.priceTier}</span></div>
               <div className="flex justify-between"><span className="text-gray-600">Цена за м²:</span><span className="font-semibold">{calculation.pricePerSqM.toLocaleString('ru-RU')} тг</span></div>
               <div className="flex justify-between pt-2 border-t"><span className="text-gray-600">Печать:</span><span className="font-semibold">{calculation.baseTotal.toLocaleString('ru-RU')} тг</span></div>
@@ -723,31 +692,15 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                                                                               </div>
                                                                             </div>
                                                                             <div className="bg-indigo-50 border-2 border-indigo-300 rounded p-3 text-sm mt-2">
-                                                                              <div className="font-semibold text-indigo-700 mb-1">🧩 {calculation.wasteInfo.bannerLike ? 'Баннер' : 'Изделие'} шире рулона — печать {calculation.wasteInfo.pieces} кусками{calculation.wasteInfo.bannerLike ? ' со склейкой' : ''}</div>
+                                                                              <div className="font-semibold text-indigo-700 mb-1">🧩 {calculation.wasteInfo.bannerLike ? 'Баннер' : 'Изделие'} шире рулона — печать {calculation.wasteInfo.pieces} кусками{calculation.bannerJoiningApplied ? ' со склейкой' : ''}</div>
                                                                                                                                                             <div className="text-gray-700 mb-1">
                                                                                                                                                               Печать с припуском: {calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} × {calculation.wasteInfo.splitSide.toFixed(2).replace('.', ',')} м.
                                                                                                                                                               Длинная сторона ({calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} м) — вдоль рулона ({calculation.wasteInfo.roll.toLocaleString('ru-RU')} м), короткую делим поперёк на {calculation.wasteInfo.pieces} куск{calculation.wasteInfo.pieces === 2 ? 'а' : 'ов'}.
                                                                                                                                                             </div>
-                                                                                                                                                              {calculation.wasteInfo.bannerLike && calculation.wasteInfo.gluePrice > 0 && (
-                                                                                                                                                              <>
-                                                                                                                                                              <div className="text-gray-600 font-medium">Склейка со стыковкой</div>
-                                                                                                                                                              <div className="flex items-baseline justify-between gap-2"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.seams} шов × {calculation.wasteInfo.longSide.toFixed(2).replace('.', ',')} м = <b>{calculation.wasteInfo.glueMeters.toFixed(2).replace('.', ',')} пог.м</b></span><span className="font-semibold sm:text-right">{calculation.wasteInfo.gluePrice.toLocaleString('ru-RU')} тг</span></div>
-                                                                                                                                                              </>
-                                                                                                                                                              )}
-                                                                                {calculation.wasteInfo.glueUnitPrice > 0 && (
-                                                                                  <div className="text-xs text-gray-500">Тариф {calculation.wasteInfo.glueUnitPrice.toLocaleString('ru-RU')} тг/пог.м{calculation.wasteInfo.glueTier ? ` (${calculation.wasteInfo.glueTier})` : ''}</div>
-                                                                                )}
-                                                                                {calculation.wasteInfo.glueingPrice > 0 && (
-                                                                                                                                                                                                          <>
-                                                                                                                                                                                                          <div className="text-gray-600 font-medium">Проклейка баннера по периметру</div>
-                                                                                                                                                                                                          <div className="flex items-baseline justify-between gap-2"><span className="flex-1 min-w-0 break-words">{calculation.wasteInfo.glueingMetersPerItem.toFixed(2).replace('.', ',')} пог.м/шт × {calculation.quantity} = <b>{calculation.wasteInfo.glueingMeters.toFixed(2).replace('.', ',')} пог.м</b></span><span className="font-semibold sm:text-right">{calculation.wasteInfo.glueingPrice.toLocaleString('ru-RU')} тг</span></div>
-                                                                                                                                                                                                          </>
-                                                                                                                                                                                                        )}
-                                                                                                                        {calculation.wasteInfo.glueingUnitPrice > 0 && (
-                                                                                                                          <div className="text-xs text-gray-500">Тариф {calculation.wasteInfo.glueingUnitPrice.toLocaleString('ru-RU')} тг/пог.м{calculation.wasteInfo.glueingTier ? ` (${calculation.wasteInfo.glueingTier})` : ''}</div>
-                                                                                                                        )}
                                         <div className="mt-1 border-t">
-                                                                                  {calculation.wasteInfo.belowThreshold ? (
+                                                                                  {!calculation.includeWaste ? (
+                      <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — учёт стоимости остатка отключён.</div>
+                    ) : calculation.wasteInfo.belowThreshold ? (
                                                                                     <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м²{calculation.wasteInfo.wastePrice > 0 ? ' — менее 0,5 м², не тарифицируется.' : ' — не тарифицируется (не задана цена остатка).'}</div>
                                                                                   ) : (
                                                                                       <>
@@ -768,13 +721,15 @@ export default function WideFormatCalculator({ client, initialGroup }) {
                       <div className="flex flex-wrap text-xs text-gray-500 mt-1 gap-x-4 gap-y-1">
                         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-400 rounded"></span>изделие (печать)</span>
                         <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-yellow-300 rounded"></span>припуск (входит в площадь печати)</span>
-                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь, тарифицируется)</span>
+                        <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-300 rounded"></span>остаток (обрезь)</span>
                       </div>
                       <div className="flex text-xs text-gray-500 mt-1">
                         <span className="flex-1">печать （с припуском) {calculation.wasteInfo.printAcross.toFixed(2).replace('.', ',')} м</span>
                         <span>остаток {(calculation.wasteInfo.roll - calculation.wasteInfo.printAcross).toFixed(2).replace('.', ',')} × {calculation.wasteInfo.printAlong.toFixed(2).replace('.', ',')} м</span>
                       </div>
-                      {calculation.wasteInfo.belowThreshold ? (
+                      {!calculation.includeWaste ? (
+                      <div className="text-sm text-gray-500 mt-1">Остаток (обрезь) {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² — учёт стоимости остатка отключён.</div>
+                    ) : calculation.wasteInfo.belowThreshold ? (
                                               <div className="text-sm text-gray-500 mt-2">Остаток {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м²{calculation.wasteInfo.wastePrice > 0 ? ' — менее 0,5 м², не тарифицируется.' : ' — не тарифицируется (не задана цена остатка).'}</div>
                                             ) : (
                         <div className="flex justify-between mt-2"><span className="text-gray-600">Остаток (обрезь): {calculation.wasteInfo.remainSqm.toFixed(2).replace('.', ',')} м² × {calculation.wasteInfo.wastePrice} тг</span><span className="font-semibold">{calculation.wasteInfo.wasteTotal.toLocaleString('ru-RU')} тг</span></div>

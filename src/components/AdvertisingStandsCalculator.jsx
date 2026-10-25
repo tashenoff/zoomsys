@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 import ResultSummary from './ResultSummary'
 import CalcResultRow from './CalcResultRow'
+import { getCanvasOperationKey } from '../lib/catalog.mjs'
 
 export default function AdvertisingStandsCalculator({ client }) {
   const { pricing: pricingContext } = usePricing()
@@ -13,13 +14,13 @@ export default function AdvertisingStandsCalculator({ client }) {
   const additionalOperations = pricingData.additionalOperations || {}
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
-  const blankOps = () => ({ pocket: null, pocketQty: 0, border: 0, canvasStretch: 0, subframe: 0 })
+  const blankOps = () => ({ pocket: null, pocketQty: 0, border: 0 })
 
   const availableOperations = useMemo(() => {
     if (!additionalOperations || typeof additionalOperations !== 'object') return []
     return Object.values(additionalOperations).filter(op => {
       const a = Array.isArray(op?.applicableTo) ? op.applicableTo : []
-      return a.includes('advertising-stands')
+      return a.includes('advertising-stands') && !getCanvasOperationKey(op) && op.is_active !== false && op.isActive !== false
     })
   }, [additionalOperations])
 
@@ -57,13 +58,26 @@ export default function AdvertisingStandsCalculator({ client }) {
     : true)
 
   // Допы для отрисовки: кармашки (select+кол-во), остальные quantity
-  const pocketOp = availableOperations.find(o => o.id === 'pockets')
-  const quantityOps = availableOperations.filter(o => o.id !== 'pockets')
+  const pocketOp = availableOperations.find(o => o.id === 'pockets' || o.type === 'quantity-select' || o.name === 'Кармашки')
+  const quantityOps = availableOperations.filter(o => o !== pocketOp)
+  const borderOp = quantityOps.find(o => o.id === 'border' || o.name === 'Декоративная кайма')
+  const automaticBorder = selectedItem?.type === 'sqm' && Number(width) > 0 && Number(height) > 0 && Number(width) * Number(height) < 1
+
+  useEffect(() => { setCalculation(null) }, [selectedItem, width, height, thickness, quantity, opts, isUrgent])
 
   const handleCalculate = (e) => {
     e.preventDefault()
     if (!selectedItem) { alert('Выберите позицию'); return }
-    if (selectedItem.type === 'sqm' && (!parseFloat(width) || !parseFloat(height))) { alert('Укажите размеры'); return }
+    if (selectedItem.type === 'sqm' && (!Number.isFinite(Number(width)) || Number(width) <= 0 || !Number.isFinite(Number(height)) || Number(height) <= 0)) { alert('Укажите положительные размеры'); return }
+    if (selectedItem.type === 'fixed' && (!Number.isInteger(Number(quantity)) || Number(quantity) <= 0)) { alert('Укажите положительное целое количество'); return }
+    if (selectedItem.type === 'sqm' && !effectiveThickness) { alert('Укажите цену выбранной толщины в прайсе'); return }
+    if (automaticBorder && !borderOp) { alert('Для стенда меньше 1 м² требуется тариф каймы в прайсе'); return }
+    if (opts.pocket && (!pocketOp?.options?.some(option => option.id === opts.pocket) || !Number.isInteger(Number(opts.pocketQty)) || Number(opts.pocketQty) <= 0)) {
+      alert('Выберите формат кармашка и положительное целое количество'); return
+    }
+    if (quantityOps.some(op => opts[op.id] !== undefined && opts[op.id] !== '' && (!Number.isFinite(Number(opts[op.id])) || Number(opts[op.id]) < 0))) {
+      alert('Укажите корректный объём дополнительных операций'); return
+    }
 
     let baseTotal = 0
     const details = []
@@ -89,16 +103,16 @@ export default function AdvertisingStandsCalculator({ client }) {
       if (opt && opts.pocketQty > 0) {
         const add = Number(opt.price) * opts.pocketQty
         extrasTotal += add
-        extras.push({ name: `Кармашки ${opt.name}`, price: add })
+        extras.push({ id: String(pocketOp.id), optionId: opt.id, name: `Кармашки ${opt.name} (${opts.pocketQty} шт)`, price: add, quantity: Number(opts.pocketQty), unitPrice: Number(opt.price) })
       }
     }
     quantityOps.forEach(op => {
-      const val = opts[op.id] || 0
+      const val = automaticBorder && op === borderOp ? 2 * (Number(width) + Number(height)) : (opts[op.id] || 0)
       const qv = parseFloat(val)
       if (qv > 0) {
         const add = Number(op.price) * qv
         extrasTotal += add
-        extras.push({ name: `${op.name} (${qv} ${op.unit || ''})`, price: add })
+        extras.push({ id: String(op.id), name: `${op.name} (${qv} ${op.unit || ''})`, price: add, quantity: qv, unitPrice: Number(op.price), automatic: automaticBorder && op === borderOp })
       }
     })
 
@@ -106,7 +120,10 @@ export default function AdvertisingStandsCalculator({ client }) {
     const urgentAmount = isUrgent ? Math.max(subtotal * urgentSurcharge / 100, 5000) : 0
     const total = subtotal + urgentAmount
 
-    setCalculation({ itemName: selectedItem.name, baseTotal, details, extrasTotal, extras, isUrgent, urgentSurcharge, urgentAmount, subtotal, total })
+    setCalculation({ itemName: selectedItem.name, productName: selectedItem.name, quantity: selectedItem.type === 'sqm' ? 1 : Number(quantity),
+      width: selectedItem.type === 'sqm' ? Number(width) : null, height: selectedItem.type === 'sqm' ? Number(height) : null,
+      area: selectedItem.type === 'sqm' ? Number(width) * Number(height) : null, thickness: effectiveThickness?.label || null,
+      selectedItemId: String(selectedItem.id), options: opts, baseTotal, details, extrasTotal, extras, isUrgent, urgentSurcharge, urgentAmount, subtotal, total })
   }
 
   const handleSaveOrder = async () => {
@@ -191,11 +208,12 @@ export default function AdvertisingStandsCalculator({ client }) {
                     </div>
                     <div>
                       <label className="text-xs text-gray-600 block mb-1">Кол-во кармашков</label>
-                      <input type="number" min="0" value={opts.pocketQty || ''} onChange={(e) => setOpts({ ...opts, pocketQty: parseInt(e.target.value, 10) || 0 })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                      <input type="number" min={opts.pocket ? '1' : '0'} step="1" required={!!opts.pocket} value={opts.pocketQty || ''} onChange={(e) => setOpts({ ...opts, pocketQty: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                     </div>
                   </div>
                 )}
-                {quantityOps.map(op => (
+                {automaticBorder && borderOp && <p className="text-sm text-gray-600">Кайма добавляется автоматически для стенда меньше 1 м²: {2 * (Number(width) + Number(height))} пог.м × {borderOp.price} тг.</p>}
+                {quantityOps.filter(op => !(automaticBorder && op === borderOp)).map(op => (
                   <div key={op.id} className="p-3 border-2 border-green-300 rounded-lg">
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
@@ -228,6 +246,7 @@ export default function AdvertisingStandsCalculator({ client }) {
           saveDisabled={!client}
         >
           <CalcResultRow label="Позиция:" value={calculation.itemName} reverseOnMobile />
+          {calculation.width && <CalcResultRow label="Размер / материал:" value={`${calculation.width} × ${calculation.height} м; ${calculation.area} м²; ${calculation.thickness}`} />}
           <CalcResultRow label="Основа:" value={`${calculation.baseTotal.toLocaleString('ru-RU')} тг`} subtotal />
           {(calculation.extras || []).map((ex) => (
             <CalcResultRow key={ex.name} label={`${ex.name}:`} value={`${Number(ex.price).toLocaleString('ru-RU')} тг`} bold={false} />

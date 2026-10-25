@@ -1,4 +1,5 @@
 const express = require('express')
+const { validateCatalogOrder } = require('../catalog-policy')
 
 module.exports = (pool) => {
   const router = express.Router()
@@ -28,6 +29,8 @@ module.exports = (pool) => {
   })
 
   router.post('/', async (req, res) => {
+    const validation = validateCatalogOrder(req.body)
+    if (validation) return res.status(400).json({ error: validation })
     try {
       const { client_id, category, status, payment_status, total_amount, notes, items } = req.body
       

@@ -5,6 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
+import { isServiceAllowed } from '../lib/catalog.mjs'
 
 export default function PrintingCalculator({ client: externalClient }) {
   // Получаем данные из контекста прайсов и заказов
@@ -12,10 +13,10 @@ export default function PrintingCalculator({ client: externalClient }) {
   const { createOrder, isOnline } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   
-  const pricing = pricingData.printing || []
+  const pricing = (pricingData.printing || []).filter(p => p.category !== 'notebooks' && p.specification?.section !== 'multipage')
   const additionalOperations = pricingData.additionalOperations || {}
   const reorderOptions = pricingData.reorderOptions || []
-  const additionalServices = pricingData.additionalServices || []
+  const additionalServices = (pricingData.additionalServices || []).filter(service => isServiceAllowed(service, 'printing'))
   
   // Состояния для выбора клиента
   const [client, setClient] = useState(externalClient)
@@ -64,6 +65,7 @@ export default function PrintingCalculator({ client: externalClient }) {
     const fromOperations = additionalOperations && typeof additionalOperations === 'object'
       ? Object.values(additionalOperations).filter(op => {
           if (!op || !op.applicableTo) return false
+          if (!isServiceAllowed(op, 'printing')) return false
           const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
           if (!applicableTo.includes('all') && !applicableTo.includes(selectedCategory)) return false
           const key = String(op.id || op.name)

@@ -1,5 +1,11 @@
 require('dotenv').config()
 const { Pool } = require('pg')
+const relocateCanvasOperations = require('./relocate-canvas-operations')
+const renameDepartmentalSigns = require('./rename-departmental-signs')
+const { configureGarmentProducts } = require('./garment-products')
+const applyPriceCorrections = require('./apply-price-corrections')
+
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL не задан')
 
 // SSL только если явно указано (для managed DB типа Heroku, Supabase)
 const useSSL = process.env.DATABASE_SSL === 'true'
@@ -27,6 +33,7 @@ async function migrate() {
       id SERIAL PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL, color_type TEXT,
       prices JSONB NOT NULL, is_active BOOLEAN DEFAULT true, sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
+    await pool.query('ALTER TABLE printing_pricing ADD COLUMN IF NOT EXISTS specification JSONB')
     console.log('✅ printing_pricing')
 
     await pool.query(`CREATE TABLE IF NOT EXISTS uv_printing_pricing (
@@ -49,7 +56,9 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS notes TEXT,
       ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
       ADD COLUMN IF NOT EXISTS waste_price NUMERIC,
-      ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2
+      ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2,
+      ADD COLUMN IF NOT EXISTS glue_allowed BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS operations JSONB
     `)
     console.log('✅ wide_format_pricing')
 
@@ -146,7 +155,9 @@ async function migrate() {
       sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW())`)
     await pool.query(`
       ALTER TABLE additional_operations
-      ADD COLUMN IF NOT EXISTS prices JSONB
+      ADD COLUMN IF NOT EXISTS prices JSONB,
+      ADD COLUMN IF NOT EXISTS step_mode BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS step_unit TEXT
     `)
     console.log('✅ additional_operations')
 
@@ -173,6 +184,10 @@ async function migrate() {
       specifications JSONB, created_at TIMESTAMP DEFAULT NOW())`)
     console.log('✅ order_items')
 
+    console.log('✅ Привязки операций холста:', await relocateCanvasOperations(pool))
+    console.log('✅ Названия ведомственных табличек:', await renameDepartmentalSigns(pool))
+    console.log('✅ Изделия и варианты нанесения:', await configureGarmentProducts(pool))
+    console.log('✅ Проверенные тарифы:', await applyPriceCorrections(pool))
     console.log('\n✨ Миграция завершена!')
   } catch (error) {
     console.error('❌ Ошибка:', error)

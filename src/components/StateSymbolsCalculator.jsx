@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
+import { catalogConfig } from '../lib/catalog.mjs'
 
 const OPTION_LABELS = {
   'coat-of-arms': 'Исполнение',
@@ -59,7 +60,7 @@ function parseItem(item, categorySlug) {
     return { group: 'Аксессуары', variant: item.name, option: item.option }
   }
   if (categorySlug === 'signs') {
-    return { group: 'Вывеска 600×800 мм', variant: item.name.replace(/^Вывеска 600800 мм,\s*/, ''), option: item.option }
+    return { group: `${catalogConfig.displayNames.signs} 600×800 мм`, variant: item.name.replace(/^(?:Вывеска|Ведомственная табличка) 600[×хx]?800 мм,\s*/i, ''), option: item.option }
   }
   return { group: item.name, variant: item.option, option: item.option }
 }

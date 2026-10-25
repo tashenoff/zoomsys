@@ -12,10 +12,12 @@ export function OrdersProvider({ children }) {
 
   // Преобразование snake_case из API в camelCase для фронтенда
   const normalizeOrder = (order) => {
+    const specification = order.items?.[0]?.specifications || {}
     // Данные клиента могут прийти из JOIN (client_name), либо из specifications.items[0].client
     const specClient = order.items && order.items[0] && order.items[0].specifications && order.items[0].specifications.client
     const firstName = order.client_name || order.clientName || specClient?.name
     return {
+      ...specification,
       ...order,
       id: order.id?.toString(),
       orderNumber: order.order_number || order.orderNumber,
@@ -29,10 +31,10 @@ export function OrdersProvider({ children }) {
       updatedAt: order.updated_at || order.updatedAt,
       // Позиции заказа (только в детальном запросе GET /:id)
       productName: order.product_name || order.productName || (order.items && order.items[0] && order.items[0].product_name),
-      materialName: order.material_name || order.materialName,
-      colorType: order.color_type || order.colorType,
+      materialName: order.material_name || order.materialName || specification.materialName,
+      colorType: order.color_type || order.colorType || specification.colorType,
       quantity: order.quantity || (order.items && order.items[0] && order.items[0].quantity),
-      unitPrice: order.unit_price || order.unitPrice,
+      unitPrice: order.unit_price || order.unitPrice || specification.unitPrice,
       // Собираем объект клиента из плоских полей/спеки, которые отдаёт API (JOIN с clients)
       client: order.client || {
         id: order.client_id || order.clientId || specClient?.id,

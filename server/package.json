@@ -8,7 +8,15 @@
     "dev": "node --watch index.js",
     "migrate": "node migrate.js",
     "migrate:users": "node migrate-users.js",
-    "seed": "node seed.js"
+    "migrate:canvas-operations": "node relocate-canvas-operations.js",
+    "migrate:departmental-signs": "node rename-departmental-signs.js",
+    "migrate:garment-products": "node garment-products.js",
+    "migrate:price-corrections": "node apply-price-corrections.js",
+    "seed": "node seed.js",
+    "seed:updates-2026": "node seed-updates-2026.js",
+    "seed:wide-format": "node seed-wide-format.js",
+    "seed:advertising-stands": "node seed-advertising-stands.js",
+    "seed:garment-embroidery": "node seed-garment-embroidery.js"
   },
   "engines": {
     "node": ">=18.0.0"

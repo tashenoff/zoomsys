@@ -1,4 +1,6 @@
 const express = require('express')
+const { normalizeBusinessCardPricing, validateBusinessCardPrices } = require('../catalog-policy')
+const { validateProductOptions } = require('../garment-products')
 
 module.exports = (pool) => {
   const router = express.Router()
@@ -27,7 +29,7 @@ module.exports = (pool) => {
       ])
       res.json({
         settings: settings.rows[0] || { urgent_surcharge: 30 },
-        businessCards: bc.rows, printing: printing.rows, uvPrinting: uv.rows,
+        businessCards: bc.rows.map(normalizeBusinessCardPricing), printing: printing.rows, uvPrinting: uv.rows,
         wideFormat: wide.rows, textile: textile.rows, flagsProducts: flagsProducts.rows, advertisingStands: advertisingStands.rows, cncLaser: cncLaser.rows, plotterCutting: plotterCutting.rows, eventServices: eventServices.rows, garmentPrinting: garment.rows, embroidery: embroidery.rows, stateSymbols: state.rows, additionalServices: services.rows,
         additionalOperations: operations.rows, reorderOptions: reorder.rows
       })
@@ -36,16 +38,20 @@ module.exports = (pool) => {
 
   // BUSINESS CARDS CRUD
   router.get('/business-cards', async (req, res) => {
-    try { res.json((await pool.query('SELECT * FROM business_cards_pricing WHERE is_active=true ORDER BY sort_order,name')).rows) }
+    try { res.json((await pool.query('SELECT * FROM business_cards_pricing WHERE is_active=true ORDER BY sort_order,name')).rows.map(normalizeBusinessCardPricing)) }
     catch (e) { res.status(500).json({ error: 'Ошибка' }) }
   })
   router.post('/business-cards', async (req, res) => {
-    const { name, color_type, prices, sort_order } = req.body
+    const { name, color_type, prices, sort_order } = normalizeBusinessCardPricing(req.body)
+    const validation = validateBusinessCardPrices(prices)
+    if (validation) return res.status(400).json({ error: validation })
     try { res.json((await pool.query('INSERT INTO business_cards_pricing (name,color_type,prices,sort_order) VALUES ($1,$2,$3,$4) RETURNING *',
       [name, color_type, JSON.stringify(prices), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/business-cards/:id', async (req, res) => {
-    const { name, color_type, prices, is_active, sort_order } = req.body
+    const { name, color_type, prices, is_active, sort_order } = normalizeBusinessCardPricing(req.body)
+    const validation = validateBusinessCardPrices(prices)
+    if (validation) return res.status(400).json({ error: validation })
     try { res.json((await pool.query('UPDATE business_cards_pricing SET name=$1,color_type=$2,prices=$3,is_active=$4,sort_order=$5,updated_at=NOW() WHERE id=$6 RETURNING *',
       [name, color_type, JSON.stringify(prices), is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
@@ -60,14 +66,18 @@ module.exports = (pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/printing', async (req, res) => {
-    const { category, name, color_type, prices, sort_order } = req.body
-    try { res.json((await pool.query('INSERT INTO printing_pricing (category,name,color_type,prices,sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [category, name, color_type, JSON.stringify(prices), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const validation = require('../validate-multipage')(req.body)
+    if (validation) return res.status(400).json({ error: validation })
+    const { category, name, color_type, prices, specification, sort_order } = req.body
+    try { res.json((await pool.query('INSERT INTO printing_pricing (category,name,color_type,prices,specification,sort_order) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [category, name, color_type, JSON.stringify(prices), JSON.stringify(specification || null), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/printing/:id', async (req, res) => {
-    const { category, name, color_type, prices, is_active, sort_order } = req.body
-    try { res.json((await pool.query('UPDATE printing_pricing SET category=$1,name=$2,color_type=$3,prices=$4,is_active=$5,sort_order=$6,updated_at=NOW() WHERE id=$7 RETURNING *',
-      [category, name, color_type, JSON.stringify(prices), is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
+    const validation = require('../validate-multipage')(req.body)
+    if (validation) return res.status(400).json({ error: validation })
+    const { category, name, color_type, prices, specification, is_active, sort_order } = req.body
+    try { res.json((await pool.query('UPDATE printing_pricing SET category=$1,name=$2,color_type=$3,prices=$4,specification=$5,is_active=$6,sort_order=$7,updated_at=NOW() WHERE id=$8 RETURNING *',
+      [category, name, color_type, JSON.stringify(prices), JSON.stringify(specification || null), is_active!==false, sort_order||0, req.params.id])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.delete('/printing/:id', async (req, res) => {
     try { await pool.query('UPDATE printing_pricing SET is_active=false WHERE id=$1', [req.params.id]); res.json({success:true}) }
@@ -320,13 +330,17 @@ module.exports = (pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/garment-printing', async (req, res) => {
-    const { name, type, unit, price_per_sqcm, min_qty, min_amount, note, sort_order } = req.body
-    try { res.json((await pool.query(`INSERT INTO garment_printing_pricing (name,type,unit,price_per_sqcm,min_qty,min_amount,note,sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`, [name, type, unit || 'кв.см', price_per_sqcm, min_qty, min_amount, note, sort_order||0])).rows[0]) }
+    const { name, type, unit, price_per_sqcm, min_qty, min_amount, note, sort_order, product_options } = req.body
+    const validation = validateProductOptions(product_options)
+    if (validation) return res.status(400).json({ error: validation })
+    try { res.json((await pool.query(`INSERT INTO garment_printing_pricing (name,type,unit,price_per_sqcm,min_qty,min_amount,note,sort_order,product_options) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`, [name, type, unit || 'кв.см', price_per_sqcm, min_qty, min_amount, note, sort_order||0, product_options == null ? null : JSON.stringify(product_options)])).rows[0]) }
     catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/garment-printing/:id', async (req, res) => {
-    const { name, type, unit, price_per_sqcm, min_qty, min_amount, note, is_active, sort_order } = req.body
-    try { res.json((await pool.query(`UPDATE garment_printing_pricing SET name=$1,type=$2,unit=$3,price_per_sqcm=$4,min_qty=$5,min_amount=$6,note=$7,is_active=$8,sort_order=$9,updated_at=NOW() WHERE id=$10 RETURNING *`, [name, type, unit || 'кв.см', price_per_sqcm, min_qty, min_amount, note, is_active!==false, sort_order||0, req.params.id])).rows[0]) }
+    const { name, type, unit, price_per_sqcm, min_qty, min_amount, note, is_active, sort_order, product_options } = req.body
+    const validation = validateProductOptions(product_options)
+    if (validation) return res.status(400).json({ error: validation })
+    try { res.json((await pool.query(`UPDATE garment_printing_pricing SET name=$1,type=$2,unit=$3,price_per_sqcm=$4,min_qty=$5,min_amount=$6,note=$7,is_active=$8,sort_order=$9,product_options=COALESCE($10,product_options),updated_at=NOW() WHERE id=$11 RETURNING *`, [name, type, unit || 'кв.см', price_per_sqcm, min_qty, min_amount, note, is_active!==false, sort_order||0, product_options == null ? null : JSON.stringify(product_options), req.params.id])).rows[0]) }
     catch(e) { console.error(e); res.status(500).json({error:'Ошибка'}) }
   })
   router.delete('/garment-printing/:id', async (req, res) => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
@@ -63,7 +63,7 @@ function getUnitLabel(unit) {
   return u.replace(/^тг\//, '')
 }
 
-export default function TextilePrintingCalculator({ client, initialCategory }) {
+export default function TextilePrintingCalculator({ client, initialCategory, flagProduct = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -109,14 +109,17 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
     })
   }, [additionalOperations])
 
+  useEffect(() => { setCalculation(null) }, [width, height, quantity, selectedMaterial, selectedServices, isUrgent, additionalOperations])
+
   const handleCalculate = (e) => {
     e.preventDefault()
 
-    const w = parseFloat(width)
-    const h = parseFloat(height)
-    const qty = parseInt(quantity, 10)
+    const w = Number(width)
+    const h = Number(height)
+    const qty = Number(quantity)
 
-    if (!w || !h || !qty || !selectedMaterial) {
+    if (!Number.isFinite(Number(width)) || Number(width) <= 0 || !Number.isFinite(Number(height)) || Number(height) <= 0
+      || !Number.isInteger(Number(quantity)) || Number(quantity) <= 0 || !selectedMaterial) {
       alert('Заполните все поля')
       return
     }
@@ -142,6 +145,13 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
     const extras = []
     const perimeterPerItem = 2 * (w + h) // пог.м на 1 шт.
 
+    const unavailable = selectedServices.map(id => availableOperations.find(o => String(o.id) === String(id)))
+      .find(op => op && !Number.isFinite(Number(getTierPrice(op.prices, perimeterPerItem * qty, op.price).price)))
+    if (unavailable) {
+      setCalculation({ materialName: selectedMaterial.name, note: `${unavailable.name}: ${getTierPrice(unavailable.prices, perimeterPerItem * qty, unavailable.price).tier} пог.м — цена договорная` })
+      return
+    }
+
     selectedServices.forEach(id => {
       const op = availableOperations.find(o => String(o.id) === String(id))
       if (!op) return
@@ -150,7 +160,7 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
       const unitPrice = Number(opPrice.price) || 0
       const add = unitPrice * opQty
       extrasTotal += add
-      extras.push({ name: `${op.name} (${opQty.toLocaleString('ru-RU')} пог.м${opPrice.tier ? `, ${opPrice.tier}` : ''})`, price: add })
+      extras.push({ id: String(op.id), name: `${op.name} (${opQty.toLocaleString('ru-RU')} пог.м${opPrice.tier ? `, ${opPrice.tier}` : ''})`, price: add, quantity: opQty, unit: op.unit, unitPrice, tier: opPrice.tier })
     })
 
     const subtotal = baseTotal + extrasTotal
@@ -175,7 +185,8 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
     setSavingOrder(true)
     try {
       await createOrder({
-        client, category: 'textile', ...calculation,
+        client, category: flagProduct ? 'flags-products' : 'textile', ...calculation,
+        ...(flagProduct ? { flagProductId: flagProduct.id, flagProductName: flagProduct.name, productName: `Флаг: ${calculation.materialName} — нестандартный размер`, sizeMode: 'custom', size: `${calculation.width}*${calculation.height}`, dimensionUnit: 'м' } : {}),
         status: orderStatus, paymentStatus: 'not_paid'
       })
       alert('Заказ успешно сохранен!')
@@ -246,7 +257,7 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Количество (шт)</label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} min="1" step="1" required className="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
 
           {availableOperations.length > 0 && (
@@ -301,12 +312,13 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
               <p className="text-gray-700">Материал: {calculation.materialName}, диапазон: {calculation.priceTier}</p>
             </>
           ) : null}
-          total={{ label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
+          total={calculation.note ? null : { label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
           saveVariant="solid"
           saving={savingOrder}
           onSave={handleSaveOrder}
           saveDisabled={!client}
         >
+          {!calculation.note && <>
           <CalcResultRow label="Материал:" value={calculation.materialName} wrap />
           <CalcResultRow label="Размер:" value={`${calculation.width} × ${calculation.height} м`} />
           <CalcResultRow label="Площадь 1 шт:" value={`${calculation.itemArea} м²`} />
@@ -321,6 +333,7 @@ export default function TextilePrintingCalculator({ client, initialCategory }) {
           {calculation.isUrgent && (
             <CalcResultRow label="Срочность:" value={`+${calculation.urgentAmount.toLocaleString('ru-RU')} тг`} highlight="red" />
           )}
+          </>}
         </ResultSummary>
       )}
     </div>

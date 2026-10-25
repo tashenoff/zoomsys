@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react'
 import api from '../lib/api'
 import pricingDataFallback from '../data/pricing.json'
+import { getStateSymbolName } from '../lib/catalog.mjs'
 
 // Контекст для прайсов
 const PricingContext = createContext(null)
@@ -32,6 +33,7 @@ export function PricingProvider({ children }) {
         printing: (data.printing || []).map(item => ({
           id: String(item.id),
           category: item.category,
+          specification: typeof item.specification === 'string' ? JSON.parse(item.specification) : item.specification,
           name: item.name,
           colorType: item.color_type,
           prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices
@@ -142,6 +144,7 @@ export function PricingProvider({ children }) {
           type: item.type,
           unit: item.unit || 'кв.см',
           pricePerSqCm: parseFloat(item.price_per_sqcm),
+          productOptions: typeof item.product_options === 'string' ? JSON.parse(item.product_options) : (item.product_options || []),
           minQty: item.min_qty,
           minAmount: item.min_amount ? parseFloat(item.min_amount) : null,
           note: item.note
@@ -156,7 +159,7 @@ export function PricingProvider({ children }) {
         stateSymbols: (data.stateSymbols || []).map(item => ({
           id: String(item.id),
           category: item.category,
-          name: item.name,
+          name: getStateSymbolName(item),
           option: item.option,
           price: item.price == null ? null : parseFloat(item.price)
         })),
@@ -215,7 +218,8 @@ export function PricingProvider({ children }) {
       // Пробуем загрузить из кэша
       const cached = localStorage.getItem('crm_pricing_cache')
       if (cached) {
-        setPricing(JSON.parse(cached))
+        const cachedPricing = JSON.parse(cached)
+        setPricing({ ...cachedPricing, stateSymbols: (cachedPricing.stateSymbols || []).map(item => ({ ...item, name: getStateSymbolName(item) })) })
         console.log('Загружены данные из кэша')
       } else {
         // Fallback на локальный JSON

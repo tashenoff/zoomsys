@@ -305,6 +305,9 @@ export default function OrderDetail({ orderId, onBack }) {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">Детали:</h2>
           <div className="space-y-3">
+            {order.size && !order.materialName && <div><p className="text-sm text-gray-600">Размер:</p><p className="font-semibold">{order.size} {order.dimensionUnit || 'м'}</p></div>}
+            {order.stickerLayout && <div className="p-3 bg-blue-50 rounded"><p className="font-semibold">Раскладка наклеек: рулон {order.stickerLayout.rollWidth} м</p><p>{order.stickerLayout.columns} в ряд × {order.stickerLayout.rows} рядов, зазор {order.stickerLayout.gap * 1000} мм</p></div>}
+            {!!order.extras?.length && <div><p className="text-sm font-semibold text-gray-700">Дополнительные операции:</p>{order.extras.map((extra, index) => <div key={index} className="flex justify-between gap-3 text-sm"><span>{extra.name}</span><span>{Number(extra.price).toLocaleString('ru-RU')} тг</span></div>)}</div>}
             {/* Для визиток */}
             {order.productName && (
               <>
@@ -358,7 +361,7 @@ export default function OrderDetail({ orderId, onBack }) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Площадь:</p>
-                  <p className="font-semibold">{order.area} м²</p>
+                  <p className="font-semibold">{order.area ?? order.factualArea ?? order.itemArea} м²</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Количество:</p>

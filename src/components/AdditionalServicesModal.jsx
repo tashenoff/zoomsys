@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import pricingDataFallback from '../data/pricing.json'
+import { isServiceAllowed } from '../lib/catalog.mjs'
 
 /**
  * AdditionalServicesModal — переиспользуемая модалка выбора дополнительных услуг.
@@ -30,6 +31,7 @@ export default function AdditionalServicesModal({
 
   const services = (Array.isArray(pricingData.additionalServices) ? pricingData.additionalServices : [])
     .filter((svc) => {
+      if (!isServiceAllowed(svc, category)) return false
       const applicableTo = Array.isArray(svc.applicableTo)
         ? svc.applicableTo
         : (Array.isArray(svc.applicable_to) ? svc.applicable_to : ['all'])

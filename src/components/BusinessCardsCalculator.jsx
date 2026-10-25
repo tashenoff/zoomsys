@@ -5,6 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
+import { filterCardProducts, getManualBadgeQuote, isBadgeProduct } from '../lib/catalog.mjs'
 
 export default function BusinessCardsCalculator({ client: externalClient }) {
   // Получаем данные из контекста прайсов и заказов
@@ -17,7 +18,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   // Состояние для выбора типа карточки
   const [selectedCardType, setSelectedCardType] = useState(null)
   
-  const pricing = pricingData.businessCards || []
+  const allPricing = pricingData.businessCards || []
+  const pricing = useMemo(() => filterCardProducts(allPricing, selectedCardType), [allPricing, selectedCardType])
   const additionalOperations = pricingData.additionalOperations || {}
   const reorderOptions = pricingData.reorderOptions || []
   const additionalServices = pricingData.additionalServices || []
@@ -32,6 +34,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   
   const [quantity, setQuantity] = useState(100)
+  const [manualBatchTotal, setManualBatchTotal] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedAddServices, setSelectedAddServices] = useState([])
   const [addServicesOpen, setAddServicesOpen] = useState(false)
@@ -111,6 +114,11 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     return Array.from(colorTypesMap.values())
   }, [selectedMaterial, pricing])
 
+  useEffect(() => {
+    setManualBatchTotal('')
+    setCalculation(null)
+  }, [selectedCardType, selectedMaterial])
+
   // При выборе материала сбрасываем цветность и скроллим к цветности
   useEffect(() => {
     setSelectedColorType(null)
@@ -126,7 +134,11 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
   // При выборе цветности устанавливаем продукт и скроллим к количеству
   useEffect(() => {
-    if (selectedMaterial && selectedColorType) {
+    if (selectedMaterial && (selectedCardType === 'badges' || (selectedCardType === 'discount-cards' && availableColorTypes.length === 1))) {
+      const product = pricing.find(p => p.name === selectedMaterial)
+      setSelectedProduct(product || null)
+      setSelectedColorType(product?.colorType || null)
+    } else if (selectedMaterial && selectedColorType) {
       const product = pricing.find(
         p => p.name === selectedMaterial && p.colorType === selectedColorType
       )
@@ -139,27 +151,39 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     } else {
       setSelectedProduct(null)
     }
-  }, [selectedMaterial, selectedColorType, pricing])
+  }, [selectedMaterial, selectedColorType, pricing, selectedCardType, availableColorTypes])
 
   useEffect(() => {
     if (selectedProduct && quantity) {
       calculatePrice()
     }
-  }, [selectedProduct, quantity, selectedServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder])
+  }, [selectedProduct, quantity, selectedServices, selectedAddServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, manualBatchTotal])
 
   const getPriceForQuantity = (product, qty) => {
+    if (!Number.isInteger(Number(qty)) || Number(qty) <= 0) return null
     if (qty < 50) return product.prices.upTo49
     if (qty < 100) return product.prices["50to99"]
     if (qty < 300) return product.prices["100to299"]
     if (qty < 500) return product.prices["300to499"]
-    return product.prices.from500 || product.prices["300to499"]
+    return product.prices.from500 ?? null
   }
 
   const calculatePrice = () => {
     if (!selectedProduct) return
 
-    const unitPrice = getPriceForQuantity(selectedProduct, quantity)
-    const baseTotal = unitPrice * quantity
+    if (!Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
+      setCalculation(null)
+      return
+    }
+    const manualPricing = selectedCardType === 'badges' || isBadgeProduct(selectedProduct)
+      || getPriceForQuantity(selectedProduct, quantity) == null
+    const manualQuote = manualPricing ? getManualBadgeQuote(quantity, manualBatchTotal) : null
+    if (manualPricing && !manualQuote) {
+      setCalculation(null)
+      return
+    }
+    const unitPrice = manualQuote ? manualQuote.unitPrice : getPriceForQuantity(selectedProduct, quantity)
+    const baseTotal = manualQuote ? manualQuote.baseTotal : unitPrice * quantity
 
     let servicesTotal = 0
     let servicesDetails = []
@@ -282,6 +306,9 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
     setCalculation({
       productName: selectedProduct.name,
+      productType: manualPricing ? 'badges' : selectedCardType,
+      pricingMode: manualQuote ? 'manual' : 'tariff',
+      manualBatchTotal: manualQuote?.manualBatchTotal,
       colorType: selectedProduct.colorType,
       quantity,
       unitPrice,
@@ -308,6 +335,11 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
       return
     }
 
+    if ((calculation.pricingMode === 'manual' || selectedCardType === 'badges' || isBadgeProduct(selectedProduct))
+      && (!getManualBadgeQuote(quantity, manualBatchTotal) || calculation.manualBatchTotal !== Number(manualBatchTotal))) {
+      alert('Укажите согласованную стоимость всего тиража')
+      return
+    }
     setSavingOrder(true)
     try {
       const orderData = {
@@ -351,6 +383,14 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
     { id: 'certificates', name: 'Сертификаты малого формата', icon: '🎓', active: false },
     { id: 'custom-cards', name: 'Карточки произвольного типа', icon: '📇', active: false },
   ]
+
+  const calculationHint = !selectedProduct
+    ? (selectedCardType === 'badges' ? 'Выберите позицию бейджа выше.' : 'Выберите материал и цветность выше.')
+    : !Number.isInteger(Number(quantity)) || Number(quantity) <= 0
+      ? 'Укажите положительное целое количество.'
+      : (selectedCardType === 'badges' || isBadgeProduct(selectedProduct) || getPriceForQuantity(selectedProduct, quantity) == null)
+        && !getManualBadgeQuote(quantity, manualBatchTotal)
+        ? 'Укажите согласованную положительную стоимость всего тиража.' : ''
 
   // Если тип карточки не выбран, показываем экран выбора
   if (!selectedCardType) {
@@ -455,7 +495,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
         </div>
 
         {/* СЕКЦИЯ 2: Выбор цветности */}
-        <div ref={colorTypeRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-200">
+        {selectedCardType !== 'badges' && <div ref={colorTypeRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-200">
           <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
             🎨 Цветность
           </label>
@@ -475,7 +515,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
                   >
                     <div className="text-xl mb-1">{colorType}</div>
                     <div className="text-xs opacity-80">
-                      от {product.prices.upTo49} тг
+                      {isBadgeProduct(product) || getPriceForQuantity(product, quantity) == null ? 'Индивидуальный расчёт' : `${getPriceForQuantity(product, quantity)} тг/шт`}
                     </div>
                   </button>
                 ))}
@@ -498,6 +538,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
           )}
         </div>
 
+        }
+
         {/* СЕКЦИЯ 3: Количество */}
         <div ref={quantityRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
@@ -506,7 +548,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             <input
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+              onChange={(e) => { setQuantity(Number(e.target.value)); setManualBatchTotal(''); setCalculation(null) }}
               min="1"
               className="w-full px-3 py-2 md:px-4 md:py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold mb-3"
             />
@@ -514,7 +556,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
               {[50, 100, 200, 300, 500, 1000].map(qty => (
                 <button
                   key={qty}
-                  onClick={() => setQuantity(qty)}
+                  onClick={() => { setQuantity(qty); setManualBatchTotal(''); setCalculation(null) }}
                   className={`px-4 py-2 rounded-lg font-medium transition ${
                     quantity === qty
                       ? 'bg-yellow-500 text-white shadow-md'
@@ -526,6 +568,16 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
             ))}
           </div>
         </div>
+
+        {(selectedCardType === 'badges' || (selectedProduct && getPriceForQuantity(selectedProduct, quantity) == null)) && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <label htmlFor="badge-batch-total" className="block font-semibold text-gray-800 mb-2">Согласованная стоимость всего тиража, тг</label>
+            <input id="badge-batch-total" type="number" min="0.01" step="0.01" value={manualBatchTotal}
+              onChange={(e) => { setManualBatchTotal(e.target.value); setCalculation(null) }}
+              className="w-full px-4 py-2 border rounded-lg" placeholder="Введите индивидуальную стоимость тиража" />
+            <p className="text-sm text-gray-600 mt-2">{selectedCardType === 'badges' ? 'Бейджи рассчитываются индивидуально.' : 'Для этой позиции и тиража тариф не указан в прайсе: укажите согласованную сумму.'} Дополнительные операции добавляются отдельно.</p>
+          </div>
+        )}
 
         {/* СЕКЦИЯ 4: Дополнительные операции (новая система) */}
         {availableOperations.length > 0 && (
@@ -786,6 +838,12 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
           </div>
         </div>
       </div>
+
+      {calculationHint && <p role="status" className="text-sm text-gray-600">{calculationHint}</p>}
+      <button type="button" onClick={() => calculatePrice()} disabled={!!calculationHint}
+        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">
+        Рассчитать
+      </button>
 
       {/* Результат расчета */}
       {calculation && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import api from '../lib/api'
+import { catalogConfig, getEnabledWideFormatMaterials, isWideFormatGroupEnabled, isBadgeProduct, resolvePricingTab, getCanvasOperationKey, isCanvasMaterial } from '../lib/catalog.mjs'
 // Все доступные типы для поля "Применимо к"
 const ALL_TYPES = [
   { id: 'all', name: 'Все типы' },
@@ -14,29 +15,40 @@ const ALL_TYPES = [
   { id: 'notebooks', name: 'Блокноты' },
   { id: 'uv-printing', name: 'УФ печать' },
   { id: 'wide-format', name: 'Широкоформат' },
+  { id: 'textile', name: 'Текстиль' },
+  { id: 'flags-products', name: 'Изготовление флагов' },
+  { id: 'advertising-stands', name: 'Рекламные стенды' },
+  { id: 'garment-printing', name: 'Брендирование продукции' },
+  { id: 'embroidery', name: 'Вышивка' },
+  { id: 'cnc-laser', name: 'Фрезер/лазер' },
+  { id: 'plotter-cutting', name: 'Плоттерная резка' },
+  { id: 'event-services', name: 'Мероприятия' },
+  { id: 'multipage', name: 'Многостраничная продукция' },
   { id: 'state-symbols', name: 'Гос. символика (все)' },
   { id: 'coat-of-arms', name: 'Герб' },
   { id: 'flags-rk', name: 'Флаги РК' },
   { id: 'flagpoles', name: 'Флагштоки' },
-  { id: 'signs', name: 'Вывески' },
+  { id: 'signs', name: catalogConfig.displayNames.signs },
   { id: 'stands', name: 'Стенды' },
   { id: 'president-portrait', name: 'Портрет президента' }
 ]
 
 const WIDE_FORMAT_OPERATIONS = [
   { id: 'bannerJoining', name: 'Склейка баннера со стыковкой (авто)' },
-  { id: 'bannerGluing', name: 'Проклейка баннера по периметру (авто)' },
+  { id: 'bannerGluing', name: 'Проклейка баннера по периметру (ручной выбор)' },
   { id: 'rebarPerimeter', name: 'Арматура (по периметру)' },
   { id: 'eyeletsInstallation', name: 'Установка люверсов' },
   { id: 'wideFormatCutting', name: 'Обрезка готовой продукции' },
   { id: 'meshStitching', name: 'Прошивка баннерной сетки' },
   { id: 'vinylLamination', name: 'Ламинация винила' },
-  { id: 'contourCutting', name: 'Обрезка по контуру напечатанных элементов' }
+  { id: 'contourCutting', name: 'Обрезка по контуру напечатанных элементов' },
+  ...catalogConfig.canvasOperations
 ]
 
 export default function PricingManagement() {
   const { pricing, loading, error, isOffline, refreshPricing } = usePricing()
   const [activeTab, setActiveTab] = useState('businessCards')
+  const [symbolsPricingType, setSymbolsPricingType] = useState('stateSymbols')
    const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
@@ -83,16 +95,14 @@ export default function PricingManagement() {
     { id: 'businessCards', label: '💼 Визитки', count: localPricing.businessCards?.length || 0 },
     { id: 'printing', label: '📄 Полиграфия', count: localPricing.printing?.length || 0 },
     { id: 'uvPrinting', label: '🖨️ УФ печать', count: localPricing.uvPrinting?.length || 0 },
-    { id: 'wideFormat', label: '🖼️ Широкоформат', count: localPricing.wideFormat?.length || 0 },
-    { id: 'textile', label: '🧵 Текстиль', count: localPricing.textile?.length || 0 },
-    { id: 'flagsProducts', label: '🚩 Готовая продукция', count: localPricing.flagsProducts?.length || 0 },
+    { id: 'wideFormat', label: '🖼️ Широкоформат', count: getEnabledWideFormatMaterials(localPricing.wideFormat).length },
+    { id: catalogConfig.combinedPricing.id, label: `🇰🇿 ${catalogConfig.combinedPricing.name}`, count: catalogConfig.combinedPricing.sections.reduce((total, section) => total + (localPricing[section.id]?.length || 0), 0) },
     { id: 'advertisingStands', label: '🪧 Рекламные стенды', count: localPricing.advertisingStands?.length || 0 },
     { id: 'cncLaser', label: '🪚 Фрезер/лазер', count: localPricing.cncLaser?.length || 0 },
     { id: 'plotterCutting', label: '✂️ Плоттерная резка', count: localPricing.plotterCutting?.length || 0 },
     { id: 'eventServices', label: '🎤 Мероприятия', count: localPricing.eventServices?.length || 0 },
-    { id: 'garmentPrinting', label: '👕 Одежда/посуда', count: localPricing.garmentPrinting?.length || 0 },
+    { id: 'garmentPrinting', label: `👕 ${catalogConfig.displayNames['garment-printing']}`, count: localPricing.garmentPrinting?.length || 0 },
     { id: 'embroidery', label: '🧵 Вышивка', count: localPricing.embroidery?.length || 0 },
-    { id: 'stateSymbols', label: '🇰🇿 Гос. символика', count: localPricing.stateSymbols?.length || 0 },
     { id: 'additionalOperations', label: '⚙️ Доп. операции', count: additionalOperationsList.length },
     { id: 'additionalServices', label: '➕ Доп. услуги', count: localPricing.additionalServices?.length || 0 }
   ]
@@ -184,7 +194,7 @@ export default function PricingManagement() {
           additionalOperationsList={additionalOperationsList}
           query={searchTerm.trim().toLowerCase()}
           onEdit={(item, category) => {
-            setEditingItem({ ...item, category, pricingTab: category })
+            setEditingItem({ ...item, pricingTab: category })
             setIsModalOpen(true)
           }}
           onDelete={(category, id) => handleDelete(category, id)}
@@ -207,6 +217,20 @@ export default function PricingManagement() {
           ))}
         </div>
 
+        {activeTab === catalogConfig.combinedPricing.id && (
+          <div className="p-4 border-b bg-gray-50">
+            <h2 className="font-semibold mb-3">{catalogConfig.combinedPricing.name}</h2>
+            <div className="flex flex-wrap gap-2">
+              {catalogConfig.combinedPricing.sections.map(section => (
+                <button key={section.id} onClick={() => setSymbolsPricingType(section.id)}
+                  className={`px-4 py-2 rounded-lg border ${symbolsPricingType === section.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}>
+                  {section.name} ({localPricing[section.id]?.length || 0})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Контент табов */}
         <div className="p-6">
           {activeTab === 'businessCards' && (
@@ -224,7 +248,7 @@ export default function PricingManagement() {
             <PrintingTable
               items={localPricing.printing}
               onEdit={(item) => {
-                setEditingItem({ ...item, category: 'printing' })
+                setEditingItem({ ...item, pricingTab: 'printing' })
                 setIsModalOpen(true)
               }}
               onDelete={(id) => handleDelete('printing', id)}
@@ -254,22 +278,22 @@ export default function PricingManagement() {
             />
           )}
 
-          {activeTab === 'textile' && (
+          {activeTab === catalogConfig.combinedPricing.id && symbolsPricingType === 'textile' && (
             <TextileTable
               items={localPricing.textile}
               onEdit={(item) => {
-                setEditingItem({ ...item, category: 'textile' })
+                setEditingItem({ ...item, pricingTab: 'textile' })
                 setIsModalOpen(true)
               }}
               onDelete={(id) => handleDelete('textile', id)}
             />
           )}
 
-          {activeTab === 'flagsProducts' && (
+          {activeTab === catalogConfig.combinedPricing.id && symbolsPricingType === 'flagsProducts' && (
             <FlagsProductsTable
               items={localPricing.flagsProducts}
               onEdit={(item) => {
-                setEditingItem({ ...item, category: 'flagsProducts' })
+                setEditingItem({ ...item, pricingTab: 'flagsProducts' })
                 setIsModalOpen(true)
               }}
               onDelete={(id) => handleDelete('flagsProducts', id)}
@@ -331,7 +355,7 @@ export default function PricingManagement() {
               onEdit={(it)=>{ setEditingItem({...it,category:'embroidery'}); setIsModalOpen(true) }} onDelete={(id)=>handleDelete('embroidery',id)} />
           )}
 
-          {activeTab === 'stateSymbols' && (
+          {activeTab === catalogConfig.combinedPricing.id && symbolsPricingType === 'stateSymbols' && (
             <StateSymbolsTable
               items={localPricing.stateSymbols}
               onEdit={(item) => {
@@ -371,13 +395,14 @@ export default function PricingManagement() {
       {isModalOpen && (
         <EditModal
           item={editingItem}
-          category={editingItem?.pricingTab || activeTab}
+          operations={additionalOperationsList}
+          category={editingItem?.pricingTab || resolvePricingTab(activeTab, symbolsPricingType)}
           onClose={() => {
             setIsModalOpen(false)
             setEditingItem(null)
           }}
           onSave={async (updatedItem) => {
-            const category = editingItem?.pricingTab || activeTab
+            const category = editingItem?.pricingTab || resolvePricingTab(activeTab, symbolsPricingType)
             setSaving(true)
             
             try {
@@ -402,7 +427,7 @@ export default function PricingManagement() {
               if (category === 'businessCards') {
                 apiData = { name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {} }
               } else if (category === 'printing') {
-                apiData = { category: updatedItem.category, name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {} }
+                apiData = { category: updatedItem.category, name: updatedItem.name, color_type: updatedItem.colorType, prices: updatedItem.prices || {}, specification: updatedItem.specification || null }
               } else if (category === 'wideFormat') {
                               apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes, roll_width: updatedItem.rollWidth ?? null, waste_price: updatedItem.wastePrice ?? null, waste_margin: updatedItem.wasteMargin ?? 0.2, glue_allowed: updatedItem.glueAllowed === true, operations: Array.isArray(updatedItem.operations) ? updatedItem.operations.map(String) : updatedItem.operations }
                             } else if (category === 'stateSymbols') {
@@ -430,7 +455,7 @@ export default function PricingManagement() {
                   default_quantity: updatedItem.defaultQuantity
                 }
               } else if (category === 'garmentPrinting') {
-                apiData = { name: updatedItem.name, type: updatedItem.type, unit: updatedItem.unit, price_per_sqcm: updatedItem.pricePerSqCm, min_qty: updatedItem.minQty, min_amount: updatedItem.minAmount, note: updatedItem.note }
+                apiData = { name: updatedItem.name, type: updatedItem.type, unit: updatedItem.unit, price_per_sqcm: updatedItem.pricePerSqCm, min_qty: updatedItem.minQty, min_amount: updatedItem.minAmount, note: updatedItem.note, product_options: updatedItem.productOptions || [] }
               } else if (category === 'embroidery') {
                 apiData = { name: updatedItem.name, unit: updatedItem.unit, price: updatedItem.price, note: updatedItem.note }
               } else if (category === 'eventServices') {
@@ -483,7 +508,7 @@ const PRINTING_CATEGORY_LABELS = {
   flyers: 'Флаера, листовки, афиши',
   booklets: 'Буклеты',
   certificates: 'Дипломы, грамоты, сертификаты',
-  notebooks: 'Блокноты',
+  notebooks: 'Многостраничная продукция — Блокноты',
   folders: 'Папки',
     'paper-bags': 'Бумажные пакеты',
     'digital-printing': 'Цифровая печать',
@@ -548,12 +573,14 @@ function GlobalSearchResults({ localPricing, additionalOperationsList, query, on
   const bcItems = (localPricing.businessCards || []).filter(i => matchesQuery(i, query))
   const prItems = (localPricing.printing || []).filter(printingMatch)
   const uvItems = (localPricing.uvPrinting || []).filter(uvMatch)
-  const wfItems = (localPricing.wideFormat || []).filter(i => matchesQuery(i, query))
+  const wfItems = getEnabledWideFormatMaterials(localPricing.wideFormat).filter(i => matchesQuery(i, query))
   const ssItems = (localPricing.stateSymbols || []).filter(stateMatch)
+  const textileItems = (localPricing.textile || []).filter(i => matchesQuery(i, query))
+  const flagsItems = (localPricing.flagsProducts || []).filter(i => matchesQuery(i, query))
   const opItems = (additionalOperationsList || []).filter(i => matchesQuery(i, query))
   const svItems = (localPricing.additionalServices || []).filter(i => matchesQuery(i, query))
 
-  const found = bcItems.length + prItems.length + uvItems.length + wfItems.length + ssItems.length + opItems.length + svItems.length
+  const found = bcItems.length + prItems.length + uvItems.length + wfItems.length + ssItems.length + textileItems.length + flagsItems.length + opItems.length + svItems.length
 
   // Обёртки onEdit / onDelete с привязкой категории к позиции + счётчик для заголовка
   const editOf = (catKey) => (item) => onEdit(item, catKey)
@@ -598,9 +625,11 @@ function GlobalSearchResults({ localPricing, additionalOperationsList, query, on
         </CategoryBlock>
       )}
 
-      {ssItems.length > 0 && (
-        <CategoryBlock title="🇰🇿 Гос. символика" count={ssItems.length}>
-          <StateSymbolsTable items={ssItems} onEdit={editOf('stateSymbols')} onDelete={delOf('stateSymbols')} />
+      {(ssItems.length + textileItems.length + flagsItems.length) > 0 && (
+        <CategoryBlock title={`🇰🇿 ${catalogConfig.combinedPricing.name}`} count={ssItems.length + textileItems.length + flagsItems.length}>
+          {ssItems.length > 0 && <StateSymbolsTable items={ssItems} onEdit={editOf('stateSymbols')} onDelete={delOf('stateSymbols')} />}
+          {textileItems.length > 0 && <TextileTable items={textileItems} onEdit={editOf('textile')} onDelete={delOf('textile')} />}
+          {flagsItems.length > 0 && <FlagsProductsTable items={flagsItems} onEdit={editOf('flagsProducts')} onDelete={delOf('flagsProducts')} />}
         </CategoryBlock>
       )}
 
@@ -660,11 +689,15 @@ function BusinessCardsTable({ items, onEdit, onDelete }) {
                   {item.colorType}
                 </span>
               </td>
-              <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices.upTo49} ₸</td>
-              <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['50to99']} ₸</td>
-              <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['100to299']} ₸</td>
-              <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['300to499']} ₸</td>
-              <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices.from500} ₸</td>
+              {isBadgeProduct(item) ? (
+                <td colSpan={5} className="px-4 py-3 text-sm text-gray-700">Индивидуальный расчёт стоимости тиража</td>
+              ) : (<>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices.upTo49 ?? "по запросу"} ₸</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['50to99'] ?? 'по запросу'} ₸</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['100to299'] ?? 'по запросу'} ₸</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices['300to499'] ?? 'по запросу'} ₸</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices.from500 ?? "по запросу"} ₸</td>
+              </>)}
               <td className="px-4 py-3 text-right">
                 <button
                   onClick={() => onEdit(item)}
@@ -700,7 +733,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
           <tr>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Название</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Цветность</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Категория</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Категория / все тарифы</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">50 шт</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">100 шт</th>
             <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">300 шт</th>
@@ -721,6 +754,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
                 <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
                   {PRINTING_CATEGORY_LABELS[item.category] || item.category}
                 </span>
+                {item.category === 'notebooks' && <p>{Object.entries(item.prices || {}).map(([q,p]) => `${q} шт: ${p ?? "ручное заполнение"} ₸`).join("; ")}</p>}
               </td>
               <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices?.['50'] || item.prices?.upTo49 || '-'}</td>
               <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices?.['100'] || item.prices?.['50to99'] || '-'}</td>
@@ -824,7 +858,7 @@ function updatePrintOption(formData, setFormData, key, rawValue) {
 // Таблица для широкоформата
 function WideFormatTable({ items, onEdit, onDelete }) {
   return (
-    <PricingGroups items={items} getGroup={(i) => WIDE_FORMAT_CATEGORY_LABELS[i.category] || i.category || 'Прочее'}>
+    <PricingGroups items={getEnabledWideFormatMaterials(items)} getGroup={(i) => WIDE_FORMAT_CATEGORY_LABELS[i.category] || i.category || 'Прочее'}>
       {(groupItems) => (
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -1126,7 +1160,7 @@ const STATE_SYMBOL_CATEGORIES = [
   { id: 'coat-of-arms', label: 'Герб' },
   { id: 'flags-rk', label: 'Флаги РК' },
   { id: 'flagpoles', label: 'Флагштоки' },
-  { id: 'signs', label: 'Вывески' },
+  { id: 'signs', label: catalogConfig.displayNames.signs },
   { id: 'stands', label: 'Стенды' },
   { id: 'president-portrait', label: 'Портрет президента' }
 ]
@@ -1183,7 +1217,7 @@ function StateSymbolsTable({ items, onEdit, onDelete }) {
 // Таблица для доп. операций (ламинация, скругление и т.д.)
 function AdditionalOperationsTable({ items, onEdit, onDelete }) {
   return (
-    <PricingGroups items={items} getGroup={(i) => i.type === 'select' ? 'Выбор опции' : i.type === 'quantity' ? 'С количеством' : 'Фикс. цена'}>
+    <PricingGroups items={items} getGroup={(i) => (i.applicableTo || ['all']).map(id => ALL_TYPES.find(type => type.id === id)?.name || id).join(' / ')}>
       {(groupItems) => (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -1297,6 +1331,35 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
   )
 }
 
+function GarmentProductsEditForm({ formData, setFormData }) {
+  const products = formData.productOptions || []
+  const update = (index, product) => setFormData({ ...formData, productOptions: products.map((item, i) => i === index ? product : item) })
+  return (
+    <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-semibold text-gray-800">Изделия и варианты</h3>
+        <button type="button" onClick={() => setFormData({ ...formData, productOptions: [...products, { id: crypto.randomUUID(), name: '', variants: [] }] })} className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded">+ Изделие</button>
+      </div>
+      <p className="text-xs text-gray-500">Все изделия и варианты используют тариф этой позиции за кв.см.</p>
+      {products.map((product, index) => (
+        <div key={product.id} className="bg-gray-50 border rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <input aria-label="Название изделия" type="text" required value={product.name} onChange={(e) => update(index, { ...product, name: e.target.value })} className="flex-1 px-3 py-2 border rounded" />
+            <button type="button" onClick={() => setFormData({ ...formData, productOptions: products.filter((_, i) => i !== index) })} className="text-red-600 text-sm">Удалить изделие</button>
+          </div>
+          {(product.variants || []).map((variant, variantIndex) => (
+            <div key={variant.id} className="flex gap-2 pl-3">
+              <input aria-label="Название варианта" type="text" required value={variant.name} onChange={(e) => update(index, { ...product, variants: product.variants.map((item, i) => i === variantIndex ? { ...item, name: e.target.value } : item) })} className="flex-1 px-3 py-2 border rounded text-sm" />
+              <button type="button" onClick={() => update(index, { ...product, variants: product.variants.filter((_, i) => i !== variantIndex) })} className="text-red-600 text-sm">Удалить вариант</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => update(index, { ...product, variants: [...(product.variants || []), { id: crypto.randomUUID(), name: '' }] })} className="text-sm text-blue-700">+ Вариант</button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Форма редактирования операций
 function OperationEditForm({ formData, setFormData }) {
   return (
@@ -1307,10 +1370,11 @@ function OperationEditForm({ formData, setFormData }) {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg">
           <option value="">Фиксированная цена</option>
           <option value="select">Выбор опции</option>
+          <option value="quantity-select">Выбор опции и количество</option>
           <option value="quantity">С количеством</option>
         </select>
       </div>
-      {formData.type !== 'select' && (
+      {!['select', 'quantity-select'].includes(formData.type) && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -1327,9 +1391,9 @@ function OperationEditForm({ formData, setFormData }) {
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold text-gray-800 mb-3">Цены по диапазонам (опционально)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {['upTo50', 'upTo100', 'upTo500', 'default'].map(key => (
+              {['upTo50', 'upTo100', 'upTo500', 'over500', 'default'].map(key => (
                 <div key={key}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">{key === 'default' ? 'фикс.' : key.replace('upTo', 'до ')}</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{key === 'default' ? 'фикс.' : key.replace('upTo', 'до ').replace('over', 'свыше ')}</label>
                   <input type="text" value={formData.prices?.[key] ?? ''} onChange={(e) => updateTier(formData, setFormData, key, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="цена" />
                 </div>
@@ -1338,7 +1402,7 @@ function OperationEditForm({ formData, setFormData }) {
           </div>
         </>
       )}
-      {formData.type === 'select' && (
+      {['select', 'quantity-select'].includes(formData.type) && (
         <div className="border border-gray-200 rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold">Опции ({(formData.options || []).length})</h3>
@@ -1381,7 +1445,7 @@ function OperationEditForm({ formData, setFormData }) {
 }
 
 // Модальное окно редактирования (полная версия)
-function EditModal({ item, category, onClose, onSave }) {
+function EditModal({ item, category, onClose, onSave, operations = [] }) {
   // Инициализируем formData с дефолтными значениями для разных категорий
   const getInitialFormData = () => {
     if (item) return item
@@ -1401,7 +1465,7 @@ function EditModal({ item, category, onClose, onSave }) {
       }
     }
     if (category === 'wideFormat') {
-      return { name: '', category: 'phaeton', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '', rollWidth: null, wastePrice: null, wasteMargin: 0.2 }
+      return { name: '', category: 'mimaki', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '', rollWidth: null, wastePrice: null, wasteMargin: 0.2 }
     }
     if (category === 'textile') {
       return { name: '', category: 'textile', unit: 'м²', pricePerSqm: 0, prices: { upTo100: 0, upTo500: 0, over500: 'договорная' }, description: '', notes: '' }
@@ -1464,7 +1528,7 @@ function EditModal({ item, category, onClose, onSave }) {
       ...formData,
       prices: {
         ...formData.prices,
-        [priceKey]: parseFloat(value) || 0
+        [priceKey]: value === '' ? null : Number(value)
       }
     })
   }
@@ -1515,7 +1579,9 @@ function EditModal({ item, category, onClose, onSave }) {
                   </select>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg p-4">
+                {isBadgeProduct(formData) ? (
+                  <p className="p-4 bg-blue-50 rounded-lg">Бейджи: индивидуальный расчёт. Согласованная стоимость всего тиража указывается в калькуляторе.</p>
+                ) : <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-800 mb-4">Градации цен по тиражу</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
@@ -1584,7 +1650,7 @@ function EditModal({ item, category, onClose, onSave }) {
                       />
                     </div>
                   </div>
-                </div>
+                </div>}
               </>
             )}
 
@@ -1599,7 +1665,7 @@ function EditModal({ item, category, onClose, onSave }) {
                       <option value="flyers">Флаера</option>
                       <option value="booklets">Буклеты</option>
                       <option value="certificates">Сертификаты</option>
-                      <option value="notebooks">Блокноты</option>
+                      <option value="notebooks">Многостраничная продукция — Блокноты</option>
                     </select>
                   </div>
                   <div>
@@ -1616,10 +1682,10 @@ function EditModal({ item, category, onClose, onSave }) {
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-800 mb-3">Цены по тиражу (тг/шт)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {[['50', '50 шт'], ['100', '100 шт'], ['300', '300 шт'], ['500', '500 шт']].map(([key, label]) => (
+                    {(formData.category === 'notebooks' ? Object.keys(formData.prices || {}).sort((a,b) => Number(a)-Number(b)).map(k => [k, `${k} шт`]) : [['50', '50 шт'], ['100', '100 шт'], ['300', '300 шт'], ['500', '500 шт']]).map(([key, label]) => (
                       <div key={key}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-                        <input type="number" step="0.01" value={formData.prices?.[key] || ''} onChange={(e) => updatePrice(key, e.target.value)}
+                        <input type="number" step="0.01" min="0" value={formData.prices?.[key] ?? ''} onChange={(e) => setFormData({ ...formData, prices: { ...formData.prices, [key]: e.target.value === '' ? null : Number(e.target.value) } })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                       </div>
                     ))}
@@ -1627,6 +1693,14 @@ function EditModal({ item, category, onClose, onSave }) {
                 </div>
               </>
             )}
+
+            {category === 'printing' && formData.category === 'notebooks' && <div className="space-y-3 border p-4 rounded">
+              <h3 className="font-bold">Многостраничная продукция: параметры каталога</h3>
+              {['format','binding','cover','backing','paper','source'].map(key => <label className="block" key={key}>{({format:'Формат',binding:'Переплёт',cover:'Обложка',backing:'Подложка',paper:'Бумага блока',source:'Источник'})[key]}<input className="block border rounded p-2 w-full" value={formData.specification?.[key] || ''} onChange={e => setFormData({ ...formData, specification: { ...formData.specification, section: 'multipage', quantityMode: 'exact', [key]: e.target.value } })} /></label>)}
+              <label className="block">Листов блока<input type="number" min="1" step="1" className="block border rounded p-2" value={formData.specification?.sheets ?? ''} onChange={e => setFormData({ ...formData, specification: { ...formData.specification, section: 'multipage', quantityMode: 'exact', sheets: Number(e.target.value) } })} /></label>
+              <p>Только точные тиражи. Пустая цена означает ручное заполнение.</p>
+              <button type="button" className="text-blue-700" onClick={() => { const q = prompt('Новый тираж (целое число)'); if (q && /^\d+$/.test(q) && Number(q)>0) setFormData({ ...formData, prices: { ...formData.prices, [Number(q)]: null } }) }}>Добавить тираж</button>
+            </div>}
 
             {/* УФ печать */}
             {category === 'uvPrinting' && (
@@ -1699,9 +1773,9 @@ function EditModal({ item, category, onClose, onSave }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Группа печати</label>
-                    <select value={formData.category || 'phaeton'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    <select value={formData.category || 'mimaki'} onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                      <option value="phaeton">Phaeton UD-3208P</option>
+                      {isWideFormatGroupEnabled('phaeton') && <option value="phaeton">Phaeton UD-3208P</option>}
                       <option value="mimaki">MIMAKI SWJ-320 S4</option>
                       <option value="roland">Roland VS-640 + плоттер</option>
                       <option value="other">Прочее</option>
@@ -1758,15 +1832,16 @@ function EditModal({ item, category, onClose, onSave }) {
                                   </div>
                                   <div className="border-t border-gray-200 pt-4">
                                     <h3 className="font-semibold text-gray-800 mb-3">Доступные доп.операции</h3>
-                                    <p className="text-xs text-gray-400 mb-2">Отметь галочкой операции, которые доступны для этого материала в калькуляторе. Склейка и проклейка добавляются автоматически (если включены).</p>
+                                    <p className="text-xs text-gray-400 mb-2">Отметь галочкой операции, которые доступны для этого материала в калькуляторе. Склейка рассчитывается автоматически по швам. Проклейка по периметру выбирается вручную в калькуляторе.</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                      {WIDE_FORMAT_OPERATIONS.map(op => {
-                                        const checked = Array.isArray(formData.operations) && formData.operations.map(String).includes(op.id)
+                                      {WIDE_FORMAT_OPERATIONS.filter(op => !getCanvasOperationKey(op) || isCanvasMaterial(formData)).map(op => {
+                                        const aliases = [op.id, ...operations.filter(item => getCanvasOperationKey(item) === op.id).map(item => String(item.id))]
+                                        const checked = Array.isArray(formData.operations) && formData.operations.map(String).some(id => aliases.includes(id))
                                         return (
                                           <label key={op.id} className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                             <input type="checkbox" checked={checked} onChange={(e) => {
                                               const cur = Array.isArray(formData.operations) ? formData.operations.map(String) : []
-                                              const next = e.target.checked ? [...cur, op.id] : cur.filter(id => id !== op.id)
+                                              const next = e.target.checked ? [...new Set([...cur, op.id])] : cur.filter(id => !aliases.includes(id))
                                               setFormData({ ...formData, operations: next })
                                             }} className="w-4 h-4" />
                                             <span className="text-sm">{op.name}</span>
@@ -1795,6 +1870,7 @@ function EditModal({ item, category, onClose, onSave }) {
                   <input type="number" value={formData.minAmount??''} onChange={(e)=>setFormData({...formData,minAmount:e.target.value===''?null:parseFloat(e.target.value)||0})} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
                 </div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">Примечание</label><input type="text" value={formData.note||''} onChange={(e)=>setFormData({...formData,note:e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg" /></div>
+                <GarmentProductsEditForm formData={formData} setFormData={setFormData} />
               </>
             )}
             {category === 'embroidery' && (

@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react'
 import pricingData from '../data/pricing.json'
 import logo from '../logo.svg'
+import { getDisplayCategories, isWideFormatGroupEnabled } from '../lib/catalog.mjs'
 import { useAuth } from '../hooks/useAuth'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView, open, onClose }) {
   const { user, hasPermission } = useAuth()
-  const categories = pricingData.categories
+  const categories = useMemo(() => getDisplayCategories(pricingData.categories), [])
     const [expandedCategory, setExpandedCategory] = useState(null)
     const [search, setSearch] = useState('')
 
@@ -25,7 +26,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                   { id: 'phaeton', name: 'Phaeton UD-3208P', icon: '🖨️' },
                   { id: 'mimaki', name: 'MIMAKI SWJ-320 S4', icon: '🖨️' },
                   { id: 'roland', name: 'Roland VS-640 + плоттер', icon: '✂️' }
-                ]
+                ].filter(group => isWideFormatGroupEnabled(group.id))
 
                 // Типы печати на текстиле (совпадают с TEXTILE_CATEGORIES в TextilePrintingCalculator.jsx)
                         const TEXTILE_CATEGORIES = [

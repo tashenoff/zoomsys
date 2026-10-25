@@ -4,6 +4,7 @@ import { useOrders } from '../hooks/useOrders'
 import pricingDataFallback from '../data/pricing.json'
 import ResultSummary from './ResultSummary'
 import CalcResultRow from './CalcResultRow'
+import TextilePrintingCalculator from './TextilePrintingCalculator'
 
 const CATEGORY_LABELS = {
   'flags-size': 'Флаги и знамена (по размеру)',
@@ -41,10 +42,12 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
+  const [customSize, setCustomSize] = useState(false)
 
   // При выборе категории в сайдбаре — сбрасываем позицию/размер и считаем с новой категории.
   useEffect(() => {
     if (initialCategory) {
+      setCustomSize(false)
       setSelectedCategory(initialCategory)
       setSelectedItemId('')
       setSelectedSize('')
@@ -106,8 +109,10 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
       return
     }
 
-    const qty = parseInt(quantity, 10) || 1
+    const qty = Number(quantity)
+    if (!Number.isInteger(qty) || qty <= 0) { setCalculation(null); alert('Укажите положительное целое количество'); return }
     const price = Number(unitPrice)
+    if (!Number.isFinite(price)) { setCalculation({ productName: selectedItem.name, size: effectiveSize, note: 'Цена по запросу — свяжитесь с менеджером' }); return }
     const baseTotal = price * qty
     const urgentAmount = isUrgent ? Math.max(baseTotal * urgentSurcharge / 100, 5000) : 0
     const total = baseTotal + urgentAmount
@@ -133,6 +138,17 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
       alert('Ошибка сохранения заказа: ' + err.message)
     } finally { setSavingOrder(false) }
   }
+
+  if (customSize && selectedItem) return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg p-4 shadow-md">
+        <button type="button" onClick={() => { setCustomSize(false); setCalculation(null) }} className="text-blue-600">← Стандартные размеры</button>
+        <h2 className="text-xl font-semibold mt-3">Нестандартный размер: {selectedItem.name}</h2>
+        <p className="text-sm text-gray-500 mt-2">Цена по прайсу текстиля: выберите материал и нужные обработки. Размеры — в метрах.</p>
+      </div>
+      <TextilePrintingCalculator key={selectedItem.id} client={client} flagProduct={selectedItem} />
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -177,6 +193,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">Размер</label>
               <div className="flex gap-2 flex-wrap">
+                {effectiveCategory === 'flags-size' && <button type="button" onClick={() => { setCustomSize(true); setCalculation(null) }} className="px-4 py-2 rounded-lg border-2 border-blue-300 hover:bg-blue-50 font-medium">Нестандартный размер</button>}
                 {sizes.map(size => (
                   <button key={size} type="button"
                     onClick={() => { setSelectedSize(size); setCalculation(null) }}
@@ -190,7 +207,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Количество (шт)</label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} min="1" required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            <input type="number" value={quantity} onChange={(e) => { setQuantity(e.target.value); setCalculation(null) }} min="1" step="1" required className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <label className="flex items-center p-3 md:p-4 bg-red-50 border-2 border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition">
@@ -211,12 +228,13 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
               {calculation.unitPriceText && <p className="text-gray-700 mt-1">Цена {calculation.unitPriceText} тг</p>}
             </>
           ) : null}
-          total={{ label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
+          total={calculation.note ? null : { label: 'Итого:', value: `${calculation.total.toLocaleString('ru-RU')} тг` }}
           saveVariant="solid"
           saving={savingOrder}
           onSave={handleSaveOrder}
           saveDisabled={!client}
         >
+          {!calculation.note && <>
           <CalcResultRow label="Позиция:" value={calculation.productName} reverseOnMobile />
           {calculation.size && <CalcResultRow label="Размер:" value={`${calculation.size} м`} />}
           <CalcResultRow label="Количество:" value={`${calculation.quantity} шт`} />
@@ -225,6 +243,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
           {calculation.isUrgent && (
             <CalcResultRow label="Срочность:" value={`+${calculation.urgentAmount.toLocaleString('ru-RU')} тг`} highlight="red" />
           )}
+          </>}
         </ResultSummary>
       )}
     </div>

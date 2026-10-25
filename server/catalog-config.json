@@ -1,0 +1,20 @@
+{
+  "displayNames": {
+    "garment-printing": "Брендирование продукции",
+    "signs": "Ведомственная табличка"
+  },
+  "combinedPricing": {
+    "id": "symbolsTextile",
+    "name": "Символика и текстиль",
+    "sections": [
+      { "id": "stateSymbols", "name": "Государственная символика" },
+      { "id": "textile", "name": "Текстиль" },
+      { "id": "flagsProducts", "name": "Готовая продукция" }
+    ]
+  },
+  "disabledWideFormatGroups": ["phaeton"],
+  "canvasOperations": [
+    { "id": "canvasStretch", "name": "Натяжка холста" },
+    { "id": "subframe", "name": "Подрамник" }
+  ]
+}

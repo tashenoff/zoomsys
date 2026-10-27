@@ -1,5 +1,5 @@
 import { Component, useRef, useState } from 'react'
-import { LottieSvg } from 'lottie-react'
+import { Lottie } from 'lottie-react'
 import animationData from '../assets/razoom-logo.json'
 import logoFallback from '../logo.svg'
 import './RazoomLogo.css'
@@ -72,15 +72,20 @@ function RazoomLogoAnimation({ className = '', width, height, alt = 'Ra Zoom', s
     lottieRef.current?.scrubTo(LAST_FRAME)
   }
 
+  const fitCanvas = () => {
+    lottieRef.current?.animationItem?.resize?.()
+  }
+
   if (failed) {
     return <LogoFallback className={className} width={width} height={height} alt={alt} style={style} />
   }
 
   return (
-    <LottieSvg
+    <Lottie
       lottieRef={lottieRef}
       className={logoClassName(className)}
       src={animationData}
+      renderer="canvas"
       loop={false}
       autoplay={!reduceMotion}
       rendererSettings={{ preserveAspectRatio: 'xMidYMid meet' }}
@@ -88,6 +93,7 @@ function RazoomLogoAnimation({ className = '', width, height, alt = 'Ra Zoom', s
       aria-label={alt}
       subscriptions={{
         ready() {
+          fitCanvas()
           if (reduceMotion) holdLastFrame()
         },
         complete: holdLastFrame,

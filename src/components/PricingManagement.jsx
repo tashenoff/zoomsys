@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePricing } from '../hooks/usePricing'
 import api from '../lib/api'
 import { catalogConfig, getEnabledWideFormatMaterials, isWideFormatGroupEnabled, isBadgeProduct, resolvePricingTab, getCanvasOperationKey, isCanvasMaterial } from '../lib/catalog.mjs'
+import { collectPriceMatches } from '../lib/priceSearch'
 // Все доступные типы для поля "Применимо к"
 const ALL_TYPES = [
   { id: 'all', name: 'Все типы' },
@@ -45,11 +46,11 @@ const WIDE_FORMAT_OPERATIONS = [
   ...catalogConfig.canvasOperations
 ]
 
-export default function PricingManagement() {
+export default function PricingManagement({ searchQuery = '', focusItemId = null, onClearSearch }) {
   const { pricing, loading, error, isOffline, refreshPricing } = usePricing()
   const [activeTab, setActiveTab] = useState('businessCards')
   const [symbolsPricingType, setSymbolsPricingType] = useState('stateSymbols')
-   const [searchTerm, setSearchTerm] = useState('')
+  const activeSearch = searchQuery.trim()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -164,35 +165,13 @@ export default function PricingManagement() {
               </div>
             </div>
 
-      {/* Глобальный поиск по всем позициям прайса */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-gray-400 text-xl">🔍</span>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Поиск по всем позициям прайса (название, категория)…"
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="text-gray-400 hover:text-gray-600 px-2 text-xl"
-              title="Очистить поиск"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Результаты глобального поиска */}
-      {searchTerm.trim() ? (
+      {/* Результаты поиска из верхней панели */}
+      {activeSearch ? (
         <GlobalSearchResults
           localPricing={localPricing}
-          additionalOperationsList={additionalOperationsList}
-          query={searchTerm.trim().toLowerCase()}
+          query={activeSearch}
+          focusItemId={focusItemId}
+          onClear={onClearSearch}
           onEdit={(item, category) => {
             setEditingItem({ ...item, pricingTab: category })
             setIsModalOpen(true)
@@ -550,50 +529,70 @@ function PricingGroups({ items, getGroup, children }) {
   )
 }
 
-// Поисковые предикаты для каждой категории
-function matchText(value, query) { return String(value ?? '').toLowerCase().includes(query) }
-function matchesQuery(item, query) {
-  return matchText(item.name, query) ||
-    matchText(item.colorType, query) ||
-    matchText(item.category, query) ||
-    matchText(item.option, query) ||
-    matchText(item.description, query) ||
-    matchText(item.unit, query)
+const PRICE_TABLES = {
+  businessCards: BusinessCardsTable,
+  printing: PrintingTable,
+  uvPrinting: UVPrintingTable,
+  wideFormat: WideFormatTable,
+  stateSymbols: StateSymbolsTable,
+  textile: TextileTable,
+  flagsProducts: FlagsProductsTable,
+  advertisingStands: AdvertisingStandsTable,
+  cncLaser: CncLaserTable,
+  plotterCutting: PlotterCuttingTable,
+  eventServices: EventServicesTable,
+  garmentPrinting: GarmentPrintingTable,
+  embroidery: EmbroideryTable,
+  additionalOperations: AdditionalOperationsTable,
+  additionalServices: AdditionalServicesTable
 }
 
-// Глобальные результаты поиска: группируем по категориям и рендерим через их собственные таблицы,
-// чтобы сохранить ту же структуру столбцов, что и в обычном (не-поисковом) виде.
-function GlobalSearchResults({ localPricing, additionalOperationsList, query, onEdit, onDelete }) {
-  // Предикаты по подкатегории (для полиграфии / УФ / гос. символики)
-  const printingMatch = (i) => matchesQuery(i, query) || matchText(PRINTING_CATEGORY_LABELS[i.category] || '', query)
-  const uvMatch = (i) => matchesQuery(i, query) || matchText(UV_CATEGORY_LABELS[i.category] || '', query)
-  const stateMatch = (i) => matchesQuery(i, query) || matchText(STATE_SYMBOL_CATEGORIES.find(c => c.id === i.category)?.label || '', query)
-  const opMatch = (i) => matchesQuery(i, query)
+const COMBINED_PRICE_KEYS = new Set(['stateSymbols', 'textile', 'flagsProducts'])
 
-  const bcItems = (localPricing.businessCards || []).filter(i => matchesQuery(i, query))
-  const prItems = (localPricing.printing || []).filter(printingMatch)
-  const uvItems = (localPricing.uvPrinting || []).filter(uvMatch)
-  const wfItems = getEnabledWideFormatMaterials(localPricing.wideFormat).filter(i => matchesQuery(i, query))
-  const ssItems = (localPricing.stateSymbols || []).filter(stateMatch)
-  const textileItems = (localPricing.textile || []).filter(i => matchesQuery(i, query))
-  const flagsItems = (localPricing.flagsProducts || []).filter(i => matchesQuery(i, query))
-  const opItems = (additionalOperationsList || []).filter(i => matchesQuery(i, query))
-  const svItems = (localPricing.additionalServices || []).filter(i => matchesQuery(i, query))
+// Результаты поиска по прайсу: те же таблицы, что и на вкладках.
+function GlobalSearchResults({ localPricing, query, onEdit, onDelete, focusItemId, onClear }) {
+  const rootRef = useRef(null)
+  const { groups, total } = collectPriceMatches(localPricing, query)
+  const combined = groups.filter(group => COMBINED_PRICE_KEYS.has(group.key))
+  const combinedCount = combined.reduce((sum, group) => sum + group.items.length, 0)
 
-  const found = bcItems.length + prItems.length + uvItems.length + wfItems.length + ssItems.length + textileItems.length + flagsItems.length + opItems.length + svItems.length
+  useEffect(() => {
+    if (!focusItemId || !rootRef.current) return
+    const node = rootRef.current.querySelector(`[data-price-id="${CSS.escape(String(focusItemId))}"]`)
+    if (!node) return
+    node.scrollIntoView({ block: 'center' })
+    node.classList.add('!bg-blue-100')
+    return () => node.classList.remove('!bg-blue-100')
+  }, [focusItemId, query, total])
 
-  // Обёртки onEdit / onDelete с привязкой категории к позиции + счётчик для заголовка
   const editOf = (catKey) => (item) => onEdit(item, catKey)
   const delOf = (catKey) => (id) => onDelete(catKey, id)
+  const renderTable = (group) => {
+    const Table = PRICE_TABLES[group.key]
+    if (!Table) return null
+    return <Table items={group.items} onEdit={editOf(group.key)} onDelete={delOf(group.key)} />
+  }
+
+  let combinedRendered = false
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md px-6 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-800">Результаты поиска по всем категориям</h2>
-        <span className="text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-1">Найдено: {found}</span>
+    <div className="space-y-6" ref={rootRef}>
+      <div className="bg-white rounded-lg shadow-md px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-gray-800">Результаты поиска по всем категориям</h2>
+          <p className="text-sm text-gray-500 mt-1">Запрос: «{query}»</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-1">Найдено: {total}</span>
+          {onClear && (
+            <button type="button" onClick={onClear} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              Очистить
+            </button>
+          )}
+        </div>
       </div>
 
-      {found === 0 && (
+      {total === 0 && (
         <div className="bg-white rounded-lg shadow-md p-10 text-center">
           <div className="text-4xl mb-3">🔍</div>
           <p className="text-gray-600 text-lg">По запросу «{query}» ничего не найдено</p>
@@ -601,49 +600,24 @@ function GlobalSearchResults({ localPricing, additionalOperationsList, query, on
         </div>
       )}
 
-      {bcItems.length > 0 && (
-        <CategoryBlock title="💼 Визитки" count={bcItems.length}>
-          <BusinessCardsTable items={bcItems} onEdit={editOf('businessCards')} onDelete={delOf('businessCards')} />
-        </CategoryBlock>
-      )}
-
-      {prItems.length > 0 && (
-        <CategoryBlock title="📄 Полиграфия" count={prItems.length}>
-          <PrintingTable items={prItems} onEdit={editOf('printing')} onDelete={delOf('printing')} />
-        </CategoryBlock>
-      )}
-
-      {uvItems.length > 0 && (
-        <CategoryBlock title="🖨️ УФ печать" count={uvItems.length}>
-          <UVPrintingTable items={uvItems} onEdit={editOf('uvPrinting')} onDelete={delOf('uvPrinting')} />
-        </CategoryBlock>
-      )}
-
-      {wfItems.length > 0 && (
-        <CategoryBlock title="🖼️ Широкоформат" count={wfItems.length}>
-          <WideFormatTable items={wfItems} onEdit={editOf('wideFormat')} onDelete={delOf('wideFormat')} />
-        </CategoryBlock>
-      )}
-
-      {(ssItems.length + textileItems.length + flagsItems.length) > 0 && (
-        <CategoryBlock title={`🇰🇿 ${catalogConfig.combinedPricing.name}`} count={ssItems.length + textileItems.length + flagsItems.length}>
-          {ssItems.length > 0 && <StateSymbolsTable items={ssItems} onEdit={editOf('stateSymbols')} onDelete={delOf('stateSymbols')} />}
-          {textileItems.length > 0 && <TextileTable items={textileItems} onEdit={editOf('textile')} onDelete={delOf('textile')} />}
-          {flagsItems.length > 0 && <FlagsProductsTable items={flagsItems} onEdit={editOf('flagsProducts')} onDelete={delOf('flagsProducts')} />}
-        </CategoryBlock>
-      )}
-
-      {opItems.length > 0 && (
-        <CategoryBlock title="⚙️ Доп. операции" count={opItems.length}>
-          <AdditionalOperationsTable items={opItems} onEdit={editOf('additionalOperations')} onDelete={delOf('additionalOperations')} />
-        </CategoryBlock>
-      )}
-
-      {svItems.length > 0 && (
-        <CategoryBlock title="➕ Доп. услуги" count={svItems.length}>
-          <AdditionalServicesTable items={svItems} onEdit={editOf('additionalServices')} onDelete={delOf('additionalServices')} />
-        </CategoryBlock>
-      )}
+      {groups.map(group => {
+        if (COMBINED_PRICE_KEYS.has(group.key)) {
+          if (combinedRendered) return null
+          combinedRendered = true
+          return (
+            <CategoryBlock key="symbolsTextile" title={`🇰🇿 ${catalogConfig.combinedPricing.name}`} count={combinedCount}>
+              <div className="space-y-8">
+                {combined.map(section => <div key={section.key}>{renderTable(section)}</div>)}
+              </div>
+            </CategoryBlock>
+          )
+        }
+        return (
+          <CategoryBlock key={group.key} title={group.title} count={group.items.length}>
+            {renderTable(group)}
+          </CategoryBlock>
+        )
+      })}
     </div>
   )
 }
@@ -682,7 +656,7 @@ function BusinessCardsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`businessCards:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-700">
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
@@ -743,7 +717,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`printing:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm">
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
@@ -791,7 +765,7 @@ function UVPrintingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`uvPrinting:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -874,7 +848,7 @@ function WideFormatTable({ items, onEdit, onDelete }) {
             </thead>
             <tbody>
               {groupItems?.map((item, index) => (
-                <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={item.id} data-price-id={`wideFormat:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <div className="font-medium">{item.name}</div>
                     {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -920,7 +894,7 @@ function AdvertisingStandsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`advertisingStands:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -955,7 +929,7 @@ function CncLaserTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`cncLaser:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -991,7 +965,7 @@ function PlotterCuttingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`plotterCutting:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.material}</td>
               <td className="px-4 py-3 text-sm text-gray-700">{item.operation}</td>
               <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.priceText || (item.price != null ? `${Number(item.price).toLocaleString('ru-RU')} тг` : '—')}</td>
@@ -1025,7 +999,7 @@ function EventServicesTable({ items, onEdit, onDelete }) {
           </thead>
           <tbody>
             {groupItems.map((item, index) => (
-              <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <tr key={item.id} data-price-id={`eventServices:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{item.unit || 'шт'}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">
@@ -1055,7 +1029,7 @@ function GarmentPrintingTable({ items, onEdit, onDelete }) {
         <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
       </tr></thead><tbody>
         {(items||[]).map((item,index)=>(
-          <tr key={item.id} className={index%2===0?'bg-white':'bg-gray-50'}>
+          <tr key={item.id} data-price-id={`garmentPrinting:${item.id}`} className={index%2===0?'bg-white':'bg-gray-50'}>
             <td className="px-4 py-3 text-sm text-gray-900"><div className="font-medium">{item.name}</div>{item.note&&<div className="text-xs text-gray-500">{item.note}</div>}</td>
             <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.pricePerSqCm} тг/кв.см</td>
             <td className="px-4 py-3 text-right"><button onClick={()=>onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button><button onClick={()=>onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button></td>
@@ -1074,7 +1048,7 @@ function EmbroideryTable({ items, onEdit, onDelete }) {
         <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
       </tr></thead><tbody>
         {(items||[]).map((item,index)=>(
-          <tr key={item.id} className={index%2===0?'bg-white':'bg-gray-50'}>
+          <tr key={item.id} data-price-id={`embroidery:${item.id}`} className={index%2===0?'bg-white':'bg-gray-50'}>
             <td className="px-4 py-3 text-sm text-gray-900"><div className="font-medium">{item.name}</div>{item.note&&<div className="text-xs text-gray-500">{item.note}</div>}</td>
             <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.price} тг / 1000 стежков</td>
             <td className="px-4 py-3 text-right"><button onClick={()=>onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button><button onClick={()=>onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button></td>
@@ -1100,7 +1074,7 @@ function FlagsProductsTable({ items, onEdit, onDelete }) {
           </thead>
           <tbody>
             {groupItems.map((item, index) => (
-              <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <tr key={item.id} data-price-id={`flagsProducts:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 text-sm text-gray-900">
                   <div className="font-medium">{item.name}</div>
                   {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -1137,7 +1111,7 @@ function TextileTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`textile:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -1193,7 +1167,7 @@ function StateSymbolsTable({ items, onEdit, onDelete }) {
               </thead>
               <tbody>
                 {group.items.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={item.id} data-price-id={`stateSymbols:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{item.option}</td>
                     <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
@@ -1233,7 +1207,7 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`additionalOperations:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900 font-medium">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
                 {item.type === 'select' ? '📋 Выбор опции' : 
@@ -1297,7 +1271,7 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {items?.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`additionalServices:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                             <td className="px-4 py-3 text-sm text-gray-600">{item.serviceCategory || '—'}</td>
                                           <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">

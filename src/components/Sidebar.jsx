@@ -1,103 +1,24 @@
 import { useState, useMemo } from 'react'
 import pricingData from '../data/pricing.json'
 import logo from '../logo.svg'
-import { getDisplayCategories, isWideFormatGroupEnabled } from '../lib/catalog.mjs'
+import { getDisplayCategories } from '../lib/catalog.mjs'
 import { useAuth } from '../hooks/useAuth'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import {
+  UV_SECTIONS,
+  WIDE_GROUPS,
+  TEXTILE_CATEGORIES,
+  FLAG_CATEGORIES,
+  PLOTTER_MATERIALS,
+  CNC_TYPES,
+  SPECIALIST_GROUPS,
+  EVENT_GROUPS
+} from '../lib/navCatalog'
 
-export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, selectedView, onSelectView, open, onClose }) {
-  const { user, hasPermission } = useAuth()
+export default function Sidebar({ selectedCategory, onSelectCategory, selectedView, onSelectView, open, onClose }) {
+  const { hasPermission } = useAuth()
   const categories = useMemo(() => getDisplayCategories(pricingData.categories), [])
     const [expandedCategory, setExpandedCategory] = useState(null)
-    const [search, setSearch] = useState('')
-
-    // Разделы страницы УФ печати (совпадают с categoryMap в UVPrintingCalculator.jsx)
-    const UV_SECTIONS = [
-          { id: 'pens', name: 'Ручки', icon: '🖊️' },
-          { id: 'cards', name: 'Флеш-карты, пластиковые карты', icon: '💳' },
-          { id: 'promotional', name: 'Промо-продукция', icon: '🎁' },
-          { id: 'notebooks', name: 'Блокноты (логотип)', icon: '📔' },
-          { id: 'notebooks-image', name: 'Блокноты (изображение)', icon: '📓' },
-          { id: 'materials', name: 'На материалах', icon: '🎨' }
-        ]
-
-        // Группы оборудования широкоформатной печати (совпадают с WIDE_FORMAT_GROUPS в WideFormatCalculator.jsx)
-                const WIDE_GROUPS = [
-                  { id: 'phaeton', name: 'Phaeton UD-3208P', icon: '🖨️' },
-                  { id: 'mimaki', name: 'MIMAKI SWJ-320 S4', icon: '🖨️' },
-                  { id: 'roland', name: 'Roland VS-640 + плоттер', icon: '✂️' }
-                ].filter(group => isWideFormatGroupEnabled(group.id))
-
-                // Типы печати на текстиле (совпадают с TEXTILE_CATEGORIES в TextilePrintingCalculator.jsx)
-                        const TEXTILE_CATEGORIES = [
-                          { id: 'sublimation', name: 'Сублимация', icon: '🖨️' },
-                          { id: 'direct', name: 'Прямая печать', icon: '🖨️' },
-                          { id: 'mesh', name: 'Сетки', icon: '🧵' },
-                          { id: 'service', name: 'Услуги', icon: '🧰' }
-                        ]
-
-                        // Категории готовой флажной продукции (совпадают с CATEGORY_LABELS в FlagsProductsCalculator.jsx)
-                        const FLAG_CATEGORIES = [
-                          { id: 'flags-size', name: 'Флаги и знамена (по размеру)', icon: '🚩' },
-                          { id: 'desk-flags', name: 'Настольные флаги', icon: '🚩' },
-                          { id: 'auto-flags', name: 'Автомобильные флаги', icon: '🚗' },
-                          { id: 'ribbons', name: 'Наградные ленты', icon: '🎗️' },
-                          { id: 'scarves', name: 'Шарфы', icon: '🧣' },
-                          { id: 'other', name: 'Вымпелы, шевроны и другое', icon: '🧨' }
-                        ]
-
-                        // Материалы плоттерной резки (по значению material в plotterCutting)
-                        const PLOTTER_MATERIALS = [
-                          { id: 'Цветная самоклеящаяся плёнка', name: 'Цветная плёнка', icon: '🎨' },
-                          { id: 'Металлизированная самоклеящаяся плёнка', name: 'Металлизированная плёнка', icon: '✨' }
-                        ]
-
-                        // Типы операций фрезерного станка (внутренние ключи opType в CncLaserCalculator.jsx)
-                                                const CNC_TYPES = [
-                                                  { id: 'milling', name: 'Резка', icon: '🪚' },
-                                                  { id: 'engrave', name: 'Гравировка', icon: '🖋️' }
-                                                ]
-
-                                                // Подгруппы работы специалистов (по subtype в eventServices, поле category=specialists)
-                                                                                                const SPECIALIST_GROUPS = [
-                                                                                                  { id: 'mount', name: 'Монтаж и выезд', icon: '🪜' },
-                                                                                                  { id: 'work', name: 'Работа специалистов', icon: '🔧' },
-                                                                                                  { id: 'transport', name: 'Транспорт', icon: '🚚' },
-                                                                                                  { id: 'agp', name: 'АГП', icon: '🏗️' }
-                                                                                                ]
-
-                                                                                                // Разделы мероприятий (по category в eventServices; specialists — отдельный пункт)
-                                                                                                const EVENT_GROUPS = [
-                                                                                                  { id: 'mobile', name: 'Мобильные конструкции', icon: '🖼️' },
-                                                                                                  { id: 'rent', name: 'Аренда для мероприятий', icon: '🎤' }
-                                                                                                ]
-
-  // Реестр всех пунктов сайдбара для поиска: подкатегории + одиночные категории
-  const NAV_ITEMS = useMemo(() => {
-    const items = []
-    const ICONS = {
-      'business-cards':'💼','printing':'📄','multipage':'📚','uv-printing':'🖨️',
-      'coat-of-arms':'🛡️','flags-rk':'🚩','flagpoles':'🎏','signs':'🪧','stands':'📰','president-portrait':'🖼️',
-      'wide-format':'🖼️','plotter-cutting':'✂️','cnc-laser':'🪚','advertising-stands':'🪧','flags-products':'🚩','textile':'🧵',
-      'garment-printing':'👕','embroidery':'🧵','additional-services':'🧩'
-    }
-    for (const cat of categories) {
-      if (cat.subcategories) {
-        for (const sub of cat.subcategories) {
-          items.push({ label: sub.name, group: cat.name, payload: sub, icon: ICONS[sub.slug] || '📋' })
-        }
-      } else {
-        items.push({ label: cat.name, group: 'Разделы', payload: cat, icon: ICONS[cat.slug] || '🧾' })
-      }
-    }
-    // Хардкод-пункт не из categories: специалисты
-    items.push({ label: 'Работа специалистов и техники', group: 'Разделы', payload: { id: 'specialists', name: 'Работа специалистов и техники', slug: 'specialists', description: 'Монтаж, техника, транспорт, АГП' }, icon: '🔧' })
-    return items
-  }, [categories])
-
-  const q = search.trim().toLowerCase()
-  const searchResults = q ? NAV_ITEMS.filter(i => i.label.toLowerCase().includes(q)).sort((a,b)=>a.label.localeCompare(b.label,'ru')) : []
-
   const handleCategoryClick = (category) => {
     if (category.subcategories) {
       // Если есть подкатегории, раскрываем/скрываем их
@@ -128,46 +49,6 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
 
       {/* Навигация */}
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-              {/* Поиск по калькуляторам */}
-              <div className="mb-3">
-                <input
-                  type="text"
-                  placeholder="🔍 Поиск калькулятора..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-
-              {search.trim() ? (
-                /* Режим поиска — показываем только совпадения */
-                <div className="space-y-1">
-                  {searchResults.length === 0 ? (
-                    <div className="text-sm text-gray-500 px-3 py-4 italic">Ничего не найдено</div>
-                  ) : (
-                    searchResults.map((item) => (
-                      <button
-                        key={item.payload?.id || item.label}
-                        onClick={() => { onSelectCategory(item.payload); setSearch('') }}
-                        className={`w-full text-left px-4 py-3 rounded-lg transition text-sm font-medium ${
-                          selectedCategory?.id === item.payload?.id
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white text-gray-800 hover:bg-gray-200 border border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="text-lg mr-3">{item.icon}</span>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium">{item.label}</div>
-                            <div className="text-xs text-gray-500">{item.group}</div>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              ) : (
-              <>
               {/* Главная */}
         <button
           onClick={() => onSelectView('home')}
@@ -663,27 +544,8 @@ export default function Sidebar({ selectedCategory, onSelectCategory, onLogout, 
                                         🧩 {cat.name}
                                       </button>
                                     ))}
-                    </>
-                    )}
                       </nav>
 
-      {/* Информация о пользователе */}
-      <div className="p-4 border-t border-gray-300">
-        <div className="mb-3">
-          <p className="text-xs text-gray-500">Пользователь</p>
-          <p className="text-sm font-semibold text-gray-800">{user?.fullName || 'Пользователь'}</p>
-          <p className="text-xs text-gray-500">
-            {user?.role === 'admin' ? '👑 Администратор' : 
-             user?.role === 'manager' ? '📊 Менеджер' : '👤 Пользователь'}
-          </p>
-        </div>
-        <button
-          onClick={onLogout}
-          className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition text-sm"
-        >
-          Выход
-        </button>
-      </div>
     </div>
   )
 }

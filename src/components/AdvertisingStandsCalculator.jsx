@@ -6,7 +6,7 @@ import ResultSummary from './ResultSummary'
 import CalcResultRow from './CalcResultRow'
 import { getCanvasOperationKey } from '../lib/catalog.mjs'
 
-export default function AdvertisingStandsCalculator({ client }) {
+export default function AdvertisingStandsCalculator({ client, initialItemId = null, initialThickness = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -24,10 +24,10 @@ export default function AdvertisingStandsCalculator({ client }) {
     })
   }, [additionalOperations])
 
-  const [selectedItemId, setSelectedItemId] = useState('')
+  const [selectedItemId, setSelectedItemId] = useState(initialItemId == null ? '' : String(initialItemId))
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
-  const [thickness, setThickness] = useState('')
+  const [thickness, setThickness] = useState(initialThickness || '')
   const [quantity, setQuantity] = useState(1)
   const [opts, setOpts] = useState(blankOps())
   const [isUrgent, setIsUrgent] = useState(false)
@@ -36,7 +36,7 @@ export default function AdvertisingStandsCalculator({ client }) {
   const [savingOrder, setSavingOrder] = useState(false)
 
   const selectedItem = useMemo(
-    () => stands.find(i => String(i.id) === String(selectedItemId)) || stands[0] || null,
+    () => stands.find(i => String(i.id) === String(selectedItemId)) || (!selectedItemId ? stands[0] : null) || null,
     [stands, selectedItemId]
   )
   const THICK_LABELS = { pvx3: 'ПВХ 3 мм', pvx5: 'ПВХ 5 мм', pvx8: 'ПВХ 8 мм' }

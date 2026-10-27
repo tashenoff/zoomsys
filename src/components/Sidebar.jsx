@@ -56,7 +56,7 @@ function NavigationLabel({ type, children, compact = false }) {
 
 export default function Sidebar({ selectedCategory, onSelectCategory, selectedView, onSelectView, open, onClose }) {
   const { hasPermission } = useAuth()
-  const categories = useMemo(() => getDisplayCategories(pricingData.categories), [])
+  const categories = useMemo(() => getDisplayCategories(pricingData.categories).filter(category => category.slug !== 'textile'), [])
   const [expandedCategory, setExpandedCategory] = useState(null)
   const [collapsed, setCollapsed] = useState(true)
   const compact = collapsed && !open

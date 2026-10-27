@@ -14,7 +14,7 @@ const THICKNESS_OPTIONS = [
   { id: 't16_20', label: '16–20 мм' }
 ]
 
-export default function CncLaserCalculator({ client, initialType }) {
+export default function CncLaserCalculator({ client, initialType, initialItemId = null, initialThickness = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -24,8 +24,8 @@ export default function CncLaserCalculator({ client, initialType }) {
 
   // типы операций: резка (milling) / гравировка (engrave)
   const [opType, setOpType] = useState(initialType || 'milling') // 'milling' | 'engrave'
-  const [materialId, setMaterialId] = useState('')
-  const [thickness, setThickness] = useState('t01_15')
+  const [materialId, setMaterialId] = useState(initialItemId == null ? '' : String(initialItemId))
+  const [thickness, setThickness] = useState(initialThickness || 't01_15')
   const [quantity, setQuantity] = useState(1) // пог.м или кв.см
   const [extraChecked, setExtraChecked] = useState(false)
   const [isUrgent, setIsUrgent] = useState(false)
@@ -39,13 +39,13 @@ export default function CncLaserCalculator({ client, initialType }) {
   useEffect(() => {
     if (initialType) {
       setOpType(initialType)
-      setMaterialId('')
+      setMaterialId(initialItemId == null ? '' : String(initialItemId))
       setManualMode(false)
       setManualPrice('')
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialType])
+  }, [initialType, initialItemId])
 
   const millingItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-cut'), [cncItems])
   const engraveItems = useMemo(() => cncItems.filter(i => i.category === 'cnc-engrave'), [cncItems])
@@ -58,7 +58,7 @@ export default function CncLaserCalculator({ client, initialType }) {
 
   const opList = opType === 'milling' ? millingItems : engraveItems
   const selectedMaterial = useMemo(
-    () => (opList.find(i => String(i.id) === String(materialId)) || opList[0] || null),
+    () => (opList.find(i => String(i.id) === String(materialId)) || (!materialId ? opList[0] : null) || null),
     [opList, materialId]
   )
 

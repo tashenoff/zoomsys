@@ -128,7 +128,7 @@ function matchesWideFormatOperation(op, material, group) {
   return true
 }
 
-export default function WideFormatCalculator({ client, initialGroup }) {
+export default function WideFormatCalculator({ client, initialGroup, initialMaterialId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -143,7 +143,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   }, [wideFormatPricing])
 
   const [selectedGroup, setSelectedGroup] = useState(initialGroup || availableGroups[0] || 'phaeton')
-  const [selectedMaterialId, setSelectedMaterialId] = useState('')
+  const [selectedMaterialId, setSelectedMaterialId] = useState(initialMaterialId == null ? '' : String(initialMaterialId))
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -164,7 +164,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   useEffect(() => {
     if (initialGroup) {
       setSelectedGroup(initialGroup)
-      setSelectedMaterialId('')
+      setSelectedMaterialId(initialMaterialId == null ? '' : String(initialMaterialId))
       setSelectedServices([])
       setServiceQuantities({})
       setSelectedServiceOptions({})
@@ -172,7 +172,7 @@ export default function WideFormatCalculator({ client, initialGroup }) {
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialGroup])
+  }, [initialGroup, initialMaterialId])
 
   const effectiveGroup = availableGroups.includes(selectedGroup) ? selectedGroup : (availableGroups[0] || 'other')
 
@@ -182,8 +182,8 @@ export default function WideFormatCalculator({ client, initialGroup }) {
   )
 
   const selectedMaterial = useMemo(() => {
-    return materialsForGroup.find(item => String(item.id) === String(selectedMaterialId)) || materialsForGroup[0] || null
-  }, [materialsForGroup, selectedMaterialId])
+    return materialsForGroup.find(item => String(item.id) === String(selectedMaterialId)) || (initialMaterialId == null ? materialsForGroup[0] : null) || null
+  }, [materialsForGroup, selectedMaterialId, initialMaterialId])
 
   const availableOperations = useMemo(() => {
     const seen = new Set()

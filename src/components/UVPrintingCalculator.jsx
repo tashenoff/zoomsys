@@ -5,8 +5,9 @@ import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
+import { isServiceAllowed } from '../lib/catalog.mjs'
 
-export default function UVPrintingCalculator({ client: externalClient, initialCategory }) {
+export default function UVPrintingCalculator({ client: externalClient, initialCategory, initialProductId = null, initialSide = null, initialMaterial = null }) {
   // Получаем данные из контекста прайсов и заказов
   const { pricing: pricingContext } = usePricing()
   const { createOrder, isOnline } = useOrders()
@@ -14,7 +15,7 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
   
   const pricing = pricingData.uvPrinting || []
   const additionalOperations = pricingData.additionalOperations || {}
-  const additionalServices = pricingData.additionalServices || []
+  const additionalServices = (pricingData.additionalServices || []).filter(service => isServiceAllowed(service, 'uv-printing'))
 
   const uvOperations = useMemo(() => {
     if (!additionalOperations || typeof additionalOperations !== 'object') return []
@@ -107,9 +108,10 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
   }, [selectedProduct])
 
   useEffect(() => {
-    setSelectedProduct(null)
-    setSelectedSide(null)
-    setSelectedMaterial(null)
+    const target = pricing.find(item => item.category === selectedCategory && String(item.id) === String(initialProductId))
+    setSelectedProduct(target || null)
+    setSelectedSide(target?.sides?.some(side => side.type === initialSide) ? initialSide : null)
+    setSelectedMaterial(target?.materials?.some(material => material.name === initialMaterial) ? initialMaterial : null)
     setSearchProduct('')
     
     if (selectedCategory && productsRef.current) {
@@ -117,12 +119,12 @@ export default function UVPrintingCalculator({ client: externalClient, initialCa
         productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 100)
     }
-  }, [selectedCategory])
+  }, [selectedCategory, initialProductId, initialSide, initialMaterial])
 
   useEffect(() => {
     if (selectedProduct) {
       if (selectedProduct.sides && selectedProduct.sides.length > 0) {
-        setSelectedSide(null)
+        setSelectedSide(String(selectedProduct.id) === String(initialProductId) && selectedProduct.sides.some(side => side.type === initialSide) ? initialSide : null)
         setTimeout(() => {
           sidesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 100)

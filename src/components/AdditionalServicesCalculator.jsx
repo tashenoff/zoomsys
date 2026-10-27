@@ -8,14 +8,14 @@ import CalcResultRow from './CalcResultRow'
 // Раздел «Дополнительные услуги» — самостоятельная продажа услуги.
 // Здесь же живут услуги, которые позже будут добавляться как опции к изделиям
 // (applicableTo) прямо внутри калькуляторов. Это одна и та же запись каталога.
-export default function AdditionalServicesCalculator({ client }) {
+export default function AdditionalServicesCalculator({ client, initialItemId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   const services = pricingData.additionalServices || []
 
   const [activeCategory, setActiveCategory] = useState('all')
-  const [selectedId, setSelectedId] = useState('')
+  const [selectedId, setSelectedId] = useState(initialItemId == null ? '' : String(initialItemId))
   const [quantity, setQuantity] = useState(1)
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')

@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRightOnRectangleIcon, Bars3Icon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../hooks/useAuth'
 import { usePricing } from '../hooks/usePricing'
-import { buildCalculatorItems, buildPageItems, filterCalculatorItems, filterPages } from '../lib/navCatalog'
-import { searchPriceHits } from '../lib/priceSearch'
+import { buildCalculatorSearchItems, searchCalculatorItems } from '../lib/calculatorSearch'
 
-const PRICE_HIT_LIMIT = 8
+const RESULT_LIMIT = 12
 
 function roleLabel(role) {
   if (role === 'admin') return '👑 Администратор'
@@ -13,7 +12,7 @@ function roleLabel(role) {
   return '👤 Пользователь'
 }
 
-export default function TopNavbar({ onOpenMenu, onLogout, onSelectView, onSelectCategory, onSearchPrices }) {
+export default function TopNavbar({ onOpenMenu, onLogout, onSelectCategory }) {
   const { user } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
   const displayName = user?.fullName || 'Пользователь'
@@ -49,7 +48,7 @@ export default function TopNavbar({ onOpenMenu, onLogout, onSelectView, onSelect
           >
             <MagnifyingGlassIcon className="w-4 h-4 shrink-0" />
             <span className="truncate sm:hidden">Поиск…</span>
-            <span className="truncate hidden sm:inline">Поиск калькуляторов и прайса…</span>
+            <span className="truncate hidden sm:inline">Поиск изделий и материалов…</span>
             <kbd className="hidden lg:inline ml-auto text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Ctrl+K</kbd>
           </button>
 
@@ -76,106 +75,56 @@ export default function TopNavbar({ onOpenMenu, onLogout, onSelectView, onSelect
       {searchOpen && (
         <GlobalSearchPalette
           onClose={() => setSearchOpen(false)}
-          onSelectView={onSelectView}
           onSelectCategory={onSelectCategory}
-          onSearchPrices={onSearchPrices}
         />
       )}
     </>
   )
 }
 
-function GlobalSearchPalette({ onClose, onSelectView, onSelectCategory, onSearchPrices }) {
-  const { hasPermission } = useAuth()
+function GlobalSearchPalette({ onClose, onSelectCategory }) {
   const { pricing, loading } = usePricing()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
+  const [showAll, setShowAll] = useState(false)
   const inputRef = useRef(null)
   const listRef = useRef(null)
-  const canEditPricing = hasPermission('editPricing')
-
-  const calculatorItems = useMemo(() => buildCalculatorItems(), [])
-  const pages = useMemo(() => buildPageItems(hasPermission), [hasPermission])
-
-  const pageResults = useMemo(() => filterPages(pages, query), [pages, query])
-  const calculatorResults = useMemo(() => filterCalculatorItems(calculatorItems, query), [calculatorItems, query])
-  const priceResults = useMemo(() => {
-    if (!canEditPricing || !query.trim()) return { total: 0, hits: [] }
-    return searchPriceHits(pricing, query, PRICE_HIT_LIMIT)
-  }, [canEditPricing, pricing, query])
-
+  const items = useMemo(() => buildCalculatorSearchItems(pricing), [pricing])
+  const results = useMemo(() => searchCalculatorItems(items, query), [items, query])
   const entries = useMemo(() => {
-    const list = []
-    for (const page of pageResults) {
-      list.push({ type: 'view', id: page.id, view: page.view, icon: page.icon, label: page.label, hint: 'Страница', section: 'Страницы' })
-    }
-    for (const item of calculatorResults) {
-      list.push({
-        type: 'calculator',
-        id: item.id,
-        icon: item.icon,
-        label: item.label,
-        hint: item.group,
-        payload: item.payload,
-        section: 'Разделы'
-      })
-    }
-    if (canEditPricing && query.trim()) {
-      if (priceResults.total > 0) {
-        list.push({
-          type: 'price-all',
-          id: 'price-all',
-          icon: '🔍',
-          label: `Все позиции прайса по запросу «${query.trim()}»`,
-          hint: `Найдено: ${priceResults.total}`,
-          query: query.trim(),
-          section: 'Позиции прайса'
-        })
-      }
-      for (const hit of priceResults.hits) {
-        list.push({
-          type: 'price',
-          id: hit.id,
-          icon: '💰',
-          label: hit.label,
-          hint: hit.hint,
-          query: query.trim(),
-          focusId: hit.focusId,
-          section: 'Позиции прайса'
-        })
-      }
-    }
+    const visible = showAll ? results : results.slice(0, RESULT_LIMIT)
+    const list = visible.map(item => ({ ...item, hint: [item.group, item.unavailableReason].filter(Boolean).join(' · '),
+      section: item.kind === 'calculator' ? 'Калькуляторы' : 'Изделия и материалы' }))
+    if (visible.length < results.length) list.push({ id: 'show-all', kind: 'all', icon: '🔎',
+      label: 'Все результаты (' + results.length + ')', hint: 'Показать в этом списке', section: 'Результаты' })
     return list
-  }, [pageResults, calculatorResults, canEditPricing, priceResults, query])
+  }, [results, showAll])
 
-  useEffect(() => {
+  const updateQuery = (value) => {
+    setQuery(value)
     setActive(0)
-  }, [query])
-
+    setShowAll(false)
+  }
+  useEffect(() => { setActive(0) }, [query, entries.length])
+  useEffect(() => { inputRef.current?.focus() }, [])
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    const node = listRef.current?.querySelector(`[data-result-index="${active}"]`)
-    node?.scrollIntoView({ block: 'nearest' })
+    listRef.current?.querySelector('[data-result-index="' + active + '"]')?.scrollIntoView({ block: 'nearest' })
   }, [active])
-
   useEffect(() => {
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previous
-    }
+    return () => { document.body.style.overflow = previous }
   }, [])
 
   const selectEntry = (entry) => {
-    if (!entry) return
-    if (entry.type === 'view') onSelectView(entry.view)
-    if (entry.type === 'calculator') onSelectCategory(entry.payload)
-    if (entry.type === 'price' || entry.type === 'price-all') {
-      onSearchPrices({ query: entry.query, focusId: entry.focusId || null })
+    if (!entry || entry.unavailableReason) return
+    if (entry.kind === 'all') {
+      setShowAll(true)
+      setActive(0)
+      inputRef.current?.focus()
+      return
     }
+    onSelectCategory(entry.payload)
     onClose()
   }
 
@@ -215,22 +164,22 @@ function GlobalSearchPalette({ onClose, onSelectView, onSelectCategory, onSearch
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => updateQuery(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Поиск по разделам и позициям прайса (название, категория)…"
+            placeholder="Например: журнал, диплом, атлас…"
             className="flex-1 py-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-            aria-label="Поиск по разделам и позициям прайса"
+            aria-label="Поиск изделий, материалов и калькуляторов"
             aria-activedescendant={entries[active] ? `search-result-${active}` : undefined}
           />
           {query && (
-            <button type="button" onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-600 px-1 text-xl" title="Очистить поиск">
+            <button type="button" onClick={() => updateQuery('')} className="text-gray-400 hover:text-gray-600 px-1 text-xl" title="Очистить поиск">
               ✕
             </button>
           )}
         </div>
 
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2" role="listbox" aria-label="Результаты поиска">
-          {entries.length === 0 && !(canEditPricing && query.trim() && loading) && (
+          {entries.length === 0 && !(query.trim() && loading) && (
             <div className="text-sm text-gray-500 px-3 py-8 text-center italic">Ничего не найдено</div>
           )}
 
@@ -247,11 +196,13 @@ function GlobalSearchPalette({ onClose, onSelectView, onSelectCategory, onSearch
                   id={`search-result-${index}`}
                   type="button"
                   role="option"
+                  disabled={Boolean(entry.unavailableReason)}
+                  title={entry.unavailableReason || undefined}
                   aria-selected={selected}
                   data-result-index={index}
                   onMouseEnter={() => setActive(index)}
                   onClick={() => selectEntry(entry)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg transition text-sm flex items-center gap-3 ${
+                  className={`w-full text-left px-3 py-2.5 rounded-lg transition text-sm flex items-center gap-3 ${entry.unavailableReason ? 'opacity-60 cursor-not-allowed' : ''} ${
                     selected ? 'bg-blue-600 text-white' : 'text-gray-800 hover:bg-gray-100'
                   }`}
                 >
@@ -267,16 +218,11 @@ function GlobalSearchPalette({ onClose, onSelectView, onSelectCategory, onSearch
             )
           })}
 
-          {canEditPricing && query.trim() && loading && (
-            <div className="px-3 py-3 text-sm text-gray-500">Загрузка прайса…</div>
+          {query.trim() && loading && (
+            <div className="px-3 py-3 text-sm text-gray-500">Загрузка материалов…</div>
           )}
-          {canEditPricing && query.trim() && !loading && priceResults.total > priceResults.hits.length && (
-            <div className="px-3 py-2 text-xs text-gray-400">
-              Показаны первые {priceResults.hits.length} из {priceResults.total}
-            </div>
-          )}
-          {canEditPricing && !query.trim() && (
-            <div className="px-3 py-3 text-xs text-gray-400">Введите название или категорию, чтобы найти позицию прайса</div>
+          {!query.trim() && (
+            <div className="px-3 py-3 text-xs text-gray-400">Введите название изделия, материала или калькулятора</div>
           )}
         </div>
 

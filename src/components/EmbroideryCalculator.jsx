@@ -5,7 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import ResultSummary from './ResultSummary'
 import CalcResultRow from './CalcResultRow'
 
-export default function EmbroideryCalculator({ client }) {
+export default function EmbroideryCalculator({ client, initialItemId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -13,7 +13,7 @@ export default function EmbroideryCalculator({ client }) {
   const additionalOperations = pricingData.additionalOperations || {}
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
-  const [selectedId, setSelectedId] = useState('')
+  const [selectedId, setSelectedId] = useState(initialItemId == null ? '' : String(initialItemId))
   const [stitches, setStitches] = useState(1000)
   const [quantity, setQuantity] = useState(1)
   const [fileChecked, setFileChecked] = useState(false)
@@ -23,7 +23,7 @@ export default function EmbroideryCalculator({ client }) {
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
 
-  const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
+  const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || (!selectedId ? items[0] : null) || null, [items, selectedId])
   const fileOp = useMemo(() => Object.values(additionalOperations).find(op => (op.applicableTo||[]).includes('embroidery') && op.id === 'embFile'), [additionalOperations])
   const metalOp = useMemo(() => Object.values(additionalOperations).find(op => op.id === 'embMetalThread'), [additionalOperations])
 

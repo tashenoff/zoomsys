@@ -22,6 +22,7 @@ import OrderDetail from './components/OrderDetail'
 import Dashboard from './components/Dashboard'
 import UserManagement from './components/UserManagement'
 import PricingManagement from './components/PricingManagement'
+import TopNavbar from './components/TopNavbar'
 import { PricingProvider } from './hooks/usePricing'
 import { OrdersProvider } from './hooks/useOrders'
 import { ClientsProvider } from './hooks/useClients'
@@ -45,11 +46,14 @@ function AppContent() {
     const [selectedClient, setSelectedClient] = useState(null)
     const [selectedOrderId, setSelectedOrderId] = useState(null)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [priceSearch, setPriceSearch] = useState(null)
 
   const handleLogout = () => {
     logout()
     setSelectedCategory(null)
     setSelectedClient(null)
+    setPriceSearch(null)
+    setSidebarOpen(false)
   }
 
   // Показываем загрузку пока проверяем токен
@@ -70,12 +74,25 @@ function AppContent() {
       setSelectedCategory(null)
       setSelectedClient(null)
       setSelectedOrderId(null)
+      setPriceSearch(null)
+      setSidebarOpen(false)
     }
 
     const handleSelectCategory = (category) => {
       setSelectedCategory(category)
       setSelectedView(null)
       setSelectedOrderId(null)
+      setPriceSearch(null)
+      setSidebarOpen(false)
+    }
+
+    const handlePriceSearch = ({ query, focusId }) => {
+      setPriceSearch({ query, focusId: focusId || null })
+      setSelectedView('pricing')
+      setSelectedCategory(null)
+      setSelectedClient(null)
+      setSelectedOrderId(null)
+      setSidebarOpen(false)
     }
 
   return (
@@ -91,26 +108,24 @@ function AppContent() {
         {/* Сайдбар */}
         <Sidebar
           selectedCategory={selectedCategory}
-          onSelectCategory={(c) => { handleSelectCategory(c); setSidebarOpen(false) }}
-          onLogout={handleLogout}
+          onSelectCategory={handleSelectCategory}
           selectedView={selectedView}
-          onSelectView={(v) => { handleSelectView(v); setSidebarOpen(false) }}
+          onSelectView={handleSelectView}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
 
         {/* Основной контент */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <TopNavbar
+            onOpenMenu={() => setSidebarOpen(true)}
+            onLogout={handleLogout}
+            onSelectView={handleSelectView}
+            onSelectCategory={handleSelectCategory}
+            onSearchPrices={handlePriceSearch}
+          />
+          <div className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto p-3 md:p-6">
-            {/* Кнопка меню (только мобилка) */}
-            <div className="md:hidden mb-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                ☰ Меню
-              </button>
-            </div>
           {selectedOrderId ? (
             <OrderDetail 
               orderId={selectedOrderId} 
@@ -130,7 +145,11 @@ function AppContent() {
             )
           ) : selectedView === 'pricing' ? (
             hasPermission('editPricing') ? (
-              <PricingManagement />
+              <PricingManagement
+                searchQuery={priceSearch?.query || ''}
+                focusItemId={priceSearch?.focusId || null}
+                onClearSearch={() => setPriceSearch(null)}
+              />
             ) : (
               <AccessDenied message="У вас нет прав для редактирования прайсов" />
             )
@@ -236,6 +255,7 @@ function AppContent() {
               )}
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

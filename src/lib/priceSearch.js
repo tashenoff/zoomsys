@@ -173,7 +173,7 @@ export function searchPriceHits(pricing, query, limit = 8) {
       const detail = hitDetail(group.key, item, source?.labels)
       hits.push({
         id: `${group.key}:${item.id}`,
-        focusId: item.id,
+        focusId: `${group.key}:${item.id}`,
         tab: group.key,
         label: hitLabel(group.key, item),
         hint: [group.plainTitle, detail].filter(Boolean).join(' · ')

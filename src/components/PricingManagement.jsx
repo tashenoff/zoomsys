@@ -561,8 +561,8 @@ function GlobalSearchResults({ localPricing, query, onEdit, onDelete, focusItemI
     const node = rootRef.current.querySelector(`[data-price-id="${CSS.escape(String(focusItemId))}"]`)
     if (!node) return
     node.scrollIntoView({ block: 'center' })
-    node.classList.add('bg-blue-100')
-    return () => node.classList.remove('bg-blue-100')
+    node.classList.add('!bg-blue-100')
+    return () => node.classList.remove('!bg-blue-100')
   }, [focusItemId, query, total])
 
   const editOf = (catKey) => (item) => onEdit(item, catKey)
@@ -656,7 +656,7 @@ function BusinessCardsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`businessCards:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-700">
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
@@ -717,7 +717,7 @@ function PrintingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`printing:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
               <td className="px-4 py-3 text-sm">
                 <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
@@ -765,7 +765,7 @@ function UVPrintingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`uvPrinting:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -848,7 +848,7 @@ function WideFormatTable({ items, onEdit, onDelete }) {
             </thead>
             <tbody>
               {groupItems?.map((item, index) => (
-                <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={item.id} data-price-id={`wideFormat:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-3 text-sm text-gray-900">
                     <div className="font-medium">{item.name}</div>
                     {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -894,7 +894,7 @@ function AdvertisingStandsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`advertisingStands:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -929,7 +929,7 @@ function CncLaserTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`cncLaser:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -965,7 +965,7 @@ function PlotterCuttingTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`plotterCutting:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.material}</td>
               <td className="px-4 py-3 text-sm text-gray-700">{item.operation}</td>
               <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.priceText || (item.price != null ? `${Number(item.price).toLocaleString('ru-RU')} тг` : '—')}</td>
@@ -999,7 +999,7 @@ function EventServicesTable({ items, onEdit, onDelete }) {
           </thead>
           <tbody>
             {groupItems.map((item, index) => (
-              <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <tr key={item.id} data-price-id={`eventServices:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                 <td className="px-4 py-3 text-sm text-gray-600">{item.unit || 'шт'}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">
@@ -1029,7 +1029,7 @@ function GarmentPrintingTable({ items, onEdit, onDelete }) {
         <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
       </tr></thead><tbody>
         {(items||[]).map((item,index)=>(
-          <tr key={item.id} data-price-id={item.id} className={index%2===0?'bg-white':'bg-gray-50'}>
+          <tr key={item.id} data-price-id={`garmentPrinting:${item.id}`} className={index%2===0?'bg-white':'bg-gray-50'}>
             <td className="px-4 py-3 text-sm text-gray-900"><div className="font-medium">{item.name}</div>{item.note&&<div className="text-xs text-gray-500">{item.note}</div>}</td>
             <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.pricePerSqCm} тг/кв.см</td>
             <td className="px-4 py-3 text-right"><button onClick={()=>onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button><button onClick={()=>onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button></td>
@@ -1048,7 +1048,7 @@ function EmbroideryTable({ items, onEdit, onDelete }) {
         <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Действия</th>
       </tr></thead><tbody>
         {(items||[]).map((item,index)=>(
-          <tr key={item.id} data-price-id={item.id} className={index%2===0?'bg-white':'bg-gray-50'}>
+          <tr key={item.id} data-price-id={`embroidery:${item.id}`} className={index%2===0?'bg-white':'bg-gray-50'}>
             <td className="px-4 py-3 text-sm text-gray-900"><div className="font-medium">{item.name}</div>{item.note&&<div className="text-xs text-gray-500">{item.note}</div>}</td>
             <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.price} тг / 1000 стежков</td>
             <td className="px-4 py-3 text-right"><button onClick={()=>onEdit(item)} className="text-blue-600 hover:text-blue-800 mr-3 text-sm font-medium">Изменить</button><button onClick={()=>onDelete(item.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Удалить</button></td>
@@ -1074,7 +1074,7 @@ function FlagsProductsTable({ items, onEdit, onDelete }) {
           </thead>
           <tbody>
             {groupItems.map((item, index) => (
-              <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <tr key={item.id} data-price-id={`flagsProducts:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 text-sm text-gray-900">
                   <div className="font-medium">{item.name}</div>
                   {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -1111,7 +1111,7 @@ function TextileTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {(items || []).map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`textile:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">
                 <div className="font-medium">{item.name}</div>
                 {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
@@ -1167,7 +1167,7 @@ function StateSymbolsTable({ items, onEdit, onDelete }) {
               </thead>
               <tbody>
                 {group.items.map((item, index) => (
-                  <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={item.id} data-price-id={`stateSymbols:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{item.option}</td>
                     <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
@@ -1207,7 +1207,7 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {groupItems.map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`additionalOperations:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900 font-medium">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
                 {item.type === 'select' ? '📋 Выбор опции' : 
@@ -1271,7 +1271,7 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
         </thead>
         <tbody>
           {items?.map((item, index) => (
-            <tr key={item.id} data-price-id={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={item.id} data-price-id={`additionalServices:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900">{item.name}</td>
                             <td className="px-4 py-3 text-sm text-gray-600">{item.serviceCategory || '—'}</td>
                                           <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">

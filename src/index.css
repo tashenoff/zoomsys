@@ -10,3 +10,24 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@media (min-width: 768px) {
+  .sidebar[data-collapsed="true"] nav {
+    scrollbar-width: none;
+  }
+
+  .sidebar[data-collapsed="true"] nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar[data-collapsed="true"] .sidebar-main-button {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar[data-collapsed="true"] .sidebar-chevron,
+  .sidebar[data-collapsed="true"] .sidebar-submenu {
+    display: none;
+  }
+}

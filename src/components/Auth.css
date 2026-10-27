@@ -12,7 +12,7 @@
 }
 .auth-visual { display: flex; flex-direction: column; min-width: 0; overflow: hidden; padding: 30px clamp(32px, 5.2vw, 88px) 25px; background: var(--auth-paper); border-right: 1px solid #e5e3db; }
 .auth-brand { display: flex; align-items: center; gap: 20px; }
-.auth-brand img { width: 140px; height: auto; }
+.auth-brand .razoom-logo { width: 140px; height: auto; }
 .auth-brand > span { padding-left: 20px; border-left: 1px solid #d7d7cd; color: #72756c; font-size: 11px; line-height: 1.65; }
 .auth-story { margin-top: clamp(34px, 5.6vh, 66px); }
 .auth-eyebrow { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 650; letter-spacing: 1.6px; line-height: 1.5; }
@@ -106,7 +106,7 @@
   .auth-visual { display: none; }
   .auth-form-panel { min-height: 100svh; padding: 24px; }
   .auth-form-shell { max-width: 420px; padding: 32px; border: 1px solid #e4e5db; border-radius: 20px; background: #fff; box-shadow: 0 18px 50px -35px #363c2677; }
-  .auth-mobile-brand { display: block; width: 130px; height: auto; margin: 0 0 35px; }
+  .auth-mobile-brand.razoom-logo { display: block; width: 130px; height: auto; margin: 0 0 35px; }
   .auth-form-heading h1 { font-size: 32px; }
   .auth-form-heading .auth-eyebrow { font-size: 8px; letter-spacing: 1.2px; }
   .auth-form-heading > p:last-child { font-size: 13px; }

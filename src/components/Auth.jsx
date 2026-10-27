@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowRightIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../hooks/useAuth'
-import logo from '../logo.svg'
+import RazoomLogo from './RazoomLogo'
 import './Auth.css'
 
 export default function Auth() {
@@ -30,7 +30,7 @@ export default function Auth() {
     <main className="auth-page">
       <section className="auth-visual" aria-label="Ra Zoom — система расчёта услуг">
         <header className="auth-brand">
-          <img src={logo} alt="Ra Zoom" width="156" height="66" />
+          <RazoomLogo alt="Ra Zoom" width={156} height={66} />
           <span>Система расчёта<br />и управления заказами</span>
         </header>
         <div className="auth-story">
@@ -58,7 +58,7 @@ export default function Auth() {
       </section>
       <section className="auth-form-panel" aria-labelledby="auth-title">
         <div className="auth-form-shell">
-          <img className="auth-mobile-brand" src={logo} alt="Ra Zoom" width="140" height="60" />
+          <RazoomLogo className="auth-mobile-brand" alt="Ra Zoom" width={140} height={60} />
           <div className="auth-form-heading">
             <p className="auth-eyebrow">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</p>
             <h1 id="auth-title">С возвращением.</h1>

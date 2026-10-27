@@ -1,0 +1,16 @@
+.razoom-logo {
+  display: block;
+  height: var(--razoom-logo-height, auto);
+  aspect-ratio: 1569 / 668;
+  max-width: 100%;
+}
+
+.razoom-logo[style*="--razoom-logo-width"] {
+  width: var(--razoom-logo-width);
+}
+
+.razoom-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

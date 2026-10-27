@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import pricingData from '../data/pricing.json'
-import logo from '../logo.svg'
+import RazoomLogo from './RazoomLogo'
 import { getDisplayCategories } from '../lib/catalog.mjs'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -90,7 +90,7 @@ export default function Sidebar({ selectedCategory, onSelectCategory, selectedVi
               <Bars3Icon className="h-5 w-5" aria-hidden="true" />
             </button>
             <div className={compact ? 'hidden' : 'flex-1'}>
-              <img src={logo} alt="Ra Zoom" className="w-32 h-auto mb-2" />
+              {!compact && <RazoomLogo alt="Ra Zoom" className="w-32 h-auto mb-2" />}
               <p className="text-sm text-gray-600">Система расчета</p>
             </div>
             {/* Закрыть (только мобилка) */}

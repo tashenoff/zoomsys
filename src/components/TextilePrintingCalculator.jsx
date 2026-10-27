@@ -63,7 +63,7 @@ function getUnitLabel(unit) {
   return u.replace(/^тг\//, '')
 }
 
-export default function TextilePrintingCalculator({ client, initialCategory, flagProduct = null }) {
+export default function TextilePrintingCalculator({ client, initialCategory, flagProduct = null, initialMaterialId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -81,7 +81,7 @@ export default function TextilePrintingCalculator({ client, initialCategory, fla
   const additionalOperations = pricingData.additionalOperations || {}
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
-  const [selectedMaterialId, setSelectedMaterialId] = useState('')
+  const [selectedMaterialId, setSelectedMaterialId] = useState(initialMaterialId == null ? '' : String(initialMaterialId))
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -92,8 +92,8 @@ export default function TextilePrintingCalculator({ client, initialCategory, fla
   const [savingOrder, setSavingOrder] = useState(false)
 
   const selectedMaterial = useMemo(
-    () => textile.find(item => String(item.id) === String(selectedMaterialId)) || textile[0] || null,
-    [textile, selectedMaterialId]
+    () => textile.find(item => String(item.id) === String(selectedMaterialId)) || (initialMaterialId == null ? textile[0] : null) || null,
+    [textile, selectedMaterialId, initialMaterialId]
   )
 
   const availableOperations = useMemo(() => {

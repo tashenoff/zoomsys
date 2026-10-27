@@ -65,7 +65,7 @@ function parseItem(item, categorySlug) {
   return { group: item.name, variant: item.option, option: item.option }
 }
 
-export default function StateSymbolsCalculator({ client, categorySlug }) {
+export default function StateSymbolsCalculator({ client, categorySlug, initialItemId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -125,14 +125,15 @@ export default function StateSymbolsCalculator({ client, categorySlug }) {
   const [savingOrder, setSavingOrder] = useState(false)
 
   useEffect(() => {
-    setSelectedGroup(null)
-    setSelectedVariant(null)
-    setSelectedOption(null)
+    const target = parsedItems.find(item => String(item.id) === String(initialItemId))
+    setSelectedGroup(target?.group || null)
+    setSelectedVariant(target?.variant || null)
+    setSelectedOption(target?.option || null)
     setIncludeEmblem(false)
     setSelectedServices([])
     setCalculation(null)
     setQuantity(1)
-  }, [categorySlug])
+  }, [categorySlug, initialItemId])
 
   const variantsForGroup = useMemo(
     () => [...new Set(parsedItems.filter(i => i.group === selectedGroup).map(i => i.variant))],

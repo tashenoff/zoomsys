@@ -12,7 +12,7 @@ const SPECIALIST_LABELS = {
   agp: 'АГП'
 }
 
-export default function SpecialistsCalculator({ client, initialGroup }) {
+export default function SpecialistsCalculator({ client, initialGroup, initialItemId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -23,7 +23,7 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
     : specialistsItems
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
-  const [selectedId, setSelectedId] = useState('')
+  const [selectedId, setSelectedId] = useState(initialItemId == null ? '' : String(initialItemId))
     const [hours, setHours] = useState(1)
     const [bannerCount, setBannerCount] = useState(1)
     const [banners, setBanners] = useState(() => [{ width: '', height: '' }])
@@ -32,7 +32,7 @@ export default function SpecialistsCalculator({ client, initialGroup }) {
     const [orderStatus, setOrderStatus] = useState('draft')
     const [savingOrder, setSavingOrder] = useState(false)
 
-    const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
+    const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || (!selectedId ? items[0] : null) || null, [items, selectedId])
     const isArea = !!selected && selected.unit === 'м²'
 
     // При смене количества баннеров — расширяем/сужаем список строк с размерами.

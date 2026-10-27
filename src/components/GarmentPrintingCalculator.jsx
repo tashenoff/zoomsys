@@ -7,7 +7,7 @@ import CalcResultRow from './CalcResultRow'
 import { catalogConfig } from '../lib/catalog.mjs'
 import { calculateGarmentPrinting } from '../lib/garmentPricing.mjs'
 
-export default function GarmentPrintingCalculator({ client }) {
+export default function GarmentPrintingCalculator({ client, initialItemId = null, initialProductId = null, initialVariantId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -15,7 +15,7 @@ export default function GarmentPrintingCalculator({ client }) {
   const additionalOperations = pricingData.additionalOperations || {}
   const urgentSurcharge = pricingData.settings?.urgentSurcharge ?? 30
 
-  const [selectedId, setSelectedId] = useState('')
+  const [selectedId, setSelectedId] = useState(initialItemId == null ? '' : String(initialItemId))
   const [area, setArea] = useState(100) // кв.см
   const [quantity, setQuantity] = useState(items[0]?.minQty || 1)
   const [extraChecked, setExtraChecked] = useState(false)
@@ -23,14 +23,14 @@ export default function GarmentPrintingCalculator({ client }) {
   const [calculation, setCalculation] = useState(null)
   const [orderStatus, setOrderStatus] = useState('draft')
   const [savingOrder, setSavingOrder] = useState(false)
-  const [productId, setProductId] = useState('')
-  const [variantId, setVariantId] = useState('')
+  const [productId, setProductId] = useState(initialProductId == null ? '' : String(initialProductId))
+  const [variantId, setVariantId] = useState(initialVariantId == null ? '' : String(initialVariantId))
 
-  const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || items[0] || null, [items, selectedId])
+  const selected = useMemo(() => items.find(i => String(i.id) === String(selectedId)) || (!selectedId ? items[0] : null) || null, [items, selectedId])
   const fileOp = useMemo(() => Object.values(additionalOperations).find(op => (op.applicableTo||[]).includes('garment-printing')), [additionalOperations])
   const products = selected?.productOptions || []
-  const product = products.find(item => item.id === productId) || products[0] || null
-  const variant = product?.variants?.find(item => item.id === variantId) || product?.variants?.[0] || null
+  const product = products.find(item => String(item.id) === String(productId)) || (!productId ? products[0] : null) || null
+  const variant = product?.variants?.find(item => String(item.id) === String(variantId)) || (!variantId ? product?.variants?.[0] : null) || null
 
   useEffect(() => { setCalculation(null) }, [selected, fileOp, urgentSurcharge])
 

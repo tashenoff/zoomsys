@@ -85,30 +85,16 @@ test('equal IDs in all pricing categories produce distinct qualified focus ident
   assert.deepEqual(new Set(hits.map(hit => hit.focusId)), new Set(categories.map(category => `${category}:7`)))
 })
 
-function selectFromPalette(query, focusId) {
-  const palette = runtime('components/TopNavbar.jsx', ['GlobalSearchPalette'])
-  let selected
-  const props = { onClose() {}, onSearchPrices(value) { selected = value } }
-  let tree = palette.render('GlobalSearchPalette', props)
-  elements(tree, node => node.type === 'input', [])[0].props.onChange({ target: { value: query } })
-  tree = palette.render('GlobalSearchPalette', props)
-  const options = elements(tree, node => node.props.role === 'option')
-  const option = focusId === null ? options[0] : options.find(node => {
-    // The palette's stable result index follows the real sorted hits, after "all".
-    const index = priceSearch.searchPriceHits(pricing, query).hits.findIndex(hit => hit.id === focusId)
-    return index >= 0 && node.props['data-result-index'] === index + 1
-  })
-  assert.ok(option, `palette offers ${focusId}`)
-  option.props.onClick()
-  return selected
+// Global search no longer navigates to prices. Keep direct admin-table
+// targeting coverage independently of that intentionally removed route.
+function selectionForPrice(query, focusId) {
+  const hit = priceSearch.searchPriceHits(pricing, query, 100).hits.find(hit => hit.id === focusId)
+  return { query, focusId: hit?.focusId || null }
 }
 
 function renderSelection(selection) {
-  const app = runtime('App.jsx', ['AppContent'])
-  let tree = app.render('AppContent')
-  elements(tree, node => typeof node.type === 'function' && node.props.onSearchPrices)[0].props.onSearchPrices(selection)
-  tree = app.render('AppContent')
-  const pageProps = elements(tree, node => typeof node.type === 'function' && 'focusItemId' in node.props)[0].props
+  const pageProps = { searchQuery: selection.query, focusItemId: selection.focusId }
+  let tree
   const page = runtime('components/PricingManagement.jsx')
   tree = page.render('default', pageProps)
   const root = expand(tree)
@@ -132,7 +118,7 @@ function renderSelection(selection) {
 for (const category of ['businessCards', 'printing', 'uvPrinting']) {
   test(`selecting ${category} scrolls/highlights only its row despite equal IDs`, () => {
     const focusId = `${category}:7`
-    const selection = selectFromPalette('Search collision', focusId)
+    const selection = selectionForPrice('Search collision', focusId)
     assert.equal(selection.focusId, focusId)
     const { rows, cleanup } = renderSelection(selection)
     assert.equal(rows.length, categories.length)
@@ -151,13 +137,13 @@ test('every pricing category targets its own rendered row, including combined se
 })
 
 test('ordinary selection within a category still targets the selected item', () => {
-  const selection = selectFromPalette('Ordinary selection', 'businessCards:8')
+  const selection = selectionForPrice('Ordinary selection', 'businessCards:8')
   const { rows } = renderSelection(selection)
   assert.deepEqual(rows.filter(row => row.highlighted).map(row => row.id), ['businessCards:8'])
 })
 
 test('all-results search preserves every match without focusing any row', () => {
-  const selection = selectFromPalette('Search collision', null)
+  const selection = selectionForPrice('Search collision', null)
   assert.equal(selection.focusId, null)
   const { rows } = renderSelection(selection)
   assert.equal(rows.length, categories.length)

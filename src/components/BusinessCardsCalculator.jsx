@@ -7,7 +7,7 @@ import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 import { filterCardProducts, getManualBadgeQuote, isBadgeProduct } from '../lib/catalog.mjs'
 
-export default function BusinessCardsCalculator({ client: externalClient }) {
+export default function BusinessCardsCalculator({ client: externalClient, initialItemId = null, initialCardType = null }) {
   // Получаем данные из контекста прайсов и заказов
   const { pricing: pricingContext, loading: pricingLoading } = usePricing()
   const { createOrder, isOnline } = useOrders()
@@ -16,7 +16,8 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   const pricingData = pricingContext || pricingDataFallback
   
   // Состояние для выбора типа карточки
-  const [selectedCardType, setSelectedCardType] = useState(null)
+  const initialProduct = (pricingData.businessCards || []).find(item => String(item.id) === String(initialItemId))
+  const [selectedCardType, setSelectedCardType] = useState(initialProduct ? (isBadgeProduct(initialProduct) ? 'badges' : initialCardType || 'business-cards') : null)
   
   const allPricing = pricingData.businessCards || []
   const pricing = useMemo(() => filterCardProducts(allPricing, selectedCardType), [allPricing, selectedCardType])
@@ -29,9 +30,9 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   
   // Состояния для фильтрации
   const [searchMaterial, setSearchMaterial] = useState('')
-  const [selectedMaterial, setSelectedMaterial] = useState(null)
-  const [selectedColorType, setSelectedColorType] = useState(null)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedMaterial, setSelectedMaterial] = useState(initialProduct?.name || null)
+  const [selectedColorType, setSelectedColorType] = useState(initialProduct?.colorType || null)
+  const [selectedProduct, setSelectedProduct] = useState(initialProduct || null)
   
   const [quantity, setQuantity] = useState(100)
   const [manualBatchTotal, setManualBatchTotal] = useState('')
@@ -121,7 +122,7 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
 
   // При выборе материала сбрасываем цветность и скроллим к цветности
   useEffect(() => {
-    setSelectedColorType(null)
+    setSelectedColorType(selectedMaterial === initialProduct?.name ? initialProduct.colorType : null)
     setSelectedProduct(null)
     
     // Автоскролл к секции цветности
@@ -135,11 +136,11 @@ export default function BusinessCardsCalculator({ client: externalClient }) {
   // При выборе цветности устанавливаем продукт и скроллим к количеству
   useEffect(() => {
     if (selectedMaterial && (selectedCardType === 'badges' || (selectedCardType === 'discount-cards' && availableColorTypes.length === 1))) {
-      const product = pricing.find(p => p.name === selectedMaterial)
+      const product = pricing.find(p => String(p.id) === String(initialItemId) && p.name === selectedMaterial) || pricing.find(p => p.name === selectedMaterial)
       setSelectedProduct(product || null)
       setSelectedColorType(product?.colorType || null)
     } else if (selectedMaterial && selectedColorType) {
-      const product = pricing.find(
+      const product = pricing.find(p => String(p.id) === String(initialItemId) && p.name === selectedMaterial && p.colorType === selectedColorType) || pricing.find(
         p => p.name === selectedMaterial && p.colorType === selectedColorType
       )
       setSelectedProduct(product)

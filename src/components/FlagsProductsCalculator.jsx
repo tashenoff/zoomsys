@@ -26,7 +26,7 @@ function formatPrice(value) {
   return String(value).toLocaleString('ru-RU').replace(/\s/g, ' ')
 }
 
-export default function FlagsProductsCalculator({ client, initialCategory }) {
+export default function FlagsProductsCalculator({ client, initialCategory, initialItemId = null, initialSize = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -35,8 +35,8 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
 
   const categories = useMemo(() => [...new Set(items.map(i => i.category || 'other'))], [items])
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedItemId, setSelectedItemId] = useState('')
-  const [selectedSize, setSelectedSize] = useState('')
+  const [selectedItemId, setSelectedItemId] = useState(initialItemId == null ? '' : String(initialItemId))
+  const [selectedSize, setSelectedSize] = useState(initialSize || '')
   const [quantity, setQuantity] = useState(1)
   const [isUrgent, setIsUrgent] = useState(false)
   const [calculation, setCalculation] = useState(null)
@@ -49,20 +49,22 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
     if (initialCategory) {
       setCustomSize(false)
       setSelectedCategory(initialCategory)
-      setSelectedItemId('')
-      setSelectedSize('')
+      setSelectedItemId(initialItemId == null ? '' : String(initialItemId))
+      setSelectedSize(initialSize || '')
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCategory])
+  }, [initialCategory, initialItemId, initialSize])
 
   const effectiveCategory = (
     initialCategory && categories.includes(initialCategory) ? initialCategory : ''
   ) || (categories.includes(selectedCategory) ? selectedCategory : (categories[0] || ''))
+  const itemLabel = effectiveCategory === 'flags-size' ? 'Материал' : 'Позиция'
+  const displayItemName = (name) => effectiveCategory === 'flags-size' ? name.replace(/^Флаг:\s*/, '') : name
   const catItems = useMemo(() => items.filter(i => (i.category || 'other') === effectiveCategory), [items, effectiveCategory])
   const selectedItem = useMemo(
-    () => catItems.find(i => String(i.id) === String(selectedItemId)) || catItems[0] || null,
-    [catItems, selectedItemId]
+    () => catItems.find(i => String(i.id) === String(selectedItemId)) || (initialItemId == null ? catItems[0] : null) || null,
+    [catItems, selectedItemId, initialItemId]
   )
   const isSizeItem = !!selectedItem && Boolean(normalizePrices(selectedItem.prices))
   const sizes = useMemo(() => {
@@ -143,7 +145,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
     <div className="space-y-4">
       <div className="bg-white rounded-lg p-4 shadow-md">
         <button type="button" onClick={() => { setCustomSize(false); setCalculation(null) }} className="text-blue-600">← Стандартные размеры</button>
-        <h2 className="text-xl font-semibold mt-3">Нестандартный размер: {selectedItem.name}</h2>
+        <h2 className="text-xl font-semibold mt-3">Нестандартный размер: {displayItemName(selectedItem.name)}</h2>
         <p className="text-sm text-gray-500 mt-2">Цена по прайсу текстиля: выберите материал и нужные обработки. Размеры — в метрах.</p>
       </div>
       <TextilePrintingCalculator key={selectedItem.id} client={client} flagProduct={selectedItem} />
@@ -173,7 +175,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Позиция</label>
+            <label className="block text-sm font-medium text-gray-700 mb-3">{itemLabel}</label>
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {catItems.map(item => {
                 const isItem = String(item.id) === String(selectedItem?.id)
@@ -181,7 +183,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
                   <button key={item.id} type="button"
                     onClick={() => { setSelectedItemId(String(item.id)); setSelectedSize(''); setCalculation(null) }}
                     className={`w-full text-left p-3 border-2 rounded-lg transition ${isItem ? 'bg-blue-50 border-blue-500' : 'border-gray-200 hover:border-blue-300'}`}>
-                    <div className="font-medium text-gray-800">{item.name}</div>
+                    <div className="font-medium text-gray-800">{displayItemName(item.name)}</div>
                     {item.description && <div className="text-xs text-gray-500 mt-1">{item.description}</div>}
                   </button>
                 )
@@ -224,7 +226,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
           noteBody={calculation.note ? (
             <>
               <p className="text-xl font-bold text-yellow-800 mb-2">⚠️ {calculation.note}</p>
-              <p className="text-gray-700">Позиция: {calculation.productName}{calculation.size ? `, размер ${calculation.size}` : ''}</p>
+              <p className="text-gray-700">{itemLabel}: {displayItemName(calculation.productName)}{calculation.size ? `, размер ${calculation.size}` : ''}</p>
               {calculation.unitPriceText && <p className="text-gray-700 mt-1">Цена {calculation.unitPriceText} тг</p>}
             </>
           ) : null}
@@ -235,7 +237,7 @@ export default function FlagsProductsCalculator({ client, initialCategory }) {
           saveDisabled={!client}
         >
           {!calculation.note && <>
-          <CalcResultRow label="Позиция:" value={calculation.productName} reverseOnMobile />
+          <CalcResultRow label={`${itemLabel}:`} value={displayItemName(calculation.productName)} reverseOnMobile />
           {calculation.size && <CalcResultRow label="Размер:" value={`${calculation.size} м`} />}
           <CalcResultRow label="Количество:" value={`${calculation.quantity} шт`} />
           <CalcResultRow label="Цена за шт:" value={`${formatPrice(calculation.unitPrice)} тг`} />

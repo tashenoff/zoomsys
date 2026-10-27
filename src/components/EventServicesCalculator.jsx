@@ -21,7 +21,7 @@ function priceText(item) {
   return item.priceText || (item.price != null ? `${Number(item.price).toLocaleString('ru-RU')} тг` : '—')
 }
 
-export default function EventServicesCalculator({ client, initialCategory }) {
+export default function EventServicesCalculator({ client, initialCategory, initialItemId = null, initialPrintOption = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -29,8 +29,8 @@ export default function EventServicesCalculator({ client, initialCategory }) {
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const [category, setCategory] = useState(initialCategory || 'mobile')
-  const [selectedId, setSelectedId] = useState('')
-  const [printOption, setPrintOption] = useState('none')
+  const [selectedId, setSelectedId] = useState(initialItemId == null ? '' : String(initialItemId))
+  const [printOption, setPrintOption] = useState(initialPrintOption || 'none')
   const [quantity, setQuantity] = useState(1)
   const [days, setDays] = useState(1)
   const [isUrgent, setIsUrgent] = useState(false)
@@ -43,19 +43,19 @@ export default function EventServicesCalculator({ client, initialCategory }) {
   useEffect(() => {
     if (initialCategory) {
       setCategory(initialCategory)
-      setSelectedId('')
+      setSelectedId(initialItemId == null ? '' : String(initialItemId))
       setManualPrice('')
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCategory])
+  }, [initialCategory, initialItemId])
 
   const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))].filter(c => c !== 'specialists'), [items])
   const effectiveCategory = (
     initialCategory && categories.includes(initialCategory) ? initialCategory : ''
   ) || (categories.includes(category) ? category : (categories[0] || 'mobile'))
   const catItems = useMemo(() => items.filter(i => i.category === effectiveCategory), [items, effectiveCategory])
-  const selected = useMemo(() => catItems.find(i => String(i.id) === String(selectedId)) || catItems[0] || null, [catItems, selectedId])
+  const selected = useMemo(() => catItems.find(i => String(i.id) === String(selectedId)) || (!selectedId ? catItems[0] : null) || null, [catItems, selectedId])
 
   const isMobile = effectiveCategory === 'mobile' && !!selected?.printOptions
   const effectivePrintOption = isMobile && selected?.printOptions && !Object.keys(selected.printOptions).includes(printOption)

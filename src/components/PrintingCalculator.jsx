@@ -7,7 +7,7 @@ import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 import { isServiceAllowed } from '../lib/catalog.mjs'
 
-export default function PrintingCalculator({ client: externalClient }) {
+export default function PrintingCalculator({ client: externalClient, initialCategory = null, initialProductId = null, initialColorType = null }) {
   // Получаем данные из контекста прайсов и заказов
   const { pricing: pricingContext } = usePricing()
   const { createOrder, isOnline } = useOrders()
@@ -22,7 +22,7 @@ export default function PrintingCalculator({ client: externalClient }) {
   const [client, setClient] = useState(externalClient)
   
   // Состояния для фильтрации
-  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [searchProduct, setSearchProduct] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedColorType, setSelectedColorType] = useState(null)
@@ -136,8 +136,8 @@ export default function PrintingCalculator({ client: externalClient }) {
 
   // При выборе категории сбрасываем выбор продукта
   useEffect(() => {
-    setSelectedProduct(null)
-    setSelectedColorType(null)
+    setSelectedProduct(initialProductId == null ? null : pricing.find(item => item.category === selectedCategory && String(item.id) === String(initialProductId)) || null)
+    setSelectedColorType(initialColorType)
     setSearchProduct('')
     
     if (selectedCategory && productsRef.current) {
@@ -145,13 +145,13 @@ export default function PrintingCalculator({ client: externalClient }) {
         productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 100)
     }
-  }, [selectedCategory])
+  }, [selectedCategory, initialProductId, initialColorType])
 
   // При выборе продукта проверяем нужна ли цветность
   useEffect(() => {
     if (selectedProduct) {
       if (selectedProduct.colorTypes && selectedProduct.colorTypes.length > 0) {
-        setSelectedColorType(null)
+        setSelectedColorType(String(selectedProduct.id) === String(initialProductId) && selectedProduct.colorTypes.some(color => color.type === initialColorType) ? initialColorType : null)
         setTimeout(() => {
           colorTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 100)

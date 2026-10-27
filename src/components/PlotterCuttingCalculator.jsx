@@ -5,7 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import ResultSummary from './ResultSummary'
 import CalcResultRow from './CalcResultRow'
 
-export default function PlotterCuttingCalculator({ client, initialMaterial }) {
+export default function PlotterCuttingCalculator({ client, initialMaterial, initialItemId = null }) {
   const { pricing: pricingContext } = usePricing()
   const { createOrder } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
@@ -13,7 +13,7 @@ export default function PlotterCuttingCalculator({ client, initialMaterial }) {
   const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
 
   const [materialId, setMaterialId] = useState('')
-  const [operationId, setOperationId] = useState('')
+  const [operationId, setOperationId] = useState(initialItemId == null ? '' : String(initialItemId))
   const [area, setArea] = useState(1) // м²
   const [isUrgent, setIsUrgent] = useState(false)
   const [calculation, setCalculation] = useState(null)
@@ -25,12 +25,12 @@ export default function PlotterCuttingCalculator({ client, initialMaterial }) {
   useEffect(() => {
     if (initialMaterial) {
       setMaterialId(initialMaterial)
-      setOperationId('')
+      setOperationId(initialItemId == null ? '' : String(initialItemId))
       setManualPrice('')
       setCalculation(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMaterial])
+  }, [initialMaterial, initialItemId])
 
   const materials = useMemo(() => [...new Set(items.map(i => i.material).filter(Boolean))], [items])
   const effectiveMaterial = (initialMaterial && materials.includes(initialMaterial) ? initialMaterial : '') || (materials.find(m => m === materialId) || materials[0] || '')
@@ -39,7 +39,7 @@ export default function PlotterCuttingCalculator({ client, initialMaterial }) {
     [items, effectiveMaterial]
   )
   const selectedOperation = useMemo(
-    () => operations.find(o => String(o.id) === String(operationId)) || operations[0] || null,
+    () => operations.find(o => String(o.id) === String(operationId)) || (!operationId ? operations[0] : null) || null,
     [operations, operationId]
   )
   const isRangePrice = (selectedOperation?.priceText && /от|до/.test(selectedOperation.priceText)) || (selectedOperation?.price != null && isNaN(Number(selectedOperation.price)))

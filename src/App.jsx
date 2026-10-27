@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Auth from './components/Auth'
 import Sidebar from './components/Sidebar'
 import ClientSelector from './components/ClientSelector'
@@ -47,6 +47,7 @@ function AppContent() {
     const [selectedOrderId, setSelectedOrderId] = useState(null)
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [priceSearch, setPriceSearch] = useState(null)
+    const searchNavigation = useRef(0)
 
   const handleLogout = () => {
     logout()
@@ -79,7 +80,8 @@ function AppContent() {
     }
 
     const handleSelectCategory = (category) => {
-      setSelectedCategory(category)
+      // A search selection starts fresh, including repeated selections of the same record.
+      setSelectedCategory(category.searchKey ? { ...category, searchKey: `${category.searchKey}:${++searchNavigation.current}` } : category)
       setSelectedView(null)
       setSelectedOrderId(null)
       setPriceSearch(null)
@@ -122,7 +124,6 @@ function AppContent() {
             onLogout={handleLogout}
             onSelectView={handleSelectView}
             onSelectCategory={handleSelectCategory}
-            onSearchPrices={handlePriceSearch}
           />
           <div className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto p-3 md:p-6">
@@ -185,64 +186,144 @@ function AppContent() {
               ) : (
                 <>
                   {selectedCategory.slug === 'business-cards' && (
-                    <BusinessCardsCalculator client={selectedClient} />
+                    <BusinessCardsCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialItemId={selectedCategory.catalogSource === 'businessCards' ? selectedCategory.catalogItemId : null}
+                      initialCardType={selectedCategory.cardType}
+                    />
                   )}
 
                   {selectedCategory.slug === 'printing' && (
-                    <PrintingCalculator client={selectedClient} />
+                    <PrintingCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialCategory={selectedCategory.printingCategory}
+                      initialProductId={selectedCategory.printingProductId}
+                      initialColorType={selectedCategory.catalogVariant?.kind === 'printing-color' ? selectedCategory.catalogVariant.value : null}
+                    />
                   )}
 
                   {selectedCategory.slug === 'uv-printing' && (
-                                      <UVPrintingCalculator client={selectedClient} initialCategory={selectedCategory.uvSection} />
-                                    )}
+                    <UVPrintingCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialCategory={selectedCategory.uvSection}
+                      initialProductId={selectedCategory.catalogSource === 'uvPrinting' ? selectedCategory.catalogItemId : null}
+                      initialSide={selectedCategory.catalogVariant?.kind === 'uv-side' ? selectedCategory.catalogVariant.value : null}
+                      initialMaterial={selectedCategory.catalogVariant?.kind === 'uv-material' ? selectedCategory.catalogVariant.value : null}
+                    />
+                  )}
 
                   {selectedCategory.slug === 'wide-format' && (
-                                      <WideFormatCalculator client={selectedClient} initialGroup={selectedCategory.wideGroup} />
-                                    )}
+                    <WideFormatCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialGroup={selectedCategory.wideGroup}
+                      initialMaterialId={selectedCategory.wideMaterialId}
+                    />
+                  )}
 
                   {['coat-of-arms', 'flags-rk', 'flagpoles', 'signs', 'stands', 'president-portrait'].includes(selectedCategory.slug) && (
-                    <StateSymbolsCalculator client={selectedClient} categorySlug={selectedCategory.slug} />
+                    <StateSymbolsCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      categorySlug={selectedCategory.slug}
+                      initialItemId={selectedCategory.catalogSource === 'stateSymbols' ? selectedCategory.catalogItemId : null}
+                    />
                   )}
 
                   {selectedCategory.slug === 'event-services' && (
-                                      <EventServicesCalculator client={selectedClient} initialCategory={selectedCategory.eventCategory} />
-                                    )}
+                    <EventServicesCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialCategory={selectedCategory.eventCategory}
+                      initialItemId={selectedCategory.catalogSource === 'eventServices' ? selectedCategory.catalogItemId : null}
+                      initialPrintOption={selectedCategory.catalogVariant?.kind === 'event-print' ? selectedCategory.catalogVariant.value : null}
+                    />
+                  )}
 
                   {selectedCategory.slug === 'textile' && (
-                                      <TextilePrintingCalculator client={selectedClient} initialCategory={selectedCategory.textileCategory} />
-                                    )}
+                    <TextilePrintingCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialCategory={selectedCategory.textileCategory}
+                      initialMaterialId={selectedCategory.textileMaterialId}
+                    />
+                  )}
 
                   {selectedCategory.slug === 'flags-products' && (
-                                      <FlagsProductsCalculator client={selectedClient} initialCategory={selectedCategory.flagsCategory} />
-                                    )}
+                    <FlagsProductsCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialCategory={selectedCategory.flagsCategory}
+                      initialItemId={selectedCategory.flagsItemId}
+                      initialSize={selectedCategory.catalogVariant?.kind === 'flag-size' ? selectedCategory.catalogVariant.value : null}
+                    />
+                  )}
 
                   {selectedCategory.slug === 'advertising-stands' && (
-                    <AdvertisingStandsCalculator client={selectedClient} />
+                    <AdvertisingStandsCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialItemId={selectedCategory.catalogSource === 'advertisingStands' ? selectedCategory.catalogItemId : null}
+                      initialThickness={selectedCategory.catalogVariant?.kind === 'stand-thickness' ? selectedCategory.catalogVariant.value : null}
+                    />
                   )}
 
                   {selectedCategory.slug === 'cnc-laser' && (
-                                      <CncLaserCalculator client={selectedClient} initialType={selectedCategory.cncType} />
-                                    )}
+                    <CncLaserCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialType={selectedCategory.cncType}
+                      initialItemId={selectedCategory.catalogSource === 'cncLaser' ? selectedCategory.catalogItemId : null}
+                      initialThickness={selectedCategory.catalogVariant?.kind === 'cnc-thickness' ? selectedCategory.catalogVariant.value : null}
+                    />
+                  )}
 
                   {selectedCategory.slug === 'plotter-cutting' && (
-                                                        <PlotterCuttingCalculator client={selectedClient} initialMaterial={selectedCategory.plotterMaterial} />
-                                                      )}
+                    <PlotterCuttingCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialMaterial={selectedCategory.plotterMaterial}
+                      initialItemId={selectedCategory.catalogSource === 'plotterCutting' ? selectedCategory.catalogItemId : null}
+                    />
+                  )}
 
-                                    {selectedCategory.slug === 'garment-printing' && (
-                                      <GarmentPrintingCalculator client={selectedClient} />
-                                    )}
+                  {selectedCategory.slug === 'garment-printing' && (
+                    <GarmentPrintingCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialItemId={selectedCategory.catalogSource === 'garmentPrinting' ? selectedCategory.catalogItemId : null}
+                      initialProductId={['garment-product', 'garment-variant'].includes(selectedCategory.catalogVariant?.kind) ? selectedCategory.catalogVariant.productId : null}
+                      initialVariantId={selectedCategory.catalogVariant?.kind === 'garment-variant' ? selectedCategory.catalogVariant.variantId : null}
+                    />
+                  )}
 
-                                    {selectedCategory.slug === 'embroidery' && (
-                                                                          <EmbroideryCalculator client={selectedClient} />
-                                                                        )}
+                  {selectedCategory.slug === 'embroidery' && (
+                    <EmbroideryCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialItemId={selectedCategory.catalogSource === 'embroidery' ? selectedCategory.catalogItemId : null}
+                    />
+                  )}
 
-                                                                        {selectedCategory.slug === 'specialists' && (
-                                                                                                                                                                                                                          <SpecialistsCalculator client={selectedClient} initialGroup={selectedCategory.specialistsGroup} />
-                                                                                                                                                                                                                        )}
+                  {selectedCategory.slug === 'specialists' && (
+                    <SpecialistsCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialGroup={selectedCategory.specialistsGroup}
+                      initialItemId={selectedCategory.catalogSource === 'eventServices' ? selectedCategory.catalogItemId : null}
+                    />
+                  )}
 
-                                                                                          {selectedCategory.slug === 'additional-services' && (
-                                                                                            <AdditionalServicesCalculator client={selectedClient} />
-                                                                                          )}
+                  {selectedCategory.slug === 'additional-services' && (
+                    <AdditionalServicesCalculator
+                      key={selectedCategory.searchKey}
+                      client={selectedClient}
+                      initialItemId={selectedCategory.catalogSource === 'additionalServices' ? selectedCategory.catalogItemId : null}
+                    />
+                  )}
                 </>
               )}
 

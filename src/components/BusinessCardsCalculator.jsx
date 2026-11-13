@@ -5,6 +5,8 @@ import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
+import SheetProductCalculator from './SheetProductCalculator'
+import { calculateCardOperations, cardSheetCount, isCurrentCardProduct, isSheetOperation, isSheetBilledOperation, defaultCardOption, optionSheetFormat } from '../lib/cardSheetPricing.mjs'
 import { filterCardProducts, getManualBadgeQuote, isBadgeProduct } from '../lib/catalog.mjs'
 
 export default function BusinessCardsCalculator({ client: externalClient, initialItemId = null, initialCardType = null }) {
@@ -20,8 +22,12 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   const [selectedCardType, setSelectedCardType] = useState(initialProduct ? (isBadgeProduct(initialProduct) ? 'badges' : initialCardType || 'business-cards') : null)
   
   const allPricing = pricingData.businessCards || []
-  const pricing = useMemo(() => filterCardProducts(allPricing, selectedCardType), [allPricing, selectedCardType])
-  const additionalOperations = pricingData.additionalOperations || {}
+  const pricing = useMemo(() => filterCardProducts(allPricing, selectedCardType).filter(isCurrentCardProduct), [allPricing, selectedCardType])
+  const additionalOperations = useMemo(() => {
+    const operations = pricingData.additionalOperations || {}
+    if (Object.values(operations).some(op => /graphtec/i.test(op.name || ''))) return operations
+    return { ...operations, graphtec: pricingDataFallback.additionalOperations.graphtec }
+  }, [pricingData])
   const reorderOptions = pricingData.reorderOptions || []
   const additionalServices = pricingData.additionalServices || []
   
@@ -35,6 +41,10 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   const [selectedProduct, setSelectedProduct] = useState(initialProduct || null)
   
   const [quantity, setQuantity] = useState(100)
+  const [sheetFormat, setSheetFormat] = useState('A4')
+  const [yieldPerSheet, setYieldPerSheet] = useState(10)
+  const [operationSides, setOperationSides] = useState({})
+  const [legacyBadgeMode, setLegacyBadgeMode] = useState(false)
   const [manualBatchTotal, setManualBatchTotal] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedAddServices, setSelectedAddServices] = useState([])
@@ -50,7 +60,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   // Новые состояния для перезаказа и примечания с ценой
   const [selectedReorder, setSelectedReorder] = useState('no')
 
-  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge ?? 30
 
   // Refs для автоскролла
   const colorTypeRef = useRef(null)
@@ -73,7 +83,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
     // Из доп. операций
     const fromOperations = additionalOperations && typeof additionalOperations === 'object'
       ? Object.values(additionalOperations).filter(op => {
-          if (!op || !op.applicableTo) return false
+          if (!op || !op.applicableTo || /монтаж|демонтаж/i.test(op.name || '')) return false
           const applicableTo = Array.isArray(op.applicableTo) ? op.applicableTo : []
           if (!applicableTo.includes('all') && !applicableTo.includes(selectedCardType)) return false
           const key = String(op.id || op.name)
@@ -155,13 +165,11 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   }, [selectedMaterial, selectedColorType, pricing, selectedCardType, availableColorTypes])
 
   useEffect(() => {
-    if (selectedProduct && quantity) {
-      calculatePrice()
-    }
-  }, [selectedProduct, quantity, selectedServices, selectedAddServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, manualBatchTotal])
+    setCalculation(null)
+  }, [selectedProduct, quantity, selectedServices, selectedAddServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, manualBatchTotal, sheetFormat, yieldPerSheet, operationSides, notes, pricingData, selectedCardType, selectedMaterial, selectedColorType])
 
   const getPriceForQuantity = (product, qty) => {
-    if (!Number.isInteger(Number(qty)) || Number(qty) <= 0) return null
+    if (!product?.prices || !Number.isInteger(Number(qty)) || Number(qty) <= 0) return null
     if (qty < 50) return product.prices.upTo49
     if (qty < 100) return product.prices["50to99"]
     if (qty < 300) return product.prices["100to299"]
@@ -170,7 +178,8 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   }
 
   const calculatePrice = () => {
-    if (!selectedProduct) return
+    setCalculation(null)
+    if (!selectedProduct || !isCurrentCardProduct(selectedProduct)) return
 
     if (!Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
       setCalculation(null)
@@ -186,114 +195,18 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
     const unitPrice = manualQuote ? manualQuote.unitPrice : getPriceForQuantity(selectedProduct, quantity)
     const baseTotal = manualQuote ? manualQuote.baseTotal : unitPrice * quantity
 
-    let servicesTotal = 0
-    let servicesDetails = []
-
-    // Обрабатываем новые допоперации
-    selectedServices.forEach(serviceId => {
-      // Ищем среди новых операций
-      const operation = availableOperations.find(op => op.id === serviceId)
-      if (operation) {
-        let servicePrice = 0
-        let serviceName = operation.name
-        
-        // Обработка операций с выбором (select)
-        if (operation.type === 'select') {
-          const selectedOptionId = selectedServiceOptions[serviceId]
-          if (selectedOptionId) {
-            const selectedOption = operation.options.find(opt => opt.id === selectedOptionId)
-            if (selectedOption) {
-              servicePrice = selectedOption.price
-              serviceName = `${operation.name}: ${selectedOption.name}`
-            }
-          }
-        }
-        // Обработка операций с количеством
-        else if (operation.type === 'quantity') {
-          const qty = serviceQuantities[serviceId] || 0
-          if (qty > 0) {
-            servicePrice = operation.price * qty
-            serviceName = `${operation.name} (${qty} шт)`
-          }
-        }
-        // Обработка операций с unit='тг/угол'
-        else if (operation.unit === 'тг/угол') {
-          const corners = serviceQuantities[serviceId] || operation.defaultQuantity || 4
-          servicePrice = operation.price * corners * quantity
-          serviceName = `${operation.name} (${corners} углов × ${quantity} шт)`
-        }
-        // Обработка обычных операций
-        else {
-          const qty = serviceQuantities[serviceId] || 1
-          if (operation.unit === 'тг/шт') {
-            servicePrice = operation.price * quantity * qty
-            if (qty > 1) {
-              serviceName = `${operation.name} (${qty} шт на визитку)`
-            }
-          } else {
-            servicePrice = operation.price
-          }
-        }
-        
-        // Применяем скидку на препресс при перезаказе
-        if (operation.id === 'prepress' && selectedReorder !== 'no' && servicePrice > 0) {
-          const reorderOption = reorderOptions.find(opt => opt.id === selectedReorder)
-          if (reorderOption && reorderOption.prepressDiscount > 0) {
-            const originalPrice = servicePrice
-            const discountAmount = servicePrice * (reorderOption.prepressDiscount / 100)
-            servicePrice -= discountAmount
-            servicesDetails.push({
-              name: `${serviceName} (перезаказ -${reorderOption.prepressDiscount}%)`,
-              price: servicePrice,
-              originalPrice: originalPrice,
-              discount: discountAmount
-            })
-          } else {
-            servicesDetails.push({
-              name: serviceName,
-              price: servicePrice
-            })
-          }
-        } else if (servicePrice > 0) {
-          servicesDetails.push({
-            name: serviceName,
-            price: servicePrice
-          })
-        }
-        
-        servicesTotal += servicePrice
-      } else {
-              // Fallback на старые additionalServices
-              const service = additionalServices.find(s => s.id === serviceId)
-              if (service) {
-                if (service.priceText) {
-                  servicesDetails.push({ name: `${service.name} (${service.priceText})`, price: 0, byRequest: true })
-                  return
-                }
-                const servicePrice = service.unit === 'тг/шт' 
-                  ? service.price * quantity 
-                  : service.price
-                servicesTotal += servicePrice
-                servicesDetails.push({
-                  name: service.name,
-                  price: servicePrice
-                })
-              }
-            }
+    const operationsQuote = calculateCardOperations({
+      quantity, format: sheetFormat, yieldPerSheet, operations: availableOperations,
+      selected: selectedServices, options: selectedServiceOptions, quantities: serviceQuantities,
+      sides: operationSides, extraServices: additionalServices, selectedExtras: selectedAddServices,
+      reorderDiscount: selectedReorder === 'no' ? 0 : reorderOptions.find(opt => opt.id === selectedReorder)?.prepressDiscount ?? 0
     })
-
-    // Доп. услуги из модалки (фиксированная цена; priceText — «по запросу», без числа в итог)
-    selectedAddServices.forEach(serviceId => {
-      const svc = additionalServices.find(s => String(s.id) === String(serviceId))
-      if (!svc) return
-      if (svc.price != null) {
-        const svcPrice = Number(svc.price) || 0
-        servicesTotal += svcPrice
-        servicesDetails.push({ name: svc.name, price: svcPrice })
-      } else if (svc.priceText) {
-        servicesDetails.push({ name: `${svc.name} (${svc.priceText})`, price: 0, byRequest: true })
-      }
-    })
+    if (!operationsQuote || !Number.isFinite(Number(unitPrice)) || Number(unitPrice) < 0
+      || !Number.isFinite(baseTotal) || baseTotal < 0 || !Number.isFinite(Number(discount))
+      || Number(discount) < 0 || Number(discount) > 100
+      || !Number.isFinite(Number(urgentSurcharge)) || Number(urgentSurcharge) < 0) return
+    const servicesTotal = operationsQuote.total
+    const servicesDetails = operationsQuote.details
 
     let subtotal = baseTotal + servicesTotal
 
@@ -305,9 +218,11 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
     const discountAmount = totalAfterUrgent * (discount / 100)
     const total = totalAfterUrgent - discountAmount
 
+    if (!Number.isFinite(total) || total < 0) return
     setCalculation({
+      sheetFormat, yieldPerSheet: Number(yieldPerSheet), sheetCount: operationsQuote.sheets, operationSides,
       productName: selectedProduct.name,
-      productType: manualPricing ? 'badges' : selectedCardType,
+      productType: selectedCardType,
       pricingMode: manualQuote ? 'manual' : 'tariff',
       manualBatchTotal: manualQuote?.manualBatchTotal,
       colorType: selectedProduct.colorType,
@@ -385,7 +300,9 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
     { id: 'custom-cards', name: 'Карточки произвольного типа', icon: '📇', active: false },
   ]
 
-  const calculationHint = !selectedProduct
+  const calculationHint = cardSheetCount(quantity, yieldPerSheet, sheetFormat) === null
+    ? 'Укажите положительные целые значения тиража и выхода с листа.'
+    : !selectedProduct
     ? (selectedCardType === 'badges' ? 'Выберите позицию бейджа выше.' : 'Выберите материал и цветность выше.')
     : !Number.isInteger(Number(quantity)) || Number(quantity) <= 0
       ? 'Укажите положительное целое количество.'
@@ -405,6 +322,13 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
     )
   }
 
+  if (selectedCardType === 'badges' && !legacyBadgeMode) {
+    return <div className="space-y-4">
+      <SheetProductCalculator kind="badges" client={client} onBack={() => setSelectedCardType(null)} />
+      <button type="button" onClick={() => setLegacyBadgeMode(true)} className="text-sm text-blue-700 underline">Согласованная стоимость тиража (прежний расчёт)</button>
+    </div>
+  }
+
   // Если выбран тип карточки, показываем соответствующий калькулятор
   return (
     <div className="space-y-6">
@@ -413,6 +337,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
         <button
           onClick={() => {
             setSelectedCardType(null)
+            setLegacyBadgeMode(false)
             // Сбрасываем все состояния
             setSearchMaterial('')
             setSelectedMaterial(null)
@@ -495,6 +420,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
           )}
         </div>
 
+        {calculation?.servicesDetails?.some(operation => operation.provisional) && <p className="text-amber-800">Предварительный расчёт: содержит неутверждённые ставки.</p>}
         {/* СЕКЦИЯ 2: Выбор цветности */}
         {selectedCardType !== 'badges' && <div ref={colorTypeRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-200">
           <label className="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">
@@ -540,6 +466,20 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
         </div>
 
         }
+
+        <div className="p-4 mb-4 bg-blue-50 rounded-lg space-y-3">
+          {selectedCardType === 'badges' && <button type="button" className="text-blue-700 underline" onClick={() => setLegacyBadgeMode(false)}>Листовой расчёт бейджей</button>}
+          <label className="block">Формат печатного листа
+            <select value={sheetFormat} onChange={e => { setSheetFormat(e.target.value); setYieldPerSheet(e.target.value === 'A4' ? 10 : ''); setSelectedServiceOptions({}); setCalculation(null) }} className="block border rounded p-2">
+              <option value="A4">A4</option><option value="A3">A3</option>
+            </select>
+          </label>
+          <label className="block">Изделий на листе (выход)
+            <input type="number" min="1" step="1" value={yieldPerSheet} onChange={e => { setYieldPerSheet(e.target.value); setCalculation(null) }} className="block border rounded p-2" />
+          </label>
+          <p className="text-sm text-gray-600">A4: по умолчанию 10 изделий. Для A3 менеджер указывает проверенный выход по раскладке. Листов: {cardSheetCount(quantity, yieldPerSheet, sheetFormat) ?? 'укажите корректный выход и тираж'}.</p>
+          {/touch[\s-]*cover|тач[\s-]*кавер/i.test(selectedMaterial || '') && <p className="text-sm text-amber-800">Используется действующий комплексный тариф Touch Cover. Отдельные ставки бумаги и лака не подтверждены; повторно их не добавляйте.</p>}
+        </div>
 
         {/* СЕКЦИЯ 3: Количество */}
         <div ref={quantityRef} className="mb-4 md:mb-6 p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -637,7 +577,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
                       {operation.type === 'select' && selectedServices.includes(operation.id) && (
                         <div className="mt-3">
                           <select
-                            value={selectedServiceOptions[operation.id] || ''}
+                            value={selectedServiceOptions[operation.id] || defaultCardOption(operation, sheetFormat)}
                             onChange={(e) => setSelectedServiceOptions({
                               ...selectedServiceOptions,
                               [operation.id]: e.target.value
@@ -645,12 +585,19 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
                             className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
                           >
                             <option value="">Выберите вариант...</option>
-                            {operation.options.map((opt) => (
+                            {operation.options.filter(opt => !isSheetBilledOperation(operation) || optionSheetFormat(opt) === sheetFormat).map((opt) => (
                               <option key={opt.id} value={opt.id}>
                                 {opt.name} — {opt.price} {opt.unit}
                               </option>
                             ))}
                           </select>
+                          {isSheetBilledOperation(operation) && !isSheetOperation(operation) && <p className="mt-2 text-sm text-gray-500">Тариф × число листов. Резка учитывается один раз на лист, независимо от сторон печати.</p>}
+                          {isSheetOperation(operation) && <label className="block mt-2 text-sm">Количество сторон
+                            <select value={operationSides[operation.id] ?? 1} onChange={e => setOperationSides({ ...operationSides, [operation.id]: Number(e.target.value) })} className="ml-2 border rounded p-2">
+                              <option value={1}>1 сторона</option><option value={2}>2 стороны</option>
+                            </select>
+                            <span className="block text-gray-500">Тариф × листы × стороны</span>
+                          </label>}
                         </div>
                       )}
                       
@@ -662,11 +609,13 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
                           </label>
                           <input
                             type="number"
-                            min="0"
-                            value={serviceQuantities[operation.id] || operation.defaultQuantity || ''}
+                            min="1"
+                            max={operation.unit === 'тг/угол' ? 4 : undefined}
+                            step="1"
+                            value={serviceQuantities[operation.id] ?? operation.defaultQuantity ?? ''}
                             onChange={(e) => setServiceQuantities({
                               ...serviceQuantities,
-                              [operation.id]: parseInt(e.target.value) || 0
+                              [operation.id]: e.target.value
                             })}
                             placeholder={operation.defaultQuantity ? `По умолчанию: ${operation.defaultQuantity}` : ''}
                             className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500"
@@ -683,10 +632,10 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
                           <input
                             type="number"
                             min="1"
-                            value={serviceQuantities[operation.id] || 1}
+                            value={serviceQuantities[operation.id] ?? 1}
                             onChange={(e) => setServiceQuantities({
                               ...serviceQuantities,
-                              [operation.id]: parseInt(e.target.value) || 1
+                              [operation.id]: e.target.value
                             })}
                             className="w-full px-3 py-2 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500"
                           />
@@ -781,7 +730,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
 
           <AdditionalServicesModal
             open={addServicesOpen}
-            category="business-cards"
+            category={selectedCardType}
             selected={selectedAddServices}
             onChange={(ids) => { setSelectedAddServices(ids); setCalculation(null) }}
             onClose={() => setAddServicesOpen(false)}
@@ -840,6 +789,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
         </div>
       </div>
 
+      {!calculation && !calculationHint && <p className="text-sm text-gray-600">После изменений нажмите «Рассчитать». Проверьте выход, варианты операций, число сторон и углов (1–4).</p>}
       {calculationHint && <p role="status" className="text-sm text-gray-600">{calculationHint}</p>}
       <button type="button" onClick={() => calculatePrice()} disabled={!!calculationHint}
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -871,7 +821,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
 
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-gray-600 font-medium">Количество:</span>
-              <span className="font-bold text-gray-800">{calculation.quantity} шт</span>
+              <span className="font-bold text-gray-800">{calculation.quantity} шт · {calculation.sheetCount} лист. {calculation.sheetFormat} ({calculation.yieldPerSheet} шт/лист)</span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b">

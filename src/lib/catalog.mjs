@@ -4,7 +4,7 @@ export { catalogConfig }
 
 export function isServiceAllowed(service, category) {
   if (category === 'uv-printing' && /^монтаж\s*\/\s*демонтаж\s+конструкции$/i.test((service?.name || '').trim())) return false
-  const printing = ['printing', 'flyers', 'booklets', 'certificates', 'notebooks', 'folders', 'paper-bags', 'digital-printing', 'paper-density', 'multipage']
+  const printing = ['business-cards', 'badges', 'discount-cards', 'custom', 'hangers', 'printing', 'flyers', 'booklets', 'certificates', 'notebooks', 'folders', 'paper-bags', 'digital-printing', 'paper-density', 'multipage']
   return !(printing.includes(category) && /монтаж|демонтаж/i.test(service?.name || ''))
 }
 

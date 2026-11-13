@@ -1,3 +1,6 @@
+import * as priceSearch from '../src/lib/priceSearch.js'
+import * as navCatalog from '../src/lib/navCatalog.js'
+import * as cardSheetHelpers from '../src/lib/cardSheetPricing.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
@@ -54,7 +57,9 @@ function componentRuntime(file, { extraExports = [], initialStates = [], pricing
     module, exports: module.exports, alert() {}, confirm() { return true },
     require(name) {
       if (name === 'react') return react
-      if (name === 'react/jsx-runtime') return require(name)
+      if (name === 'react/jsx-runtime' || name === '@heroicons/react/24/outline') return require(name)
+      if (name.endsWith('/priceSearch')) return priceSearch
+      if (name.endsWith('/navCatalog')) return navCatalog
       if (name.endsWith('/catalog.mjs')) return helpers
       if (name.endsWith('/wideFormatFinishing.mjs')) return finishing
       if (name.endsWith('/garmentPricing.mjs')) return garmentPricing
@@ -219,10 +224,15 @@ test('24: edits/additions keep the original endpoint and product subcategory in 
 
 test('24: global price search includes textile and finished products without changing routing keys', () => {
   const runtime = componentRuntime('PricingManagement.jsx', { extraExports: ['GlobalSearchResults', 'StateSymbolsTable', 'TextileTable', 'FlagsProductsTable'] })
-  const root = runtime.render('GlobalSearchResults', { localPricing: fixture, additionalOperationsList: [], query: '', onEdit() {}, onDelete() {} })
   for (const [name, key] of [['StateSymbolsTable', 'stateSymbols'], ['TextileTable', 'textile'], ['FlagsProductsTable', 'flagsProducts']]) {
+    const item = fixture[key][0]; let edited, deleted
+    const root = runtime.render('GlobalSearchResults', { localPricing: fixture, query: item.name,
+      onEdit: (row, category) => { edited = [row, category] }, onDelete: (category, id) => { deleted = [category, id] } })
     const table = elements(root, element => element.type === runtime.exports[name])[0]
-    assert.equal(table.props.items.length, fixture[key].length)
+    assert.ok(table, key)
+    assert.ok(table.props.items.some(row => row.id === item.id))
+    table.props.onEdit(item); assert.equal(edited[1], key)
+    table.props.onDelete(item.id); assert.deepEqual(deleted, [key, item.id])
   }
 })
 
@@ -272,7 +282,7 @@ function calculationHarness({ product = badge, quantity = 100, manualBatchTotal 
   const declarations = new Map(component.body.body.filter(node => node.type === 'VariableDeclaration').flatMap(node => node.declarations).map(node => [node.id.name, node.init]))
   let result
   let saved
-  const context = { ...helpers, selectedProduct: product, selectedCardType: cardType, quantity, manualBatchTotal,
+  const context = { ...helpers, ...cardSheetHelpers, sheetFormat: 'A4', yieldPerSheet: 10, operationSides: {}, selectedProduct: product, selectedCardType: cardType, quantity, manualBatchTotal,
     selectedServices: [], selectedAddServices: [], additionalServices: [], availableOperations: [], selectedServiceOptions: {}, serviceQuantities: {},
     selectedReorder: 'no', reorderOptions: [], isUrgent: false, urgentSurcharge: 30, discount: 0, notes: '',
     client: { id: 'test-client' }, orderStatus: 'draft', alert() {}, setSavingOrder() {},
@@ -363,4 +373,29 @@ test('20: real pricing read handlers suppress legacy badge tariffs without chang
     assert.equal(output[0].pricing_mode, 'manual')
   }
   assert.equal(JSON.stringify(row), original)
+})
+
+
+test('sheet paper editor preserves explicit format, density and per-sheet tariff metadata', () => {
+ const item={id:'paper-test',category:'paper-density',name:'Paper',prices:{default:123},specification:{section:'sheet-paper',sheetFormat:'A3',density:120}}
+ const runtime=componentRuntime('PricingManagement.jsx',{extraExports:['EditModal']}); let saved
+ const tree=runtime.render('EditModal',{category:'printing',item,onSave:value=>{saved=value}})
+ assert.equal(elements(tree,node=>node.props['aria-label']==='Формат листа бумаги')[0].props.value,'A3')
+ const density=elements(tree,node=>node.props['aria-label']==='Плотность бумаги')[0]
+ density.props.onChange({target:{value:'160'}})
+ const next=runtime.render('EditModal',{category:'printing',item,onSave:value=>{saved=value}})
+ elements(next,node=>node.type==='form')[0].props.onSubmit({preventDefault(){}})
+ assert.equal(saved.specification.density,160);assert.equal(saved.specification.sheetFormat,'A3');assert.equal(saved.prices.default,123)
+})
+
+test('Graphtec editor stores explicit format and complexity without inventing a price', () => {
+ const runtime=componentRuntime('PricingManagement.jsx',{extraExports:['OperationEditForm']});let edited
+ let formData={name:'Graphtec',type:'select',options:[],applicableTo:['hangers']}
+ const tree=runtime.render('OperationEditForm',{formData,setFormData:value=>{edited=value}})
+ elements(tree,node=>node.type==='button'&&text(node)==='+ Добавить')[0].props.onClick()
+ assert.equal(edited.options[0].price,null);assert.equal(edited.options[0].sheetFormat,'A3');assert.equal(edited.options[0].complexity,'simple')
+ formData=edited
+ const next=runtime.render('OperationEditForm',{formData,setFormData:value=>{edited=value}})
+ elements(next,node=>node.props['aria-label']==='Сложность Graphtec')[0].props.onChange({target:{value:'complex'}})
+ assert.equal(edited.options[0].complexity,'complex');assert.equal(edited.options[0].price,null)
 })

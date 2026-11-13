@@ -13,6 +13,8 @@ const ALL_TYPES = [
   { id: 'certificates', name: 'Сертификаты' },
   { id: 'flyers', name: 'Флаеры' },
   { id: 'booklets', name: 'Буклеты' },
+  { id: 'custom', name: 'Нестандартная продукция' },
+  { id: 'hangers', name: 'Хенгеры' },
   { id: 'notebooks', name: 'Блокноты' },
   { id: 'uv-printing', name: 'УФ печать' },
   { id: 'wide-format', name: 'Широкоформат' },
@@ -57,19 +59,19 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
 
   // Локальное состояние для отображения (используем данные из контекста)
   const localPricing = pricing || { businessCards: [], printing: [], uvPrinting: [], wideFormat: [], textile: [], flagsProducts: [], advertisingStands: [], cncLaser: [], plotterCutting: [], eventServices: [], garmentPrinting: [], embroidery: [], stateSymbols: [], additionalServices: [], additionalOperations: {} }
-  
+
   // Преобразуем additionalOperations объект в массив для отображения
-  const additionalOperationsList = localPricing.additionalOperations 
-    ? Object.values(localPricing.additionalOperations) 
+  const additionalOperationsList = localPricing.additionalOperations
+    ? Object.values(localPricing.additionalOperations)
     : []
 
   const handleDelete = async (category, itemId) => {
     if (!confirm('Вы уверены, что хотите удалить эту позицию?')) return
-    
+
     setSaving(true)
     try {
-      const apiCategory = category === 'businessCards' ? 'business-cards' : 
-                          category === 'wideFormat' ? 'wide-format' : 
+      const apiCategory = category === 'businessCards' ? 'business-cards' :
+                          category === 'wideFormat' ? 'wide-format' :
                           category === 'stateSymbols' ? 'state-symbols' :
                           category === 'additionalServices' ? 'services' :
                           category === 'additionalOperations' ? 'operations' :
@@ -82,7 +84,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
                           category === 'eventServices' ? 'event-services' :
                           category === 'garmentPrinting' ? 'garment-printing' :
                           category === 'embroidery' ? 'embroidery' : category
-      
+
       await api.request(`/pricing/${apiCategory}/${itemId}`, { method: 'DELETE' })
       await refreshPricing()
     } catch (err) {
@@ -133,7 +135,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
           </div>
         </div>
       )}
-      
+
       {/* Заголовок */}
       <div className="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
@@ -383,11 +385,11 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
           onSave={async (updatedItem) => {
             const category = editingItem?.pricingTab || resolvePricingTab(activeTab, symbolsPricingType)
             setSaving(true)
-            
+
             try {
               // Определяем API endpoint
-              const apiCategory = category === 'businessCards' ? 'business-cards' : 
-                                  category === 'wideFormat' ? 'wide-format' : 
+              const apiCategory = category === 'businessCards' ? 'business-cards' :
+                                  category === 'wideFormat' ? 'wide-format' :
                                   category === 'stateSymbols' ? 'state-symbols' :
                                   category === 'additionalServices' ? 'services' :
                                   category === 'additionalOperations' ? 'operations' :
@@ -400,7 +402,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
                           category === 'eventServices' ? 'event-services' :
                           category === 'garmentPrinting' ? 'garment-printing' :
                           category === 'embroidery' ? 'embroidery' : category
-              
+
               // Преобразуем данные для API
               let apiData = {}
               if (category === 'businessCards') {
@@ -422,7 +424,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
               } else if (category === 'additionalServices') {
                               apiData = { name: updatedItem.name, price: typeof updatedItem.price === 'number' ? updatedItem.price : null, price_text: typeof updatedItem.price === 'string' ? updatedItem.price : (updatedItem.priceText || null), unit: updatedItem.unit, description: updatedItem.description, applicable_to: updatedItem.applicableTo, category: updatedItem.serviceCategory || null }
                             } else if (category === 'additionalOperations') {
-                apiData = { 
+                apiData = {
                   name: updatedItem.name,
                   operation_type: updatedItem.type,
                   applicable_to: updatedItem.applicableTo,
@@ -431,6 +433,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
                   prices: updatedItem.prices,
                   unit: updatedItem.unit,
                   description: updatedItem.description,
+                  price_status: updatedItem.priceStatus || 'approved',
                   default_quantity: updatedItem.defaultQuantity
                 }
               } else if (category === 'garmentPrinting') {
@@ -450,16 +453,16 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
               } else if (category === 'textile') {
                 apiData = { name: updatedItem.name, price_per_sqm: updatedItem.pricePerSqm, category: updatedItem.category, unit: updatedItem.unit, prices: updatedItem.prices, description: updatedItem.description, notes: updatedItem.notes }
               } else if (category === 'uvPrinting') {
-                apiData = { 
-                  category: updatedItem.category || 'pens', 
-                  name: updatedItem.name, 
+                apiData = {
+                  category: updatedItem.category || 'pens',
+                  name: updatedItem.name,
                   description: updatedItem.description,
                   sides: updatedItem.sides,
                   materials: updatedItem.materials,
                   price_type: updatedItem.priceType
                 }
               }
-              
+
               if (editingItem?.id) {
                 // Обновление
                 await api.request(`/pricing/${apiCategory}/${editingItem.id}`, { method: 'PUT', body: apiData })
@@ -467,7 +470,7 @@ export default function PricingManagement({ searchQuery = '', focusItemId = null
                 // Создание
                 await api.request(`/pricing/${apiCategory}`, { method: 'POST', body: apiData })
               }
-              
+
               await refreshPricing()
               setIsModalOpen(false)
               setEditingItem(null)
@@ -1210,7 +1213,7 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
             <tr key={item.id} data-price-id={`additionalOperations:${item.id}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               <td className="px-4 py-3 text-sm text-gray-900 font-medium">{item.name}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
-                {item.type === 'select' ? '📋 Выбор опции' : 
+                {item.type === 'select' ? '📋 Выбор опции' :
                  item.type === 'quantity' ? '🔢 С количеством' : '💰 Фикс. цена'}
               </td>
               <td className="px-4 py-3 text-sm text-right text-gray-700 font-medium">
@@ -1220,8 +1223,8 @@ function AdditionalOperationsTable({ items, onEdit, onDelete }) {
               </td>
               <td className="px-4 py-3 text-sm text-gray-600">{item.unit || '—'}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
-                {item.applicableTo?.includes('all') ? 
-                  <span className="text-green-600">Все типы</span> : 
+                {item.applicableTo?.includes('all') ?
+                  <span className="text-green-600">Все типы</span> :
                   <span className="text-xs">{item.applicableTo?.slice(0, 2).join(', ')}{item.applicableTo?.length > 2 ? '...' : ''}</span>}
               </td>
               <td className="px-4 py-3 text-right">
@@ -1279,8 +1282,8 @@ function AdditionalServicesTable({ items, onEdit, onDelete }) {
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">{item.unit || 'тг'}</td>
               <td className="px-4 py-3 text-sm text-gray-600">
-                {item.applicableTo?.includes('all') ? 
-                  <span className="text-green-600">Все типы</span> : 
+                {item.applicableTo?.includes('all') ?
+                  <span className="text-green-600">Все типы</span> :
                   <span className="text-xs">{item.applicableTo?.slice(0, 2).join(', ')}{item.applicableTo?.length > 2 ? '...' : ''}</span>}
               </td>
               <td className="px-4 py-3 text-right">
@@ -1336,6 +1339,7 @@ function GarmentProductsEditForm({ formData, setFormData }) {
 
 // Форма редактирования операций
 function OperationEditForm({ formData, setFormData }) {
+  const graphtec = /graphtec/i.test(formData.name || '')
   return (
     <>
       <div>
@@ -1380,14 +1384,15 @@ function OperationEditForm({ formData, setFormData }) {
         <div className="border border-gray-200 rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold">Опции ({(formData.options || []).length})</h3>
-            <button type="button" onClick={() => setFormData({ ...formData, options: [...(formData.options || []), { id: `o${Date.now()}`, name: '', price: 0 }] })}
+            <button type="button" onClick={() => setFormData({ ...formData, options: [...(formData.options || []), { id: `o${Date.now()}`, name: '', price: graphtec ? null : 0, ...(graphtec ? { sheetFormat: 'A3', complexity: 'simple' } : {}) }] })}
               className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded">+ Добавить</button>
           </div>
           {(formData.options || []).map((opt, i) => (
-            <div key={opt.id || i} className="flex gap-2 mb-2 bg-gray-50 p-2 rounded">
+            <div key={opt.id || i} className="flex flex-wrap gap-2 mb-2 bg-gray-50 p-2 rounded">
+              {graphtec && <><select aria-label="Формат Graphtec" value={opt.sheetFormat || ''} onChange={event => { const options = [...formData.options]; options[i] = { ...opt, sheetFormat: event.target.value }; setFormData({ ...formData, options }) }}><option value="">Формат</option>{['A4','A3','SRA3'].map(format => <option key={format}>{format}</option>)}</select><select aria-label="Сложность Graphtec" value={opt.complexity || ''} onChange={event => { const options = [...formData.options]; options[i] = { ...opt, complexity: event.target.value }; setFormData({ ...formData, options }) }}><option value="">Сложность</option><option value="simple">Простая</option><option value="medium">Средняя</option><option value="complex">Сложная</option></select></>}
               <input type="text" value={opt.name} placeholder="Название" onChange={(e) => { const o = [...formData.options]; o[i] = { ...o[i], name: e.target.value }; setFormData({ ...formData, options: o }) }}
                 className="flex-1 px-3 py-2 border rounded" />
-              <input type="number" value={opt.price} placeholder="Цена" onChange={(e) => { const o = [...formData.options]; o[i] = { ...o[i], price: parseFloat(e.target.value) || 0 }; setFormData({ ...formData, options: o }) }}
+              <input type="number" min="0" step="0.01" value={opt.price ?? ''} placeholder="Цена" onChange={(e) => { const o = [...formData.options]; o[i] = { ...o[i], price: e.target.value === '' ? null : Number(e.target.value) }; setFormData({ ...formData, options: o }) }}
                 className="w-24 px-3 py-2 border rounded" />
               <button type="button" onClick={() => setFormData({ ...formData, options: formData.options.filter((_, j) => j !== i) })} className="text-red-500">✕</button>
             </div>
@@ -1423,7 +1428,7 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
   // Инициализируем formData с дефолтными значениями для разных категорий
   const getInitialFormData = () => {
     if (item) return item
-    
+
     // Дефолтные значения для новых позиций
     if (category === 'businessCards' || category === 'printing') {
       return {
@@ -1472,13 +1477,13 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
       return { name: '', price: 0, unit: '', description: '', applicableTo: ['all'], serviceCategory: '' }
     }
     if (category === 'additionalOperations') {
-      return { 
-        name: '', 
-        type: null, 
+      return {
+        name: '',
+        type: null,
         price: null,
         prices: null,
         unit: '',
-        description: '', 
+        description: '',
         defaultQuantity: null,
         applicableTo: ['all'],
         options: []
@@ -1489,7 +1494,7 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
     }
     return {}
   }
-  
+
   const [formData, setFormData] = useState(getInitialFormData)
 
   const handleSubmit = (e) => {
@@ -1638,6 +1643,10 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg">
                       <option value="flyers">Флаера</option>
                       <option value="booklets">Буклеты</option>
+                      <option value="paper-density">Бумага: листы и плотности</option>
+                      <option value="folders">Папки</option>
+                      <option value="paper-bags">Бумажные пакеты</option>
+                      <option value="digital-printing">Цифровая печать</option>
                       <option value="certificates">Сертификаты</option>
                       <option value="notebooks">Многостраничная продукция — Блокноты</option>
                     </select>
@@ -1656,7 +1665,7 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="font-semibold text-gray-800 mb-3">Цены по тиражу (тг/шт)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    {(formData.category === 'notebooks' ? Object.keys(formData.prices || {}).sort((a,b) => Number(a)-Number(b)).map(k => [k, `${k} шт`]) : [['50', '50 шт'], ['100', '100 шт'], ['300', '300 шт'], ['500', '500 шт']]).map(([key, label]) => (
+                    {(formData.category === 'paper-density' ? [['default', 'Тг за лист указанного формата']] : formData.category === 'notebooks' ? Object.keys(formData.prices || {}).sort((a,b) => Number(a)-Number(b)).map(k => [k, `${k} шт`]) : [['50', '50 шт'], ['100', '100 шт'], ['300', '300 шт'], ['500', '500 шт']]).map(([key, label]) => (
                       <div key={key}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
                         <input type="number" step="0.01" min="0" value={formData.prices?.[key] ?? ''} onChange={(e) => setFormData({ ...formData, prices: { ...formData.prices, [key]: e.target.value === '' ? null : Number(e.target.value) } })}
@@ -1667,6 +1676,20 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
                 </div>
               </>
             )}
+
+            {(category === 'additionalOperations' || (category === 'printing' && formData.category === 'paper-density')) && <label className="block border rounded p-3">
+              <input aria-label="Предварительный тариф" type="checkbox" checked={(category === 'additionalOperations' ? formData.priceStatus : formData.specification?.priceStatus) === 'provisional'} onChange={event => {
+                const priceStatus = event.target.checked ? 'provisional' : 'approved'
+                setFormData(category === 'additionalOperations' ? { ...formData, priceStatus } : { ...formData, specification: { ...formData.specification, priceStatus } })
+              }} /> Предварительный тариф (снять после утверждения клиентом)
+            </label>}
+            {category === 'printing' && formData.category === 'paper-density' && <div className="grid md:grid-cols-2 gap-3 border rounded p-4">
+              <label>Формат листа бумаги<select aria-label="Формат листа бумаги" className="block border rounded p-2 w-full" value={formData.specification?.sheetFormat || ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, section: 'sheet-paper', sheetFormat: event.target.value } })}><option value="">Укажите формат</option>{['A4','A3','SRA3'].map(format => <option key={format}>{format}</option>)}</select></label>
+              <label>Плотность бумаги, г/м²<input aria-label="Плотность бумаги" type="number" min="1" className="block border rounded p-2 w-full" value={formData.specification?.density ?? ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, section: 'sheet-paper', density: event.target.value === '' ? null : Number(event.target.value) } })} /></label>
+
+              <label className="md:col-span-2">Источник / примечание<input className="block border rounded p-2 w-full" value={formData.specification?.source || ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, source: event.target.value } })} /></label>
+              <p className="text-sm text-gray-600 md:col-span-2">Цена за один чистый лист, без печати. Не переносите сюда тариф готового изделия. Метаданные используются в листовом калькуляторе.</p>
+            </div>}
 
             {category === 'printing' && formData.category === 'notebooks' && <div className="space-y-3 border p-4 rounded">
               <h3 className="font-bold">Многостраничная продукция: параметры каталога</h3>
@@ -1718,10 +1741,10 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
                           <div key={qty}>
                             <label className="block text-xs text-gray-500">{qty} шт</label>
                             <input type="text" value={side.prices?.[qty] || ''} placeholder="цена"
-                              onChange={(e) => { 
-                                const s = [...formData.sides]; 
-                                s[sideIdx] = { ...s[sideIdx], prices: { ...s[sideIdx].prices, [qty]: e.target.value } }; 
-                                setFormData({ ...formData, sides: s }) 
+                              onChange={(e) => {
+                                const s = [...formData.sides];
+                                s[sideIdx] = { ...s[sideIdx], prices: { ...s[sideIdx].prices, [qty]: e.target.value } };
+                                setFormData({ ...formData, sides: s })
                               }}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm" />
                           </div>

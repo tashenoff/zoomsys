@@ -159,6 +159,7 @@ async function migrate() {
       ADD COLUMN IF NOT EXISTS step_mode BOOLEAN DEFAULT FALSE,
       ADD COLUMN IF NOT EXISTS step_unit TEXT
     `)
+    await require('./operation-price-status').ensureOperationPriceStatus(pool)
     console.log('✅ additional_operations')
 
     await pool.query(`CREATE TABLE IF NOT EXISTS reorder_options (

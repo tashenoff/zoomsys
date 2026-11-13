@@ -4,6 +4,21 @@ import api from '../lib/api'
 const OrdersContext = createContext(null)
 const STORAGE_KEY = 'orders'
 
+const validNumber = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isFinite(Number(value)) && Number(value) >= 0
+
+export function validateNewOrderData(order) {
+  if (!order || !validNumber(order.total)) throw new Error('Order total must be a finite nonnegative number')
+  if (!validNumber(order.quantity) || Number(order.quantity) <= 0) throw new Error('Order quantity must be finite and positive')
+  const integerQuantity = ['printing', 'business-cards', 'badges'].includes(order.category || 'business-cards') || order.pricingMode === 'sheet' || order.productType === 'badges'
+  if (integerQuantity && !Number.isSafeInteger(Number(order.quantity))) throw new Error('Printed product quantity must be a positive integer')
+  if (order.pricePerUnit != null && !validNumber(order.pricePerUnit)) throw new Error('Order unit price must be a finite nonnegative number')
+  const unresolved = value => value && typeof value === 'object' && (
+    value.byRequest === true || value.unresolved === true || value.requiresQuote === true || value.pricingMode === 'byRequest'
+    || Object.values(value).some(child => child && typeof child === 'object' && unresolved(child)))
+  if (unresolved(order)) throw new Error('Resolve all selected service prices before creating an order')
+  return { total: Number(order.total), quantity: Number(order.quantity) }
+}
+
 export function OrdersProvider({ children }) {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -71,20 +86,23 @@ export function OrdersProvider({ children }) {
 
   const createOrder = useCallback(async (orderData) => {
     try {
+      const { total, quantity } = validateNewOrderData(orderData)
+      // Keep the saved quote independent of later calculator/selection mutations.
+      orderData = structuredClone(orderData)
       if (isOnline) {
         const apiData = {
           client_id: orderData.client?.id || null,
           category: orderData.category || 'business-cards',
           status: orderData.status || 'draft',
           payment_status: orderData.paymentStatus || 'not_paid',
-          total_amount: parseFloat(orderData.total) || 0,
+          total_amount: total,
           notes: orderData.notes || '',
           items: [{
             product_name: orderData.productName || orderData.materialName || orderData.printType || 'Товар',
             color_type: orderData.colorType || null,
-            quantity: orderData.quantity || 1,
-            unit_price: orderData.pricePerUnit || (parseFloat(orderData.total) / (orderData.quantity || 1)),
-            total_price: parseFloat(orderData.total) || 0,
+            quantity,
+            unit_price: orderData.pricePerUnit != null ? Number(orderData.pricePerUnit) : total / quantity,
+            total_price: total,
             specifications: { ...orderData, client: orderData.client }
           }]
         }

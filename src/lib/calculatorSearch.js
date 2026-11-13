@@ -1,7 +1,9 @@
+import { isCurrentCardProduct } from './cardSheetPricing.mjs'
 import { buildCalculatorItems } from './navCatalog.js'
 import { getEnabledWideFormatMaterials, isBadgeProduct, getStateSymbolName } from './catalog.mjs'
 
 const PRINTING_SECTIONS = {
+  custom: 'Нестандартная продукция', hangers: 'Хенгеры',
   flyers: 'Флаера, листовки, афиши', booklets: 'Буклеты',
   certificates: 'Дипломы, грамоты, сертификаты, пригласительные', folders: 'Папки',
   'paper-bags': 'Бумажные пакеты', 'digital-printing': 'Цифровая печать',
@@ -34,7 +36,7 @@ export function buildCalculatorSearchItems(pricing) {
     parent, { ...navigation, catalogItemId: String(item.id), catalogVariant: choice }, group)
 
   for (const [category, label] of Object.entries(PRINTING_SECTIONS)) {
-    if (!root('printing') || !pricing?.printing?.some(item => item.category === category && item.specification?.section !== 'multipage')) continue
+    if (!root('printing') || (!['custom','hangers'].includes(category) && !pricing?.printing?.some(item => item.category === category && item.specification?.section !== 'multipage'))) continue
     const id = `printing-section:${category}`
     items.push({ id, kind: 'calculator', label, group: 'Листовая полиграфия', icon: '📄',
       payload: { ...root('printing'), printingCategory: category, searchKey: id } })
@@ -80,6 +82,7 @@ export function buildCalculatorSearchItems(pricing) {
       { kind: 'uv-material', value: material.name }, material.name)
   }
   for (const item of pricing?.businessCards || []) {
+    if (!isCurrentCardProduct(item)) continue
     for (const cardType of isBadgeProduct(item) ? ['badges'] : ['business-cards', 'discount-cards']) {
       add('businessCards', { ...item, category: cardType, name: [item.name, item.colorType].filter(Boolean).join(' · ') },
         root('business-cards'), { cardType }, cardType === 'badges' ? 'Бейджи' : cardType === 'discount-cards' ? 'Дисконтные карты' : 'Визитки')

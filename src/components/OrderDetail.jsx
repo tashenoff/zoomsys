@@ -334,6 +334,17 @@ export default function OrderDetail({ orderId, onBack }) {
                   </div>
                 )}
                 
+                {order.sheetCalculation?.version === 1 && <div className="mt-4 border rounded-lg p-3 bg-blue-50 space-y-1">
+                  <p className="font-semibold">Листовой расчёт: сохранённые параметры</p>
+                  {(order.sheetCalculation.paper?.provisional || order.sheetCalculation.printing?.provisional || order.sheetCalculation.operations?.some(operation => operation.provisional)) && <p className="text-amber-800 font-medium">Предварительный расчёт: при сохранении использованы неутверждённые ставки.</p>}
+                  <p className="text-sm">{order.sheetCalculation.sheetFormat}: {order.sheetCalculation.yieldPerSheet} изделий/лист · {order.sheetCalculation.sheets} листов · {order.sheetCalculation.pages} печатных страниц</p>
+                  <p className="text-sm">Бумага: {order.sheetCalculation.paper?.name}{order.sheetCalculation.paper?.density ? ' · ' + order.sheetCalculation.paper.density + ' г/м²' : ''}</p>
+                  <p className="text-sm">Бумага: {order.sheetCalculation.sheets} × {order.sheetCalculation.paper?.rate} = {order.sheetCalculation.paper?.total} тг</p>
+                  <p className="text-sm">Печать: {order.sheetCalculation.printing?.impressions} сторон × {order.sheetCalculation.printing?.rate} = {order.sheetCalculation.printing?.total} тг</p>
+                  <p className="text-xs text-gray-600">Поля: {order.sheetCalculation.margin} мм с каждой стороны; зазор: {order.sheetCalculation.gap} мм. Тарифы сохранены на момент расчёта.</p>
+                </div>}
+
+                {order.servicesDetails?.some(service => service.provisional) && <p className="text-amber-800 font-medium">Сохранённый расчёт содержит предварительные тарифы операций.</p>}
                 {order.servicesDetails && order.servicesDetails.length > 0 && (
                   <div className="mt-4 pt-4 border-t">
                     <p className="text-sm font-semibold text-gray-700 mb-2">Доп. услуги:</p>

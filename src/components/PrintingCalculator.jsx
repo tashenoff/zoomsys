@@ -5,6 +5,7 @@ import pricingDataFallback from '../data/pricing.json'
 import AdditionalServicesModal from './AdditionalServicesModal'
 import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
+import SheetProductCalculator from './SheetProductCalculator'
 import { isServiceAllowed } from '../lib/catalog.mjs'
 
 export default function PrintingCalculator({ client: externalClient, initialCategory = null, initialProductId = null, initialColorType = null }) {
@@ -13,7 +14,7 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   const { createOrder, isOnline } = useOrders()
   const pricingData = pricingContext || pricingDataFallback
   
-  const pricing = (pricingData.printing || []).filter(p => p.category !== 'notebooks' && p.specification?.section !== 'multipage')
+  const pricing = (pricingData.printing || []).filter(p => p.category !== 'notebooks' && p.specification?.section !== 'multipage' && !/^фольгирование$/i.test(p.name || ''))
   const additionalOperations = pricingData.additionalOperations || {}
   const reorderOptions = pricingData.reorderOptions || []
   const additionalServices = (pricingData.additionalServices || []).filter(service => isServiceAllowed(service, 'printing'))
@@ -24,6 +25,8 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   // Состояния для фильтрации
   const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [searchProduct, setSearchProduct] = useState('')
+  const [sheetMode, setSheetMode] = useState(false)
+  const [calculationError, setCalculationError] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedColorType, setSelectedColorType] = useState(null)
   
@@ -42,7 +45,7 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   const [customNotes, setCustomNotes] = useState([])
   const [serviceManualPrices, setServiceManualPrices] = useState({}) // Ручная цена для услуг с диапазоном
 
-  const urgentSurcharge = pricingData.settings?.urgentSurcharge || 30
+  const urgentSurcharge = pricingData.settings?.urgentSurcharge ?? 30
 
   // Refs для автоскролла
   const productsRef = useRef(null)
@@ -55,6 +58,13 @@ export default function PrintingCalculator({ client: externalClient, initialCate
       setClient(externalClient)
     }
   }, [externalClient])
+
+  useEffect(() => {
+    if (!pricingContext || !selectedProduct) return
+    const current = (pricingContext.printing || []).find(item => String(item.id) === String(selectedProduct.id) && item.category === selectedCategory)
+    setSelectedProduct(current || null)
+    setCalculation(null)
+  }, [pricingContext])
 
   // Получаем доступные допоперации и доп. услуги для выбранной категории
   const availableOperations = useMemo(() => {
@@ -96,6 +106,8 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   // Получаем уникальные категории
   const categories = useMemo(() => {
     const categoryMap = {
+          'custom': { name: 'Нестандартная продукция', icon: '📐' },
+          'hangers': { name: 'Хенгеры', icon: '🚪' },
           'flyers': { name: 'Флаера, Листовки, Афиши', icon: '📄' },
           'booklets': { name: 'Буклеты', icon: '📒' },
           'certificates': { name: 'Дипломы, Грамоты, Сертификаты, Пригласительные', icon: '🎓' },
@@ -106,7 +118,7 @@ export default function PrintingCalculator({ client: externalClient, initialCate
                     'paper-density': { name: 'Печать на бумаге разной плотности', icon: '📄' }
                   }
     
-    const uniqueCategories = [...new Set(pricing.map(p => p.category))]
+    const uniqueCategories = [...new Set([...pricing.map(p => p.category), 'custom', 'hangers'])]
     return uniqueCategories.map((cat, index) => ({
       id: cat,
       ...categoryMap[cat],
@@ -177,13 +189,13 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   useEffect(() => {
     if (selectedProduct && quantity) {
       // Если есть colorTypes, ждем выбора цветности
-      if (selectedProduct.colorTypes && !selectedColorType) return
+      if (selectedProduct.colorTypes && !selectedColorType) { setCalculation(null); return }
       calculatePrice()
-    }
-  }, [selectedProduct, selectedColorType, quantity, selectedServices, isUrgent, discount, selectedReorder, customNotes, serviceManualPrices])
+    } else { setCalculation(null) }
+  }, [selectedProduct, selectedColorType, quantity, selectedServices, selectedAddServices, isUrgent, discount, selectedReorder, customNotes, serviceManualPrices, notes, pricingContext])
 
   const getPriceForQuantity = (pricesObj, qty) => {
-    if (!pricesObj) return 0
+    if (!pricesObj) return null
     
     // Если есть default цена (например, для фольгирования)
     if (pricesObj.default !== undefined) {
@@ -212,9 +224,12 @@ export default function PrintingCalculator({ client: externalClient, initialCate
   }
 
   const calculatePrice = () => {
-    if (!selectedProduct) return
+    setCalculationError('')
+    if (!selectedProduct) { setCalculation(null); return }
+    if (!Number.isSafeInteger(Number(quantity)) || Number(quantity) <= 0 || !Number.isFinite(Number(discount)) || Number(discount) < 0 || Number(discount) > 100) { setCalculation(null); setCalculationError('Проверьте тираж и скидку'); return }
+    if (selectedServices.some(id => availableOperations.find(operation => String(operation.id) === String(id))?.type === 'select')) { setCalculation(null); setCalculationError('Для операций по листам перейдите в «Расчёт по листам»: там учитываются листы, варианты и стороны обработки.'); return }
 
-    let unitPrice = 0
+    let unitPrice = null
 
     // Если у продукта есть colorTypes
     if (selectedProduct.colorTypes && selectedColorType) {
@@ -318,10 +333,11 @@ export default function PrintingCalculator({ client: externalClient, initialCate
     const discountAmount = totalAfterUrgent * (discount / 100)
     const total = totalAfterUrgent - discountAmount
 
+    if (![unitPrice, baseTotal, servicesTotal, total].every(value => Number.isFinite(value) && value >= 0) || servicesDetails.some(service => service.byRequest || !Number.isFinite(service.price) || service.price < 0)) { setCalculation(null); setCalculationError('У выбранной операции нет подтверждённого тарифа. Введите цену или используйте расчёт по листам.'); return }
     setCalculation({
       productName: selectedProduct.name,
       format: selectedProduct.format,
-      colorType: selectedColorType,
+      colorType: selectedColorType || selectedProduct.colorType || null,
       quantity,
       unitPrice,
       baseTotal,
@@ -393,20 +409,29 @@ export default function PrintingCalculator({ client: externalClient, initialCate
       <CategorySelector
         categories={categories}
         selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
+        onSelectCategory={category => { setSelectedCategory(category); setSheetMode(true); setSelectedServices([]); setSelectedAddServices([]); setServiceManualPrices({}); setCalculation(null) }}
         title="Выберите категорию продукции для расчета:"
         gridCols="md:grid-cols-2"
       />
     )
   }
 
+  if (['custom', 'hangers', 'flyers', 'booklets'].includes(selectedCategory) || sheetMode === 'all') {
+    return <SheetProductCalculator key={selectedCategory} kind={['flyers','booklets','hangers'].includes(selectedCategory) ? selectedCategory : 'custom'} client={client} onBack={() => { setSelectedCategory(null); setSheetMode(true); setCalculation(null) }} />
+  }
+
   return (
     <div className="space-y-6">
+      <button type="button" className="px-4 py-2 rounded-lg bg-blue-600 text-white" onClick={() => { setSheetMode('all'); setCalculation(null) }}>Расчёт по листам: формат, бумага и обработка</button>
+      {calculationError && <p role="alert" className="text-red-700">{calculationError}</p>}
       {/* Плавающая кнопка "Назад" */}
       <div className="sticky top-0 z-10 bg-gray-100 pt-3 pb-4">
         <button
           onClick={() => {
             setSelectedCategory(null)
+            setSelectedServices([])
+            setSelectedAddServices([])
+            setServiceManualPrices({})
             setSearchProduct('')
             setSelectedProduct(null)
             setSelectedColorType(null)
@@ -464,7 +489,7 @@ export default function PrintingCalculator({ client: externalClient, initialCate
                   >
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold">{product.name}</span>
+                        <span className="font-semibold">{product.name}{product.colorType ? ` · ${product.colorType}` : ''}</span>
                         {selectedProduct?.id === product.id && (
                           <span className="text-lg">✓</span>
                         )}

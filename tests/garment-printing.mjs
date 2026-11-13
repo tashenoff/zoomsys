@@ -130,9 +130,16 @@ test('real order adapter and POST handler persist actual quantity, product, vari
     Object.values(node).forEach(walk)
   }
   walk(tree)
+  const validationSource = tree.program.body.flatMap(node => {
+    if (node.type === 'VariableDeclaration' && node.declarations.some(declaration => declaration.id.name === 'validNumber')) return [source.slice(node.start, node.end)]
+    if (node.type === 'ExportNamedDeclaration' && node.declaration?.id?.name === 'validateNewOrderData') return [source.slice(node.declaration.start, node.declaration.end)]
+    return []
+  }).join(';\n')
+  assert.ok(validationSource.includes('validateNewOrderData'))
   let persisted
-  const router = require('../server/routes/orders.js')({ async query(sql, values) {
-    if (sql.includes('SELECT COUNT')) return { rows: [{ count: '0' }] }
+  const router = require('../server/routes/orders.js')({ async connect() { return this }, release() {}, async query(sql, values) {
+    if (sql.includes('AS next_number')) return { rows: [{ next_number: '1' }] }
+    if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql) || sql.startsWith('LOCK TABLE')) return { rows: [] }
     if (sql.includes('INSERT INTO orders')) return { rows: [{ id: 10, total_amount: values[5] }] }
     if (sql.includes('INSERT INTO order_items')) persisted = { name: values[1], quantity: values[3], total: values[5], spec: JSON.parse(values[6]) }
     return { rows: [] }
@@ -140,9 +147,9 @@ test('real order adapter and POST handler persist actual quantity, product, vari
   const handler = router.stack.find(layer => layer.route?.path === '/' && layer.route.methods.post).route.stack[0].handle
   for (const variant of mugs.variants) {
     const result = quote({ item: sublimation, product: mugs, variant, quantity: 3 })
-    const context = { isOnline: true, STORAGE_KEY: 'test', localStorage: { setItem() {} }, setOrders: update => update([]),
+    const context = { structuredClone, isOnline: true, STORAGE_KEY: 'test', localStorage: { setItem() {} }, setOrders: update => update([]),
       api: { async createOrder(payload) { let response; await handler({ body: payload }, { json(value) { response = value } }); return response } } }
-    const create = vm.runInNewContext('(' + source.slice(callback.start, callback.end) + ')', context)
+    const create = vm.runInNewContext(validationSource + ';\n(' + source.slice(callback.start, callback.end) + ')', context)
     await create({ ...result, category: 'garment-printing', client: { id: 901 } })
     assert.equal(persisted.quantity, 3); assert.equal(persisted.total, 6000)
     assert.ok(persisted.name.endsWith(variant.name))

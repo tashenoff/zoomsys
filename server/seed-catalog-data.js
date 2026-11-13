@@ -78,7 +78,7 @@ function catalogRecords(data = pricing) {
   for (const [sort_order, it] of Object.values(data.additionalOperations || {}).entries())
     add('additionalOperations', 'additional_operations', ['name'], { name: it.name, operation_type: it.type ?? null,
       applicable_to: json(it.applicableTo ?? ['all']), options: json(it.options), price: it.price ?? null, prices: json(it.prices),
-      unit: it.unit ?? null, description: it.description ?? null, default_quantity: it.defaultQuantity ?? null,
+      unit: it.unit ?? null, description: it.description ?? null, default_quantity: it.defaultQuantity ?? null, price_status: it.priceStatus || 'approved',
       step_mode: !!it.stepMode, step_unit: it.stepUnit ?? null, sort_order })
   for (const [sort_order, it] of (data.reorderOptions || []).entries())
     add('reorderOptions', 'reorder_options', ['name'], { name: it.name ?? it.label, discount_percent: it.discountPercent ?? 0, sort_order })
@@ -114,6 +114,7 @@ async function seedCatalog(pool, { groups = null, data = pricing } = {}) {
     // Run `npm run migrate` first. These columns also support an existing pre-update schema.
     await client.query('ALTER TABLE garment_printing_pricing ADD COLUMN IF NOT EXISTS product_options JSONB')
     await client.query('ALTER TABLE printing_pricing ADD COLUMN IF NOT EXISTS specification JSONB')
+    await require('./operation-price-status').ensureOperationPriceStatus(client)
     await client.query('ALTER TABLE additional_operations ADD COLUMN IF NOT EXISTS step_mode BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS step_unit TEXT')
     await client.query(`ALTER TABLE wide_format_pricing ADD COLUMN IF NOT EXISTS roll_width NUMERIC,
       ADD COLUMN IF NOT EXISTS waste_price NUMERIC, ADD COLUMN IF NOT EXISTS waste_margin NUMERIC DEFAULT 0.2,

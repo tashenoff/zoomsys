@@ -42,7 +42,10 @@ function database() {
       if (sql.startsWith('SELECT *')) return { rows: rows.filter(row => !sql.includes('is_active=true') || row.is_active) }
       if (sql.startsWith('UPDATE')) {
         let matches = [], change
-        if (sql.includes('substring(name')) {
+        if (sql.includes('SET price_status = CASE')) {
+          matches = rows.filter(row => row.price_status == null)
+          change = row => { row.price_status = args[0].includes(row.name) ? 'provisional' : 'approved' }
+        } else if (sql.includes('substring(name')) {
           matches = rows.filter(row => row.category === 'signs' && args[2].includes(row.name))
           change = row => { row.name = args[0] + row.name.slice(args[1].length) }
         } else if (sql.includes('product_options IS NULL') && sql.includes('name=$2')) {
@@ -136,7 +139,9 @@ test('real price API and provider consume seeded numeric IDs, mug variants, tari
     Object.values(value).forEach(walk)
   }
   walk(tree)
-  const formatted = vm.runInNewContext('(' + provider.slice(expression.start, expression.end) + ')', { data, getStateSymbolName })
+  const optionParser = tree.program.body.find(node => node.type === 'VariableDeclaration' && node.declarations.some(declaration => declaration.id.name === 'parseOperationOptions'))
+  assert.ok(optionParser)
+  const formatted = vm.runInNewContext(provider.slice(optionParser.start, optionParser.end) + ';\n(' + provider.slice(expression.start, expression.end) + ')', { data, getStateSymbolName })
   const mug = formatted.garmentPrinting.find(row => row.type === 'sublimation')
   assert.equal(mug.pricePerSqCm, 20)
   assert.deepEqual(Array.from(mug.productOptions.find(row => row.id === 'mugs').variants, row => row.name), ['Кружка белая','Кружка перламутровая'])

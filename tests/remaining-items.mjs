@@ -1,3 +1,4 @@
+import * as cardSheetHelpers from '../src/lib/cardSheetPricing.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
@@ -16,7 +17,7 @@ function actual(file, bindings) {
   const component = tree.program.body.find(node => node.type === 'ExportDefaultDeclaration').declaration
   const declarations = new Map(component.body.body.filter(node => node.type === 'VariableDeclaration').flatMap(node => node.declarations).map(node => [node.id.name, node.init]))
   let result, saved; const alerts = []
-  const context = { ...catalog, ...finishing, calculateStickerLayout, ...bindings,
+  const context = { ...catalog, ...finishing, ...cardSheetHelpers, sheetFormat: 'A4', yieldPerSheet: 10, operationSides: {}, calculateStickerLayout, ...bindings,
     alert: message => alerts.push(message), setCalculation(value) { result = value; context.calculation = value },
     createOrder: async value => { saved = value }, setSavingOrder() {}, client: { id: 901, name: 'Test' }, orderStatus: 'draft' }
   for (const name of ['setWidth','setHeight','setQuantity','setSelectedServices','setIsUrgent','setOrderStatus','setCalculationUnused','setServiceQuantities','setSelectedServiceOptions','setSelectedAddServices','setOpts','setSearchMaterial','setSelectedMaterial','setSelectedColorType','setSelectedProduct','setDiscount','setNotes','setSelectedReorder']) context[name] = () => {}

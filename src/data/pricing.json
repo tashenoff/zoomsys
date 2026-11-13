@@ -599,7 +599,7 @@
         {
           "id": "gloss-a4",
           "name": "Глянец А4",
-          "price": 450,
+          "price": 250,
           "unit": "тг"
         },
         {
@@ -611,7 +611,7 @@
         {
           "id": "gloss-a3",
           "name": "Глянец А3",
-          "price": 250,
+          "price": 450,
           "unit": "тг"
         },
         {
@@ -619,6 +619,20 @@
           "name": "Матовая А3",
           "price": 600,
           "unit": "тг"
+        },
+        {
+          "id": "gloss-sra3",
+          "name": "Глянец SRA3",
+          "price": 550,
+          "unit": "тг",
+          "sheetFormat": "SRA3"
+        },
+        {
+          "id": "matte-sra3",
+          "name": "Матовая SRA3",
+          "price": 700,
+          "unit": "тг",
+          "sheetFormat": "SRA3"
         }
       ],
       "applicableTo": [
@@ -628,7 +642,9 @@
         "invitations",
         "certificates",
         "custom-cards"
-      ]
+      ],
+      "priceStatus": "provisional",
+      "description": "A3/A4: действующие ставки сохранены. SRA3: предварительная оценка 11.11.2026, редактируется в прайсе; требуется утверждение клиентом. Общий флаг предварительности включён из-за SRA3."
     },
     "prepress": {
       "id": "prepress",
@@ -658,11 +674,27 @@
           "name": "Листовая Шайн А4, 1 сторона",
           "price": 90,
           "unit": "тг"
+        },
+        {
+          "id": "leaflet-gloss-sra3-1",
+          "name": "Листовая Глянец SRA3, 1 сторона",
+          "price": 210,
+          "unit": "тг",
+          "sheetFormat": "SRA3"
+        },
+        {
+          "id": "leaflet-shine-sra3-1",
+          "name": "Листовая Шайн SRA3, 1 сторона",
+          "price": 210,
+          "unit": "тг",
+          "sheetFormat": "SRA3"
         }
       ],
       "applicableTo": [
         "all"
-      ]
+      ],
+      "priceStatus": "provisional",
+      "description": "A3/A4: действующие ставки сохранены. SRA3: предварительная оценка 11.11.2026, редактируется в прайсе; требуется утверждение клиентом. Общий флаг предварительности включён из-за SRA3."
     },
     "foiling": {
       "id": "foiling",
@@ -680,6 +712,13 @@
           "name": "А4 лист, 1 сторона",
           "price": 150,
           "unit": "тг"
+        },
+        {
+          "id": "foil-sra3-1",
+          "name": "SRA3 лист, 1 сторона",
+          "price": 300,
+          "unit": "тг",
+          "sheetFormat": "SRA3"
         }
       ],
       "applicableTo": [
@@ -687,7 +726,9 @@
         "invitations",
         "certificates",
         "flyers"
-      ]
+      ],
+      "priceStatus": "provisional",
+      "description": "A3/A4: действующие ставки сохранены. SRA3: предварительная оценка 11.11.2026, редактируется в прайсе; требуется утверждение клиентом. Общий флаг предварительности включён из-за SRA3."
     },
     "cutting": {
       "id": "cutting",
@@ -696,7 +737,8 @@
       "unit": "тг/шт",
       "applicableTo": [
         "all"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "cornerRounding": {
       "id": "cornerRounding",
@@ -704,12 +746,13 @@
       "price": 7,
       "unit": "тг/угол",
       "defaultQuantity": 4,
-      "description": "Визитка 1×4 угла",
+      "description": "Предварительно: существующий тариф, не подтверждён найденным PDF. Утвердить у клиента. Визитка 1×4 угла",
       "applicableTo": [
         "business-cards",
         "badges",
         "discount-cards"
-      ]
+      ],
+      "priceStatus": "provisional"
     },
     "roundHole": {
       "id": "roundHole",
@@ -721,7 +764,9 @@
         "badges",
         "discount-cards",
         "certificates"
-      ]
+      ],
+      "description": "Предварительно: существующий тариф, не подтверждён найденным PDF. Утвердить у клиента. ",
+      "priceStatus": "provisional"
     },
     "polyGrommet": {
       "id": "polyGrommet",
@@ -733,7 +778,8 @@
         "badges",
         "discount-cards",
         "certificates"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "tags": {
       "id": "tags",
@@ -744,7 +790,8 @@
       "description": "Считается отдельно, как доп опция",
       "applicableTo": [
         "business-cards"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "assembly": {
       "id": "assembly",
@@ -753,7 +800,8 @@
       "unit": "тг",
       "applicableTo": [
         "all"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "bigovka": {
       "id": "bigovka",
@@ -764,7 +812,8 @@
         "flyers",
         "booklets",
         "certificates"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "folding": {
       "id": "folding",
@@ -774,7 +823,9 @@
       "applicableTo": [
         "flyers",
         "booklets"
-      ]
+      ],
+      "description": "Предварительно: существующий тариф, не подтверждён найденным PDF. Утвердить у клиента. ",
+      "priceStatus": "provisional"
     },
     "grommets": {
       "id": "grommets",
@@ -784,7 +835,8 @@
       "applicableTo": [
         "flyers",
         "booklets"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "bolts": {
       "id": "bolts",
@@ -794,7 +846,8 @@
       "applicableTo": [
         "flyers",
         "booklets"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "pocket": {
       "id": "pocket",
@@ -803,7 +856,8 @@
       "unit": "тг",
       "applicableTo": [
         "flyers"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "bannerGluing": {
       "id": "bannerGluing",
@@ -818,7 +872,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "bannerJoining": {
       "id": "bannerJoining",
@@ -833,7 +888,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "wideFormatCutting": {
       "id": "wideFormatCutting",
@@ -848,7 +904,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "meshStitching": {
       "id": "meshStitching",
@@ -863,7 +920,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "vinylLamination": {
       "id": "vinylLamination",
@@ -878,7 +936,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "eyeletsInstallation": {
       "id": "eyeletsInstallation",
@@ -895,7 +954,8 @@
       "description": "Доп. услуга широкоформатной печати. Кол-во люверсов считается по периметру баннера: 2 × (Ш+В), делённое на шаг.",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "rebarPerimeter": {
       "id": "rebarPerimeter",
@@ -909,7 +969,8 @@
       "description": "Доп. услуга широкоформатной печати",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "contourCutting": {
       "id": "contourCutting",
@@ -924,7 +985,8 @@
       "description": "Из блока Roland + плоттер",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "uvDarkSurface": {
       "id": "uvDarkSurface",
@@ -935,7 +997,8 @@
       "description": "К=1.5 к стоимости печати",
       "applicableTo": [
         "uv-printing"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "uvPartialVarnish": {
       "id": "uvPartialVarnish",
@@ -946,7 +1009,8 @@
       "description": "К=1.3 к стоимости печати",
       "applicableTo": [
         "uv-printing"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "uvTemplate": {
       "id": "uvTemplate",
@@ -969,7 +1033,8 @@
       "description": "Для нестандартных предметов изготавливается шаблон 2 000–3 000 тг",
       "applicableTo": [
         "uv-printing"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "uvMakeready": {
       "id": "uvMakeready",
@@ -979,7 +1044,8 @@
       "description": "Клиент предоставляет 1–3 экземпляра для настройки печати",
       "applicableTo": [
         "uv-printing"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "flagStitching": {
       "id": "flagStitching",
@@ -994,7 +1060,8 @@
       "description": "до 500 пог.м — 750 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "flagCutting": {
       "id": "flagCutting",
@@ -1009,7 +1076,8 @@
       "description": "до 500 пог.м — 750 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "cordLacing": {
       "id": "cordLacing",
@@ -1024,7 +1092,8 @@
       "description": "до 500 пог.м — 800 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "fringe": {
       "id": "fringe",
@@ -1039,7 +1108,8 @@
       "description": "до 500 пог.м — 1000 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "textileEyelets": {
       "id": "textileEyelets",
@@ -1054,7 +1124,8 @@
       "description": "до 500 пог.м — 120 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "clampTape": {
       "id": "clampTape",
@@ -1069,7 +1140,8 @@
       "description": "до 500 пог.м — 500 тг, свыше — договорная",
       "applicableTo": [
         "textile"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "pockets": {
       "id": "pockets",
@@ -1096,7 +1168,8 @@
       "description": "A5-800, A4-1500, A3-4000 тг/шт",
       "applicableTo": [
         "advertising-stands"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "border": {
       "id": "border",
@@ -1107,7 +1180,8 @@
       "description": "750 тг/п.м",
       "applicableTo": [
         "advertising-stands"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "canvasStretch": {
       "id": "canvasStretch",
@@ -1118,7 +1192,8 @@
       "description": "3500 тг/м²",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "subframe": {
       "id": "subframe",
@@ -1129,7 +1204,8 @@
       "description": "3000 тг/п.м",
       "applicableTo": [
         "wide-format"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "cncTape": {
       "id": "cncTape",
@@ -1140,7 +1216,8 @@
       "description": "Скотч для фрезерной резки (на 1 м²)",
       "applicableTo": [
         "cnc-laser"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "folderPocket": {
       "id": "folderPocket",
@@ -1154,7 +1231,8 @@
       "description": "Доп. опция для папок",
       "applicableTo": [
         "folders"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "badgeCorner": {
       "id": "badgeCorner",
@@ -1165,18 +1243,20 @@
       "description": "12 тг за 100 шт",
       "applicableTo": [
         "badges"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "badgeLanyard": {
       "id": "badgeLanyard",
       "name": "Ланьярд с карабином (без нанесения)",
       "type": "quantity",
-      "price": 2.5,
-      "unit": "тг/шт",
-      "description": "250 тг за 100 шт",
+      "price": 250,
+      "unit": "тг/комплект",
+      "description": "Предварительно 11.11.2026: 250 тг за один комплект ланьярд + карабин, не за 100 шт. Утвердить у клиента.",
       "applicableTo": [
         "badges"
-      ]
+      ],
+      "priceStatus": "provisional"
     },
     "garmentFile": {
       "id": "garmentFile",
@@ -1185,7 +1265,8 @@
       "unit": "тг",
       "applicableTo": [
         "garment-printing"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "embFile": {
       "id": "embFile",
@@ -1194,7 +1275,8 @@
       "unit": "тг",
       "applicableTo": [
         "embroidery"
-      ]
+      ],
+      "priceStatus": "approved"
     },
     "embMetalThread": {
       "id": "embMetalThread",
@@ -1204,7 +1286,193 @@
       "type": "coefficient",
       "applicableTo": [
         "embroidery"
-      ]
+      ],
+      "priceStatus": "approved"
+    },
+    "graphtec": {
+      "id": "graphtec",
+      "name": "Фигурная резка Graphtec",
+      "type": "select",
+      "unit": "тг/лист",
+      "description": "A3/A4: действующие ставки сохранены. SRA3: предварительная оценка 11.11.2026, редактируется в прайсе; требуется утверждение клиентом. Общий флаг предварительности включён из-за SRA3.",
+      "applicableTo": [
+        "business-cards",
+        "badges",
+        "discount-cards",
+        "invitations",
+        "certificates",
+        "custom-cards",
+        "flyers",
+        "booklets",
+        "custom",
+        "hangers"
+      ],
+      "options": [
+        {
+          "id": "a3-simple",
+          "name": "A3 — Простая",
+          "sheetFormat": "A3",
+          "complexity": "simple",
+          "price": 650,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "a3-medium",
+          "name": "A3 — Средняя",
+          "sheetFormat": "A3",
+          "complexity": "medium",
+          "price": 850,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "a3-complex",
+          "name": "A3 — Сложная",
+          "sheetFormat": "A3",
+          "complexity": "complex",
+          "price": 1000,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "a4-simple",
+          "name": "A4 — Простая",
+          "sheetFormat": "A4",
+          "complexity": "simple",
+          "price": 325,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "a4-medium",
+          "name": "A4 — Средняя",
+          "sheetFormat": "A4",
+          "complexity": "medium",
+          "price": 425,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "a4-complex",
+          "name": "A4 — Сложная",
+          "sheetFormat": "A4",
+          "complexity": "complex",
+          "price": 500,
+          "unit": "тг/лист"
+        },
+        {
+          "id": "sra3-simple",
+          "name": "SRA3 — Простая",
+          "price": 750,
+          "unit": "тг/лист",
+          "sheetFormat": "SRA3",
+          "complexity": "simple"
+        },
+        {
+          "id": "sra3-medium",
+          "name": "SRA3 — Средняя",
+          "price": 1000,
+          "unit": "тг/лист",
+          "sheetFormat": "SRA3",
+          "complexity": "medium"
+        },
+        {
+          "id": "sra3-complex",
+          "name": "SRA3 — Сложная",
+          "price": 1200,
+          "unit": "тг/лист",
+          "sheetFormat": "SRA3",
+          "complexity": "complex"
+        }
+      ],
+      "priceStatus": "provisional"
+    },
+    "sheetPrinting": {
+      "id": "sheetPrinting",
+      "name": "Листовая печать без бумаги",
+      "type": "select",
+      "unit": "тг/сторона",
+      "description": "Предварительные тарифы 11.11.2026: только печать, бумага оплачивается отдельно. Не извлечены из пакетных цен PDF. Уточнить у клиента в редакторе прайса.",
+      "applicableTo": [
+        "sheet-printing"
+      ],
+      "options": [
+        {
+          "id": "a4-mono",
+          "name": "A4 — ч/б, без бумаги, за сторону",
+          "price": 40,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "a4-color",
+          "name": "A4 — цветная, без бумаги, за сторону",
+          "price": 120,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "a3-mono",
+          "name": "A3 — ч/б, без бумаги, за сторону",
+          "price": 70,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "a3-color",
+          "name": "A3 — цветная, без бумаги, за сторону",
+          "price": 220,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "sra3-mono",
+          "name": "SRA3 — ч/б, без бумаги, за сторону",
+          "price": 80,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "sra3-color",
+          "name": "SRA3 — цветная, без бумаги, за сторону",
+          "price": 250,
+          "unit": "тг/сторона"
+        }
+      ],
+      "priceStatus": "provisional"
+    },
+    "sheetCutting": {
+      "id": "sheetCutting",
+      "name": "Обрезка листовая за заказ",
+      "type": "quantity",
+      "price": 500,
+      "unit": "тг/заказ",
+      "description": "Предварительная сумма 500 тг за весь заказ; менеджер может изменить её в расчёте.",
+      "applicableTo": [
+        "sheet-printing"
+      ],
+      "priceStatus": "provisional"
+    },
+    "sheetVarnish": {
+      "id": "sheetVarnish",
+      "name": "Лакировка листовая",
+      "type": "select",
+      "description": "Предварительные тарифы 11.11.2026, за одну сторону листа; утвердить у клиента.",
+      "applicableTo": [
+        "sheet-printing"
+      ],
+      "options": [
+        {
+          "id": "varnish-a4",
+          "name": "A4 — лак, одна сторона",
+          "price": 150,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "varnish-a3",
+          "name": "A3 — лак, одна сторона",
+          "price": 300,
+          "unit": "тг/сторона"
+        },
+        {
+          "id": "varnish-sra3",
+          "name": "SRA3 — лак, одна сторона",
+          "price": 350,
+          "unit": "тг/сторона"
+        }
+      ],
+      "priceStatus": "provisional"
     }
   },
   "reorderOptions": [
@@ -1689,6 +1957,13 @@
       "format": "A3(Colotech)",
       "prices": {
         "default": 100
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 120,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1698,6 +1973,13 @@
       "format": "SRA3",
       "prices": {
         "default": 160
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 120,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1707,6 +1989,13 @@
       "format": "A3(Colotech)",
       "prices": {
         "default": 180
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1716,6 +2005,13 @@
       "format": "SRA3",
       "prices": {
         "default": 190
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1725,6 +2021,13 @@
       "format": "A3(Colotech)",
       "prices": {
         "default": 190
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 200,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1734,6 +2037,13 @@
       "format": "SRA3",
       "prices": {
         "default": 210
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 200,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1743,6 +2053,13 @@
       "format": "A3(Colotech)",
       "prices": {
         "default": 250
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 250,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1752,6 +2069,13 @@
       "format": "SRA3",
       "prices": {
         "default": 280
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 250,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1761,6 +2085,13 @@
       "format": "A3(Colotech)",
       "prices": {
         "default": 320
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1770,6 +2101,13 @@
       "format": "SRA3",
       "prices": {
         "default": 350
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
       }
     },
     {
@@ -1781,7 +2119,14 @@
       "prices": {
         "default": 620
       },
-      "colorType": null
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
+      }
     },
     {
       "id": "d7",
@@ -1792,7 +2137,14 @@
       "prices": {
         "default": 750
       },
-      "colorType": null
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
+      }
     },
     {
       "id": "d8",
@@ -1803,7 +2155,14 @@
       "prices": {
         "default": 600
       },
-      "colorType": null
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
+      }
     },
     {
       "id": "d9",
@@ -1814,7 +2173,14 @@
       "prices": {
         "default": 450
       },
-      "colorType": null
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
+      }
     },
     {
       "id": "d10",
@@ -1825,7 +2191,14 @@
       "prices": {
         "default": 1700
       },
-      "colorType": null
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительная самостоятельная цена листа на основе таблицы доплат PDF ZOOM2026 стр.7. Состав и плотность дизайнерской бумаги требуют утверждения."
+      }
     },
     {
       "id": "d11",
@@ -1928,6 +2301,304 @@
         "paper": "80 г/м²",
         "quantityMode": "exact",
         "source": "Прайс ZOOM 2026.pdf, стр. 8, таблица «Блокнот A4; A5»"
+      }
+    },
+    {
+      "id": "d1_120_ColotechA3-a4",
+      "category": "paper-density",
+      "name": "Плотность 120 гр — A3(Colotech) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 50.0
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 120,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d2_160_ColotechA3-a4",
+      "category": "paper-density",
+      "name": "Плотность 160 гр — A3(Colotech) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 90.0
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d3_200_ColotechA3-a4",
+      "category": "paper-density",
+      "name": "Плотность 200 гр — A3(Colotech) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 95.0
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 200,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d4_250_ColotechA3-a4",
+      "category": "paper-density",
+      "name": "Плотность 250 гр — A3(Colotech) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 125.0
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 250,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d5_300_ColotechA3-a4",
+      "category": "paper-density",
+      "name": "Плотность 300 гр — A3(Colotech) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 160.0
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d6-a4",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Лен — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 310.0
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d7-a4",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сирио — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 375.0
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d8-a4",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сплендергель — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 300.0
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d9-a4",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Акварелла (160 гр) — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 225.0
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "d10-a4",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Тачкавер — A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 850.0
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительно: половина A3. Утвердить у клиента."
+      }
+    },
+    {
+      "id": "sheet-paper-80-a4",
+      "category": "paper-density",
+      "name": "Бумага 80 гр A4 (предварительно)",
+      "format": "A4",
+      "prices": {
+        "default": 10
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A4",
+        "density": 80,
+        "priceStatus": "provisional",
+        "source": "Предварительная оценка 11.11.2026, утвердить у клиента."
+      }
+    },
+    {
+      "id": "sheet-paper-80-a3",
+      "category": "paper-density",
+      "name": "Бумага 80 гр A3 (предварительно)",
+      "format": "A3",
+      "prices": {
+        "default": 20
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "A3",
+        "density": 80,
+        "priceStatus": "provisional",
+        "source": "Предварительная оценка 11.11.2026, утвердить у клиента."
+      }
+    },
+    {
+      "id": "sheet-paper-80-sra3",
+      "category": "paper-density",
+      "name": "Бумага 80 гр SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 25
+      },
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 80,
+        "priceStatus": "provisional",
+        "source": "Предварительная оценка 11.11.2026, утвердить у клиента."
+      }
+    },
+    {
+      "id": "d6-sra3",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Лен — SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 740
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: A3 × 1.2, округлено до 10 тг. Оценка 11.11.2026, не подтверждённая цена поставщика."
+      }
+    },
+    {
+      "id": "d7-sra3",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сирио — SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 900
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: A3 × 1.2, округлено до 10 тг. Оценка 11.11.2026, не подтверждённая цена поставщика."
+      }
+    },
+    {
+      "id": "d8-sra3",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Сплендергель — SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 720
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 280,
+        "priceStatus": "provisional",
+        "source": "Предварительно: A3 × 1.2, округлено до 10 тг. Оценка 11.11.2026, не подтверждённая цена поставщика."
+      }
+    },
+    {
+      "id": "d9-sra3",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Акварелла (160 гр) — SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 540
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 160,
+        "priceStatus": "provisional",
+        "source": "Предварительно: A3 × 1.2, округлено до 10 тг. Оценка 11.11.2026, не подтверждённая цена поставщика."
+      }
+    },
+    {
+      "id": "d10-sra3",
+      "category": "paper-density",
+      "name": "Дизайнерская бумага Тачкавер — SRA3 (предварительно)",
+      "format": "SRA3",
+      "prices": {
+        "default": 2040
+      },
+      "colorType": null,
+      "specification": {
+        "section": "sheet-paper",
+        "sheetFormat": "SRA3",
+        "density": 300,
+        "priceStatus": "provisional",
+        "source": "Предварительно: A3 × 1.2, округлено до 10 тг. Оценка 11.11.2026, не подтверждённая цена поставщика."
       }
     }
   ],

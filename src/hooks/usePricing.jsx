@@ -6,6 +6,11 @@ import { getStateSymbolName } from '../lib/catalog.mjs'
 // Контекст для прайсов
 const PricingContext = createContext(null)
 
+const parseOperationOptions = value => {
+  if (typeof value !== 'string') return value ?? []
+  try { return JSON.parse(value) ?? [] } catch { return [] }
+}
+
 export function PricingProvider({ children }) {
   const [pricing, setPricing] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -22,12 +27,13 @@ export function PricingProvider({ children }) {
       // Преобразуем данные из БД в формат фронтенда
       const formattedData = {
         settings: {
-          urgentSurcharge: data.settings?.urgent_surcharge || 30
+          urgentSurcharge: data.settings?.urgent_surcharge ?? 30
         },
         businessCards: (data.businessCards || []).map(item => ({
           id: String(item.id),
           name: item.name,
-          colorType: item.color_type,
+          colorType: item.color_type ?? item.colorType,
+          color_type: item.color_type ?? item.colorType,
           prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices
         })),
         printing: (data.printing || []).map(item => ({
@@ -35,7 +41,8 @@ export function PricingProvider({ children }) {
           category: item.category,
           specification: typeof item.specification === 'string' ? JSON.parse(item.specification) : item.specification,
           name: item.name,
-          colorType: item.color_type,
+          colorType: item.color_type ?? item.colorType,
+          color_type: item.color_type ?? item.colorType,
           prices: typeof item.prices === 'string' ? JSON.parse(item.prices) : item.prices
         })),
         uvPrinting: (data.uvPrinting || []).map(item => ({
@@ -186,15 +193,16 @@ export function PricingProvider({ children }) {
                 applicableTo: typeof item.applicable_to === 'string' 
                   ? JSON.parse(item.applicable_to) 
                   : (item.applicable_to || ['all']),
-                options: typeof item.options === 'string' 
-                  ? JSON.parse(item.options) 
-                  : item.options,
-                price: item.price ? parseFloat(item.price) : undefined,
+                options: parseOperationOptions(item.options),
+                price: item.price != null && item.price !== '' ? Number(item.price) : null,
+                priceText: item.price_text ?? item.priceText ?? null,
+                price_text: item.price_text ?? item.priceText ?? null,
                 prices: typeof item.prices === 'string'
                   ? JSON.parse(item.prices)
                   : item.prices,
                 unit: item.unit,
                                 description: item.description,
+                                priceStatus: item.price_status || item.priceStatus || 'approved',
                                 defaultQuantity: item.default_quantity,
                                 stepMode: !!item.step_mode,
                                 stepUnit: item.step_unit

@@ -220,12 +220,20 @@ test('actual save handler and order adapter preserve selections, breakdown and t
     if (node.type === 'VariableDeclarator' && node.id.name === 'createOrder') createCallback = node.init.arguments[0]
   })
   assert.ok(createCallback)
+  const validationSource = ordersAst.program.body.flatMap(node => {
+    if (node.type === 'VariableDeclaration' && node.declarations.some(declaration => declaration.id.name === 'validNumber')) return [ordersSource.slice(node.start, node.end)]
+    if (node.type === 'ExportNamedDeclaration' && node.declaration?.id?.name === 'validateNewOrderData') return [ordersSource.slice(node.declaration.start, node.declaration.end)]
+    return []
+  }).join(';\n')
+  assert.ok(validationSource.includes('validateNewOrderData'))
   let persistedOrderTotal
   let persistedItemTotal
   let persistedSpecifications
   const router = require('../server/routes/orders.js')({
+    async connect() { return this }, release() {},
     async query(sql, values) {
-      if (sql.includes('SELECT COUNT(*)')) return { rows: [{ count: '0' }] }
+      if (sql.includes('AS next_number')) return { rows: [{ next_number: '1' }] }
+      if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql) || sql.startsWith('LOCK TABLE')) return { rows: [] }
       if (sql.includes('INSERT INTO orders')) {
         persistedOrderTotal = values[5]
         return { rows: [{ id: 'test-order', total_amount: values[5] }] }
@@ -250,6 +258,7 @@ test('actual save handler and order adapter preserve selections, breakdown and t
     const result = h.calculate()
     let apiPayload
     const adapterContext = {
+      structuredClone,
       isOnline: true, STORAGE_KEY: 'test-orders', localStorage: { setItem() {} }, setOrders(update) { update([]) },
       api: { async createOrder(payload) {
         apiPayload = JSON.parse(JSON.stringify(payload))
@@ -260,7 +269,7 @@ test('actual save handler and order adapter preserve selections, breakdown and t
       } }
     }
     vm.createContext(adapterContext)
-    vm.runInContext(`globalThis.createOrder = ${ordersSource.slice(createCallback.start, createCallback.end)}`, adapterContext)
+    vm.runInContext(`${validationSource};\nglobalThis.createOrder = ${ordersSource.slice(createCallback.start, createCallback.end)}`, adapterContext)
     h.context.createOrder = adapterContext.createOrder
     await h.save()
     const spec = apiPayload.items[0].specifications

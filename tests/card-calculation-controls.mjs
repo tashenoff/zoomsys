@@ -4,6 +4,7 @@ import vm from 'node:vm'
 import test from 'node:test'
 import { createRequire } from 'node:module'
 import * as catalog from '../src/lib/catalog.mjs'
+import * as sheetHelpers from '../src/lib/cardSheetPricing.mjs'
 const require = createRequire(import.meta.url)
 const React = require('react')
 const { transformSync } = require('esbuild')
@@ -50,6 +51,7 @@ function runtime() {
       if (name === 'react') return react
       if (name === 'react/jsx-runtime') return require(name)
       if (name.endsWith('/catalog.mjs')) return catalog
+      if (name.endsWith('/cardSheetPricing.mjs')) return sheetHelpers
       if (name.endsWith('/usePricing')) return { usePricing: () => ({ pricing, loading: false }) }
       if (name.endsWith('/useOrders')) return { useOrders: () => ({ isOnline: true, createOrder: async value => calls.push(value) }) }
       if (name.endsWith('/pricing.json')) return pricing
@@ -72,6 +74,7 @@ const button = (tree, label) => elements(tree, node => node.type === 'button' &&
 test('badges select a product without a color gate; visible Calculate validates quote and saving retains manual price', async () => {
   const app = runtime(); let tree = app.render()
   tree.props.onSelectCategory('badges'); tree = app.render()
+  button(tree, 'Согласованная стоимость тиража (прежний расчёт)').props.onClick(); tree = app.render()
   assert.ok(button(tree, 'Рассчитать').props.disabled)
   const badge = pricing.businessCards.find(catalog.isBadgeProduct)
   button(tree, badge.name).props.onClick(); tree = app.render()

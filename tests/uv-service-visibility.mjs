@@ -34,15 +34,19 @@ function modal(category) {
   return module.exports.default({open:true, category, selected:[901], onClose(){}})
 }
 
-test('construction installation is unavailable only in UV; other services/categories retain their policy', () => {
+test('construction installation is unavailable for UV and sheet products; applicable categories retain their policy', () => {
   assert.ok(!text(modal('uv-printing')).includes(mount.name))
   assert.ok(text(modal('uv-printing')).includes(allowed.name))
-  for (const category of ['wide-format','textile','event-services','advertising-stands','business-cards']) {
+  for (const category of ['wide-format','textile','event-services','advertising-stands']) {
     assert.ok(text(modal(category)).includes(mount.name), category)
     assert.equal(isServiceAllowed(mount, category), true)
   }
   assert.equal(isServiceAllowed({name:'Монтаж макета'}, 'uv-printing'), true)
-  assert.equal(isServiceAllowed(mount, 'printing'), false)
+  for (const category of ['printing','business-cards','badges','discount-cards','custom','hangers']) {
+    assert.equal(isServiceAllowed(mount, category), false)
+    assert.ok(!text(modal(category)).includes(mount.name), category)
+    assert.ok(text(modal(category)).includes(allowed.name), category)
+  }
 })
 
 // Execute the real pricing/filter/save expressions with a deliberately stale

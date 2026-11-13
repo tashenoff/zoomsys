@@ -1,3 +1,4 @@
+import * as cardSheetPricing from '../src/lib/cardSheetPricing.mjs'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
@@ -55,6 +56,7 @@ function runtime(file, extraExports=[]) {
       if(name==='react')return react
       if(name==='react/jsx-runtime' || name.startsWith('@heroicons/'))return require(name)
       if(name.endsWith('/catalog.mjs'))return catalog
+      if(name.endsWith('/cardSheetPricing.mjs'))return cardSheetPricing
       if(name.endsWith('/navCatalog'))return navCatalog
       if(name.endsWith('/calculatorSearch'))return search
       if(name.endsWith('/wideFormatFinishing.mjs'))return finishing
@@ -262,6 +264,7 @@ function selectedRecord(app,id) {
 
 test('all real selectable products have a scoped result across every implemented calculator family',()=>{
   const skipped = {
+    businessCards: item=>!cardSheetPricing.isCurrentCardProduct(item),
     printing: item=>!['flyers','booklets','certificates','folders','paper-bags','digital-printing','paper-density'].includes(item.category) || item.specification?.section==='multipage' || /^Фольгирование$/i.test(item.name),
     flagsProducts: item=>/^Прошивка/i.test(item.name), textile:item=>item.category==='service',
     wideFormat:item=>!catalog.isWideFormatGroupEnabled(item.category), stateSymbols:item=>item.name.includes('Объемный герб')
@@ -335,4 +338,16 @@ test('representative search selections preserve real tariff totals across calcul
     assert.ok(calculation,source+':'+id+' must calculate')
     assert.equal(calculation.total,total,source+':'+id)
   }
+})
+
+test('unsupported Touch Cover monochrome variants have no selectable search destination; supported variants remain',()=>{
+  const variants = [
+    {id:'tc-10',name:'Тачкавер',colorType:'1+0'},
+    {id:'tc-11',name:'Touch Cover',colorType:'1+1'},
+    {id:'tc-44',name:'Тачкавер с лаком',colorType:'4+4'}
+  ]
+  const items=search.buildCalculatorSearchItems({businessCards:variants})
+  for(const id of ['tc-10','tc-11']) assert.ok(!items.some(item=>item.payload.catalogItemId===id))
+  assert.ok(items.some(item=>item.payload.catalogItemId==='tc-44'))
+  assert.equal(variants.length,3)
 })

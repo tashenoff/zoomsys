@@ -7,7 +7,7 @@ import vm from 'node:vm'
 import test from 'node:test'
 import { createRequire } from 'node:module'
 import { catalogConfig, getDisplayCategories, getEnabledWideFormatMaterials, isWideFormatGroupEnabled,
-  resolvePricingTab, isBadgeProduct, filterCardProducts, getManualBadgeQuote, getCanvasOperationKey, isCanvasMaterial, isServiceAllowed } from '../src/lib/catalog.mjs'
+  resolvePricingTab, isBadgeProduct, filterCardProducts, getManualBadgeQuote, exactCardBatchPrice, getCanvasOperationKey, isCanvasMaterial, isServiceAllowed } from '../src/lib/catalog.mjs'
 
 const require = createRequire(import.meta.url)
 const React = require('react')
@@ -18,7 +18,7 @@ const fixture = JSON.parse(fs.readFileSync(new URL('../src/data/pricing.json', i
 const badge = fixture.businessCards.find(isBadgeProduct)
 const ordinary = fixture.businessCards.find(item => !isBadgeProduct(item))
 const helpers = { catalogConfig, getDisplayCategories, getEnabledWideFormatMaterials, isWideFormatGroupEnabled,
-  resolvePricingTab, isBadgeProduct, filterCardProducts, getManualBadgeQuote, getCanvasOperationKey, isCanvasMaterial, isServiceAllowed }
+  resolvePricingTab, isBadgeProduct, filterCardProducts, getManualBadgeQuote, exactCardBatchPrice, getCanvasOperationKey, isCanvasMaterial, isServiceAllowed }
 
 function elements(node, predicate = () => true, found = []) {
   if (Array.isArray(node)) node.forEach(child => elements(child, predicate, found))
@@ -313,8 +313,8 @@ test('20: actual calculator uses the quoted batch amount and saves manual-pricin
   stale.context.manualBatchTotal = ''
   assert.equal(await stale.save(), undefined)
   const regular = calculationHarness({ product: ordinary, cardType: 'business-cards' }).calculate()
-  assert.equal(regular.unitPrice, ordinary.prices['100to299'])
-  assert.equal(regular.total, ordinary.prices['100to299'] * 100)
+  assert.equal(regular.unitPrice, ordinary.prices['100to299'] / 100)
+  assert.equal(regular.total, ordinary.prices['100to299'])
 })
 
 function route(router, method, path) {

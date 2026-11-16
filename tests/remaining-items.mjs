@@ -33,7 +33,7 @@ function actual(file, bindings) {
 
 test('22: all 64 confirmed card tariffs match PDF page 7; unsupported tariffs remain manual', () => {
   const pdf = {1:[30,28,26,23],2:[32,30,28,26],3:[35,35,33,31],4:[48,47,46,45],7:[43,43,36,34],8:[53,53,46,44],11:[58,56,54,52],12:[70,68,66,64],19:[175,170,160,150],20:[300,290,280,270],31:[160,150,140,135],32:[310,300,280,270],23:[180,170,160,150],24:[410,400,390,380],27:[270,250,240,230],28:[450,430,400,350]}
-  const h = actual('BusinessCardsCalculator.jsx', {})
+  const h = actual('BusinessCardsCalculator.jsx', { selectedCardType: 'business-cards' })
   for (const product of fixture.businessCards) {
     if (product.id === 'bdg1') { assert.deepEqual(product.prices, {}); continue }
     assert.equal(h.context.getPriceForQuantity(product, 49), null)
@@ -45,10 +45,10 @@ test('18: actual card calculation and save handler require a client and retain t
   const h = actual('BusinessCardsCalculator.jsx', { selectedProduct: fixture.businessCards[0], selectedCardType: 'business-cards', quantity: 100,
     manualBatchTotal: '', selectedServices: [], selectedAddServices: [], availableOperations: [], additionalServices: [],
     selectedServiceOptions: {}, serviceQuantities: {}, selectedReorder: 'no', reorderOptions: [], isUrgent: false, urgentSurcharge: 30, discount: 0, notes: '' })
-  const result = h.calculate(); assert.equal(result.total, 2800)
+  const result = h.calculate(); assert.equal(result.total, 28)
   h.context.client = null; assert.equal(await h.save(), undefined)
   h.context.client = { id: 901, name: 'Test' }; const order = await h.save()
-  assert.equal(order.client.id, 901); assert.equal(order.quantity, 100); assert.equal(order.productName, fixture.businessCards[0].name); assert.equal(order.total, 2800)
+  assert.equal(order.client.id, 901); assert.equal(order.quantity, 100); assert.equal(order.productName, fixture.businessCards[0].name); assert.equal(order.total, 28)
 })
 
 function textile(width, height, quantity, flagProduct = null) {

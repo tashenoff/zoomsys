@@ -28,7 +28,7 @@ function elements(node, predicate, result = []) {
 
 // Run the real JSX and effects until state settles, including dependency comparison.
 // A state/effect loop fails the test instead of hanging a browser tab.
-function runtime() {
+function runtime(pricingOverride = pricing) {
   const hooks = []; let cursor = 0, dirty = false, effects = []
   const calls = []; const client = { id: 901, name: 'Local test' }
   const changed = (previous, next) => !previous || !next || previous.length !== next.length || previous.some((value, index) => !Object.is(value, next[index]))
@@ -52,7 +52,7 @@ function runtime() {
       if (name === 'react/jsx-runtime') return require(name)
       if (name.endsWith('/catalog.mjs')) return catalog
       if (name.endsWith('/cardSheetPricing.mjs')) return sheetHelpers
-      if (name.endsWith('/usePricing')) return { usePricing: () => ({ pricing, loading: false }) }
+      if (name.endsWith('/usePricing')) return { usePricing: () => ({ pricing: pricingOverride, loading: false }) }
       if (name.endsWith('/useOrders')) return { useOrders: () => ({ isOnline: true, createOrder: async value => calls.push(value) }) }
       if (name.endsWith('/pricing.json')) return pricing
       return { __esModule: true, default: () => null }
@@ -100,5 +100,30 @@ for (const type of ['business-cards', 'discount-cards']) test(`${type}: Calculat
   assert.ok(!text(tree).includes('null тг'))
   assert.equal(button(tree, 'Рассчитать').props.disabled, false)
   button(tree, 'Рассчитать').props.onClick(); tree = app.render()
-  assert.match(text(tree), /2800.00 тг/)
+  assert.match(text(tree), type === 'business-cards' ? /28.00 тг/ : /2800.00 тг/)
+})
+
+
+test('Touch Cover exact batch uses 290 once, saves quote, and 101 requires an explicit manual batch', async () => {
+  const actual = pricing.businessCards.find(x => x.name === 'Таккавер' && x.colorType === '4+4')
+  const old = { ...actual, id: 'old-touch', name: 'Тачкавер', prices: { upTo49: 170, '50to99': 160, '100to299': 140, '300to499': 130, from500: 130 } }
+  const app = runtime({ ...pricing, businessCards: [old, ...pricing.businessCards] }); let tree = app.render()
+  tree.props.onSelectCategory('business-cards'); tree = app.render()
+  assert.ok(!button(tree, 'Тачкавер'))
+  button(tree, 'Таккавер').props.onClick(); tree = app.render()
+  elements(tree, node => node.type === 'button' && text(node).startsWith('4+4'))[0].props.onClick(); tree = app.render()
+  assert.match(text(tree), /290 тг за тираж/)
+  button(tree, 'Рассчитать').props.onClick(); tree = app.render()
+  assert.match(text(tree), /Цена за тираж:/); assert.match(text(tree), /290.00 тг/)
+  assert.ok(!text(tree).includes('29000.00'))
+  const qty = elements(tree, node => node.type === 'input' && node.props.type === 'number' && node.props.value === 100)[0]
+  qty.props.onChange({ target: { value: '101' } }); tree = app.render()
+  assert.equal(button(tree, 'Рассчитать').props.disabled, true)
+  assert.ok(elements(tree, node => node.props.id === 'badge-batch-total')[0])
+  elements(tree, node => node.props.id === 'badge-batch-total')[0].props.onChange({ target: { value: '321' } }); tree = app.render()
+  button(tree, 'Рассчитать').props.onClick(); tree = app.render()
+  assert.match(text(tree), /321.00 тг/)
+  await elements(tree, node => node.type === 'button' && /Сохранить заказ/.test(text(node)))[0].props.onClick()
+  assert.equal(app.calls[0].baseTotal, 321); assert.equal(app.calls[0].sheetCount, 11)
+  assert.equal(app.calls[0].tariffUnit, 'batch'); assert.equal(app.calls[0].quantity, 101)
 })

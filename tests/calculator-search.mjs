@@ -307,7 +307,7 @@ test('invalid item IDs do not silently charge the first product in other calcula
 
 test('representative search selections preserve real tariff totals across calculator families',()=>{
   const cases=[
-    ['businessCards','1',null,2800],
+    ['businessCards','1',null,28],
     ['printing','p10',null,65000],
     ['uvPrinting','uv1',{kind:'uv-side',value:'2 стороны'},24000],
     ['stateSymbols','2',null,3600000],

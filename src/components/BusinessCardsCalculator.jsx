@@ -7,7 +7,7 @@ import ClientSelector from './ClientSelector'
 import CategorySelector from './CategorySelector'
 import SheetProductCalculator from './SheetProductCalculator'
 import { calculateCardOperations, cardSheetCount, isCurrentCardProduct, isSheetOperation, isSheetBilledOperation, defaultCardOption, optionSheetFormat } from '../lib/cardSheetPricing.mjs'
-import { filterCardProducts, getManualBadgeQuote, isBadgeProduct } from '../lib/catalog.mjs'
+import { filterCardProducts, getManualBadgeQuote, isBadgeProduct, exactCardBatchPrice } from '../lib/catalog.mjs'
 
 export default function BusinessCardsCalculator({ client: externalClient, initialItemId = null, initialCardType = null }) {
   // Получаем данные из контекста прайсов и заказов
@@ -169,6 +169,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
   }, [selectedProduct, quantity, selectedServices, selectedAddServices, selectedServiceOptions, serviceQuantities, isUrgent, discount, selectedReorder, manualBatchTotal, sheetFormat, yieldPerSheet, operationSides, notes, pricingData, selectedCardType, selectedMaterial, selectedColorType])
 
   const getPriceForQuantity = (product, qty) => {
+    if (selectedCardType === 'business-cards') return exactCardBatchPrice(product, qty)
     if (!product?.prices || !Number.isInteger(Number(qty)) || Number(qty) <= 0) return null
     if (qty < 50) return product.prices.upTo49
     if (qty < 100) return product.prices["50to99"]
@@ -192,8 +193,9 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
       setCalculation(null)
       return
     }
-    const unitPrice = manualQuote ? manualQuote.unitPrice : getPriceForQuantity(selectedProduct, quantity)
-    const baseTotal = manualQuote ? manualQuote.baseTotal : unitPrice * quantity
+    const tariff = getPriceForQuantity(selectedProduct, quantity)
+    const baseTotal = manualQuote ? manualQuote.baseTotal : selectedCardType === 'business-cards' ? tariff : tariff * quantity
+    const unitPrice = baseTotal / quantity
 
     const operationsQuote = calculateCardOperations({
       quantity, format: sheetFormat, yieldPerSheet, operations: availableOperations,
@@ -224,6 +226,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
       productName: selectedProduct.name,
       productType: selectedCardType,
       pricingMode: manualQuote ? 'manual' : 'tariff',
+      tariffUnit: selectedCardType === 'business-cards' ? 'batch' : 'piece',
       manualBatchTotal: manualQuote?.manualBatchTotal,
       colorType: selectedProduct.colorType,
       quantity,
@@ -442,7 +445,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
                   >
                     <div className="text-xl mb-1">{colorType}</div>
                     <div className="text-xs opacity-80">
-                      {isBadgeProduct(product) || getPriceForQuantity(product, quantity) == null ? 'Индивидуальный расчёт' : `${getPriceForQuantity(product, quantity)} тг/шт`}
+                      {isBadgeProduct(product) || getPriceForQuantity(product, quantity) == null ? 'Индивидуальный расчёт' : `${getPriceForQuantity(product, quantity)} ${selectedCardType === 'business-cards' ? 'тг за тираж' : 'тг/шт'}`}
                     </div>
                   </button>
                 ))}
@@ -516,7 +519,7 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
             <input id="badge-batch-total" type="number" min="0.01" step="0.01" value={manualBatchTotal}
               onChange={(e) => { setManualBatchTotal(e.target.value); setCalculation(null) }}
               className="w-full px-4 py-2 border rounded-lg" placeholder="Введите индивидуальную стоимость тиража" />
-            <p className="text-sm text-gray-600 mt-2">{selectedCardType === 'badges' ? 'Бейджи рассчитываются индивидуально.' : 'Для этой позиции и тиража тариф не указан в прайсе: укажите согласованную сумму.'} Дополнительные операции добавляются отдельно.</p>
+            <p className="text-sm text-gray-600 mt-2">{selectedCardType === 'badges' ? 'Бейджи рассчитываются индивидуально.' : 'В прайсе заданы только точные тиражи 50, 100, 300 и 500 шт. Для другого количества или отсутствующей ставки укажите согласованную сумму всего тиража.'} Дополнительные операции добавляются отдельно.</p>
           </div>
         )}
 
@@ -825,8 +828,8 @@ export default function BusinessCardsCalculator({ client: externalClient, initia
             </div>
 
             <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-gray-600 font-medium">Цена за единицу:</span>
-              <span className="font-bold text-gray-800">{calculation.unitPrice} тг</span>
+              <span className="text-gray-600 font-medium">{calculation.tariffUnit === 'batch' ? 'Цена за тираж:' : 'Цена за единицу:'}</span>
+              <span className="font-bold text-gray-800">{calculation.tariffUnit === 'batch' ? calculation.baseTotal : calculation.unitPrice} тг</span>
             </div>
 
             <div className="flex justify-between items-center py-3 border-b-2 border-gray-300">

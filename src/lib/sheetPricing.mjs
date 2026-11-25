@@ -68,6 +68,9 @@ export function calculateSheetQuote(input) {
   if (kind === 'hangers' && sides !== 2) throw new Error('Для хенгеров требуется двусторонняя печать')
   if (Number(input.pages) < sides) throw new Error('Число страниц меньше выбранного числа сторон печати')
   const layout = calculateSheetLayout({ ...input, sides, ...(kind === 'hangers' ? { yieldPerSheet: 6, template: true } : {}) })
+  const minQty = paper.minQty ?? 1
+  if (!Number.isSafeInteger(minQty) || minQty < 1) throw new Error('В прайсе указан неверный минимальный тираж бумаги')
+  if (layout.quantity < minQty) throw new Error(`Минимальный тираж для выбранной бумаги: ${minQty} шт`)
   const paperRate = finiteNumber(paper.rate, 'стоимость бумаги за лист')
   const printRate = finiteNumber(input.printRate, 'стоимость печати за сторону листа')
   const paperTotal = roundMoney(paperRate * layout.sheets)
@@ -110,7 +113,7 @@ export function getPaperChoices(pricing) {
     const name = item.name || ''
     const format = item.specification?.sheetFormat || (/SRA3/i.test(name + (item.format || '')) ? 'SRA3' : /[АA]3/.test(name + (item.format || '')) || /дизайнерская/i.test(name) ? 'A3' : null)
     const rate = item.prices?.default
-    return { id: String(item.id), name, density: item.specification?.density || name.match(/(\d+)\s*(?:гр|г\/)/)?.[1] || '', sheetFormat: format,
+    return { id: String(item.id), name, minQty: item.specification?.minQty ?? 1, density: item.specification?.density || name.match(/(\d+)\s*(?:гр|г\/)/)?.[1] || '', sheetFormat: format,
       rate: typeof rate === 'number' && Number.isFinite(rate) && rate >= 0 ? rate : null, rateSource: 'catalog', provisional: item.specification?.priceStatus === 'provisional', source: item.specification?.source || '' }
   })
 }

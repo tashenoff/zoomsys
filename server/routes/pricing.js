@@ -2,6 +2,16 @@ const express = require('express')
 const { normalizeBusinessCardPricing, validateBusinessCardPrices } = require('../catalog-policy')
 const { validateProductOptions } = require('../garment-products')
 
+// Keep legacy paper rows compatible; the existing admin form always sends a minimum.
+function validatePrintingItem(item) {
+  if (item.category === 'paper-density' && Object.hasOwn(item.specification || {}, 'minQty')) {
+    const { minQty } = item.specification
+    if (!Number.isSafeInteger(minQty) || minQty < 1) return 'Минимальный тираж должен быть положительным целым числом'
+    if (typeof item.name !== 'string' || !item.name.trim()) return 'Укажите название бумаги'
+  }
+  return require('../validate-multipage')(item)
+}
+
 module.exports = (pool) => {
   const router = express.Router()
 
@@ -66,14 +76,14 @@ module.exports = (pool) => {
     catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.post('/printing', async (req, res) => {
-    const validation = require('../validate-multipage')(req.body)
+    const validation = validatePrintingItem(req.body)
     if (validation) return res.status(400).json({ error: validation })
     const { category, name, color_type, prices, specification, sort_order } = req.body
     try { res.json((await pool.query('INSERT INTO printing_pricing (category,name,color_type,prices,specification,sort_order) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [category, name, color_type, JSON.stringify(prices), JSON.stringify(specification || null), sort_order||0])).rows[0]) } catch(e) { res.status(500).json({error:'Ошибка'}) }
   })
   router.put('/printing/:id', async (req, res) => {
-    const validation = require('../validate-multipage')(req.body)
+    const validation = validatePrintingItem(req.body)
     if (validation) return res.status(400).json({ error: validation })
     const { category, name, color_type, prices, specification, is_active, sort_order } = req.body
     try { res.json((await pool.query('UPDATE printing_pricing SET category=$1,name=$2,color_type=$3,prices=$4,specification=$5,is_active=$6,sort_order=$7,updated_at=NOW() WHERE id=$8 RETURNING *',

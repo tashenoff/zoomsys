@@ -494,7 +494,7 @@ const PRINTING_CATEGORY_LABELS = {
   folders: 'Папки',
     'paper-bags': 'Бумажные пакеты',
     'digital-printing': 'Цифровая печать',
-    'paper-density': 'Печать разной плотности'
+    'paper-density': 'Бумага: листы и плотности'
   }
 
 const UV_CATEGORY_LABELS = {
@@ -731,6 +731,9 @@ function PrintingTable({ items, onEdit, onDelete }) {
                 <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
                   {PRINTING_CATEGORY_LABELS[item.category] || item.category}
                 </span>
+                {item.category === 'paper-density' && <p className="mt-1 text-xs text-gray-600">
+                  {[item.specification?.sheetFormat, item.specification?.density ? `${item.specification.density} г/м²` : null, item.prices?.default != null ? `${item.prices.default} ₸/лист` : 'Цена вручную', `Мин. тираж: ${item.specification?.minQty ?? 1} шт`].filter(Boolean).join(' · ')}
+                </p>}
                 {item.category === 'notebooks' && <p>{Object.entries(item.prices || {}).map(([q,p]) => `${q} шт: ${p ?? "ручное заполнение"} ₸`).join("; ")}</p>}
               </td>
               <td className="px-4 py-3 text-sm text-right text-gray-700">{item.prices?.['50'] || item.prices?.upTo49 || '-'}</td>
@@ -1499,6 +1502,10 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (category === 'printing' && formData.category === 'paper-density') {
+      onSave({ ...formData, name: formData.name.trim(), specification: { ...formData.specification, section: 'sheet-paper', minQty: formData.specification?.minQty ?? 1 } })
+      return
+    }
     onSave(formData)
   }
 
@@ -1687,6 +1694,7 @@ function EditModal({ item, category, onClose, onSave, operations = [] }) {
               <label>Формат листа бумаги<select aria-label="Формат листа бумаги" className="block border rounded p-2 w-full" value={formData.specification?.sheetFormat || ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, section: 'sheet-paper', sheetFormat: event.target.value } })}><option value="">Укажите формат</option>{['A4','A3','SRA3'].map(format => <option key={format}>{format}</option>)}</select></label>
               <label>Плотность бумаги, г/м²<input aria-label="Плотность бумаги" type="number" min="1" className="block border rounded p-2 w-full" value={formData.specification?.density ?? ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, section: 'sheet-paper', density: event.target.value === '' ? null : Number(event.target.value) } })} /></label>
 
+              <label>Минимальный тираж, шт<input required aria-label="Минимальный тираж" type="number" min="1" max={Number.MAX_SAFE_INTEGER} step="1" className="block border rounded p-2 w-full" value={formData.specification?.minQty ?? 1} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, minQty: event.target.value === '' ? '' : Number(event.target.value) } })} /></label>
               <label className="md:col-span-2">Источник / примечание<input className="block border rounded p-2 w-full" value={formData.specification?.source || ''} onChange={event => setFormData({ ...formData, specification: { ...formData.specification, source: event.target.value } })} /></label>
               <p className="text-sm text-gray-600 md:col-span-2">Цена за один чистый лист, без печати. Не переносите сюда тариф готового изделия. Метаданные используются в листовом калькуляторе.</p>
             </div>}

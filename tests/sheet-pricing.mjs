@@ -14,6 +14,19 @@ test('badge A3 geometry rotates when useful, rounds sheets, respects fields and 
  assert.throws(()=>quote({yieldPerSheet:10}),/превышает/)
 })
 
+test('new catalog paper enforces its minimum in finished items, not sheets', () => {
+ const row = {id: 77, category:'paper-density', name:'Бумага под заказ', prices:{default:75}, specification:{section:'sheet-paper', sheetFormat:'A3', density:250, minQty:30}}
+ const [paper, legacy] = getPaperChoices({printing:[row,{...row,id:78,specification:{section:'sheet-paper'}}]})
+ assert.equal(paper.minQty,30)
+ assert.equal(legacy.minQty,1)
+ assert.throws(()=>quote({paper,quantity:29}),/30 шт/)
+ assert.throws(()=>quote({paper:{...paper,minQty:1.5}}),/неверный минимальный тираж/)
+ const accepted = quote({paper,quantity:30})
+ assert.equal(accepted.sheetCalculation.paper.minQty,30)
+ assert.ok(accepted.sheetCalculation.sheets < 30)
+ assert.equal(accepted.sheetCalculation.paper.rate,75)
+})
+
 test('all standard flyer formats and euro use geometric output on A3',()=>{
  for(const [format,[width,height]] of Object.entries(PRODUCT_FORMATS)) {
   const result=quote({kind:'flyers',width,height,quantity:37}); assert.ok(result.sheetCalculation.yieldPerSheet>=1,format)
